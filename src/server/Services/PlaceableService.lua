@@ -1,9 +1,10 @@
 local RS = game:GetService("ReplicatedStorage");
+local ServerUtil: Folder = script.Parent.Parent.Utils;
+local Placeables: Folder = RS.Placeables;
 
 local Knit = require(RS.Packages.Knit);
 local Weld = require(RS.Shared.Weld);
-
-local Placeables: Folder = RS.Placeables;
+local PlaceableType = require(RS.Shared.Enums.PlaceableType);
 
 local PlaceableService = Knit.CreateService {
     Name = "PlaceableService";
@@ -28,7 +29,13 @@ function PlaceableService:KnitInit()
     -- Store all models in Placeables in PlaceableService.Placeables
 
     for _, folder in ipairs(Placeables:GetChildren()) do
-        if (not PlaceableService.Placeables[folder.Name]) then
+
+        if (self:PlaceableTypeIsValid(folder.Name) == false) then
+            warn("Invalid placeable type: " .. folder.Name);
+            continue;
+        end
+
+        if (PlaceableService.Placeables[folder.Name] == nil) then
             PlaceableService.Placeables[folder.Name] = {};
         end
 
@@ -40,6 +47,16 @@ end
 
 function PlaceableService:KnitStart()
     print("PlaceableService started");
+end
+
+function PlaceableService:PlaceableTypeIsValid(placeableType: string) : boolean
+    for _, enum in pairs(PlaceableType) do
+        if (enum.name == placeableType) then
+            return true;
+        end
+    end
+
+    return false;
 end
 
 return PlaceableService;

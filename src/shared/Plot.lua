@@ -102,8 +102,30 @@ function Plot:getTileAt(x, y)
 end
 
 -- type
-function Plot:isAdjacentTo(tile: BasePart, type: string) : boolean
-    -- TODO: Implement this
+function Plot:isAdjacentTo(tile1: BasePart, tile2: BasePart) : boolean
+    local tile1Pos = tile1.Position
+    local tile2Pos = tile2.Position
+
+    local tile1X = math.floor((tile1Pos.X + TILE_SIZE/2) / TILE_SIZE)
+    local tile1Y = math.floor((tile1Pos.Z + TILE_SIZE/2) / TILE_SIZE)
+
+    local tile2X = math.floor((tile2Pos.X + TILE_SIZE/2) / TILE_SIZE)
+    local tile2Y = math.floor((tile2Pos.Z + TILE_SIZE/2) / TILE_SIZE)
+
+    if (math.abs(tile1X - tile2X) <= 1 and math.abs(tile1Y - tile2Y) <= 1) then
+        return true
+    end
+
+    return false
+end
+
+function Plot:isOccupied(tile: BasePart) : boolean
+    for _, placeable in ipairs(self.placeables) do
+        if placeable:isOccupying(tile) then
+            return true
+        end
+    end
+    return false
 end
 
 function Plot:placeObject(x: number, y: number, placeable)

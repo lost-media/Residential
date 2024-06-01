@@ -1,13 +1,13 @@
 --[[
 
     For now, there are 4 types of Placeables:
-    - Factory
+    - Industrial
     - Residence
     - Commercial
     - Road
 
     Each type of Placeable has a different set of properties, such as:
-    - Factory: Production rate, production capacity, production cost, production time
+    - Industrial: Production rate, production capacity, production cost, production time
     - Residence: Population, population capacity, population growth rate, population growth time
     - Commercial: Revenue, revenue capacity, revenue growth rate, revenue growth time
     - Road: Cost, speed, capacity
@@ -15,14 +15,14 @@
 --]]
 
 return {
-    EMPTY = { 
+    EMPTY = {
         name = "Empty",
         isBuilding = false,
         properties = {}
     },
 
-    RESIDENTIAL = {
-        name = "Residential",
+    RESIDENCE = {
+        name = "Residence",
         isBuilding = true,
         properties = {
             population = 0,

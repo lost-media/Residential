@@ -59,7 +59,7 @@ end
 function PlotService:RemovePlayerFromPlot(player: Player)
     local plot = player:GetAttribute("Plot");
 
-    if (not plot) then
+    if (plot == nil) then
         warn("PlotService: Player is not assigned to a plot");
         return;
     end
