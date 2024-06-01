@@ -26,21 +26,6 @@ function PlaceableService:KnitInit()
     print("Welded all models in Placeables");
 
     -- Store all models in Placeables in PlaceableService.Placeables
-    --[[
-
-    For now, there are 4 types of Placeables:
-    - Factory
-    - Residence
-    - Commercial
-    - Road
-    
-    Each type of Placeable has a different set of properties, such as:
-    - Factory: Production rate, production capacity, production cost, production time
-    - Residence: Population, population capacity, population growth rate, population growth time
-    - Commercial: Revenue, revenue capacity, revenue growth rate, revenue growth time
-    - Road: Cost, speed, capacity
-
-    --]]
 
     for _, folder in ipairs(Placeables:GetChildren()) do
         if (not PlaceableService.Placeables[folder.Name]) then

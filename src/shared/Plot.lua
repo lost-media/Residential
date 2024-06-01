@@ -19,20 +19,64 @@ local TILE_SIZE = 6;
 
 ]]--
 
-function Plot.new(model: Model)
+function Plot.new(model: Model, id: number)
+
+    -- Validate the model before creating the Plot instance
+
+    if (model == nil) then
+        error("Model is nil")
+    end
+
+    if (model:FindFirstChild("Tiles") == nil) then
+        error("Model does not have a Tiles folder")
+    end
+
+    if (model:FindFirstChild("Placeables") == nil) then
+        error("Model does not have a Placeables folder")
+    end
+
+    if (id == nil) then
+        error("Plot cannot be created without an ID")
+    end
+
     local self = setmetatable({}, Plot)
 
+    self.player = nil
     self.placeables = {}
     self.tiles = {}
-    self.model = model
 
+    self.id = id
+    self.model = model
     self.size = DEFAULT_PLOT_SIZE
+
+    self.model.Name = id
 
     for i, v: BasePart in ipairs(model.Tiles:GetChildren()) do
         self.tiles[i] = v
     end
 
     return self
+end
+
+function Plot:getPlayer() : Player?
+    return self.player
+end
+
+function Plot:assignPlayer(player: Player)
+    if (self.player ~= nil) then
+        error("Plot already has a player assigned")
+    end
+
+    if (player == nil) then
+        error("Player is nil")
+    end
+
+    player:SetAttribute("Plot", self.id)
+    self.player = player
+end
+
+function Plot:removePlayer()
+    self.player = nil
 end
 
 function Plot:getTile(tile: BasePart) : BasePart?
