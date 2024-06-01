@@ -23,7 +23,7 @@ function PlaceableService:KnitInit()
         end
     end
 
-    print("Welded all models in Placeables");
+    print("PlaceableService: Welded all models in Placeables");
 
     -- Store all models in Placeables in PlaceableService.Placeables
 

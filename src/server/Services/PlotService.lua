@@ -26,11 +26,11 @@ function PlotService:KnitInit()
         end);
 
         if (not success) then
-            warn("Failed to create plot: " .. err);
+            warn("PlotService: Failed to create plot: " .. err);
         end
     end
 
-    print("Created " .. #self.Plots .. " plots")
+    print("PlotService: Created " .. #self.Plots .. " plots")
 end
 
 function PlotService:KnitStart()
@@ -60,7 +60,7 @@ function PlotService:RemovePlayerFromPlot(player: Player)
     local plot = player:GetAttribute("Plot");
 
     if (not plot) then
-        warn("Player is not assigned to a plot");
+        warn("PlotService: Player is not assigned to a plot");
         return;
     end
 
