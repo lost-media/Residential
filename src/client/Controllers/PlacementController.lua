@@ -16,6 +16,7 @@ local PLACEMENT_TWEEN_DURATION = 0.1;
 local ROTATION_INCREMENT = 90;
 local LEVEL_HEIGHT = 6; -- The height of each level for stacking in studs
 local LEVEL_MAX = 5;
+local SNAPPING_THRESHOLD = 5;
 
 local PlacementController = Knit.CreateController {
     Name = "PlacementController";
@@ -35,6 +36,7 @@ local PlacementController = Knit.CreateController {
     };
 
     Plot = nil;
+    SelectionBox = nil;
 };
 
 function PlacementController:KnitInit()
@@ -131,6 +133,14 @@ function PlacementController:StartPlacing(identifier: string)
         InstanceUtils:getAllPlayerCharacters(),
     });
 
+    local boundingBox = Instance.new("SelectionBox");
+    boundingBox.Color3 = Color3.fromRGB(0, 255, 0);
+    boundingBox.LineThickness = 0.1;
+    boundingBox.Adornee = clone.PrimaryPart;
+    boundingBox.Parent = clone.PrimaryPart;
+
+    self.SelectionBox = boundingBox;
+
     -- Choose a random tile to place the placeable on initially
     local randomTile: BasePart? = InstanceUtils:getRandomInstance(tiles:GetChildren());
     
@@ -156,6 +166,13 @@ function PlacementController:StopPlacing()
 
     self.State.CurrentPlaceable = nil;
     self.State.OriginalPlaceable = nil;
+    self.State.OriginalIdentifier = nil;
+
+    if self.SelectionBox then
+        self.SelectionBox:Destroy();
+    end
+
+    self.SelectionBox = nil;
 end
 
 function PlacementController:RenderStepped()
@@ -180,17 +197,30 @@ function PlacementController:RenderStepped()
 
     self.State.Tile = closestTile;
 
-    self:MovePlaceableToTile(closestTile);
-
-    if closestTile then
-        local snapped = self:SnapToClosestPoint();
-        if (snapped == false) then
-            self.State.Level = 0;
-            self.State.Stacked = false;
-            self.State.StackedOn = nil;
-            self.State.SnappedPoint = nil;
-        end
+    if (closestTile == nil) then
+        return;
     end
+
+    local snapped = self:SnapToClosestPoint();
+    if (snapped == false) then
+
+        -- Check if the tile is occupied
+        if (closestTile:GetAttribute("Occupied") == true) then
+            return;
+        end
+
+        self:MovePlaceableToTile(closestTile);
+
+        self.State.Level = 0;
+        self.State.Stacked = false;
+        self.State.StackedOn = nil;
+        self.State.SnappedPoint = nil;
+    end
+
+    if (closestTile:GetAttribute("Occupied") == true) then
+        return;
+    end
+
 end
 
 function PlacementController:MovePlaceableToTile(tile: BasePart, instant: boolean?)
@@ -293,15 +323,26 @@ function PlacementController:SnapToClosestPoint() : boolean
     local snapPoints = self:GetAllSnapPoints(plot);
     local closestSnapPoint, closestDistance = nil, math.huge;
 
+    local MousePosition = self.Mouse:GetHit();
+
+    if MousePosition == nil then
+        return false;
+    end
+
     for _, snapPoint in pairs(snapPoints) do
-        local distance = (self.State.CurrentPlaceable.PrimaryPart.Position - snapPoint.WorldCFrame.Position).Magnitude;
+        local distance = (snapPoint.WorldCFrame.Position - MousePosition).Magnitude;
+        
+        if (snapPoint:GetAttribute("Occupied") == true) then
+            continue;
+        end
+
         if distance < closestDistance then
             closestSnapPoint = snapPoint;
             closestDistance = distance;
         end
     end
 
-    if closestSnapPoint and closestDistance < 5 then -- Adjust threshold as needed
+    if closestSnapPoint and closestDistance < SNAPPING_THRESHOLD then
         local currentCFrame = self.State.CurrentPlaceable.PrimaryPart.CFrame
         if self:IsOrientationCompatible(currentCFrame, closestSnapPoint.WorldCFrame) then
 
@@ -318,9 +359,15 @@ function PlacementController:SnapToClosestPoint() : boolean
             local _, placeableSize = self.State.CurrentPlaceable:GetBoundingBox();
             local objectPosition = closestSnapPoint.WorldCFrame.Position;
             objectPosition = objectPosition + Vector3.new(0, placeableSize.Y / 2, 0);
-            
-            self.State.CurrentPlaceable.PrimaryPart:PivotTo(CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(self.State.Rotation), 0));
-            
+                        
+            local tweenInfo = TweenInfo.new(PLACEMENT_TWEEN_DURATION, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, 0, false, 0);
+
+            local tween = TS:Create(self.State.CurrentPlaceable.PrimaryPart, tweenInfo, {
+                CFrame = CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(self.State.Rotation), 0)
+            });
+
+            tween:Play();
+
             return true;
         end
     end
@@ -335,6 +382,11 @@ function PlacementController:GetAllSnapPoints(plot) : {Attachment}
     for _, placeable in ipairs(plot.Placeables:GetChildren()) do
         for _, attachment in ipairs(placeable.PrimaryPart:GetChildren()) do
             if attachment:IsA("Attachment") and (attachment.Name:find("TopSnap") or attachment.Name:find("BottomSnap")) then
+                
+                if (attachment:GetAttribute("Occupied") == true) then
+                    continue;
+                end
+
                 table.insert(snapPoints, attachment)
             end
         end

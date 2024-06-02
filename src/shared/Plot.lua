@@ -54,6 +54,7 @@ function Plot.new(model: Model, id: number)
 
     for i, v: BasePart in ipairs(model.Tiles:GetChildren()) do
         self.tiles[i] = v
+        v:SetAttribute("Occupied", false)
     end
 
     return self
@@ -141,6 +142,24 @@ function Plot:placeObject(placeable: Model, state: table)
     if (state == nil) then
         error("State is nil")
     end
+    
+    if (state.Stacked == false and state.Tile:GetAttribute("Occupied") == true) then
+        error("Tile is already occupied")
+    end
+
+    -- Snap point
+
+    if (state.Stacked) then
+        local snappedPoint = state.SnappedPoint
+        if (snappedPoint == nil) then
+            error("Snapped point is nil")
+        end
+
+        if (snappedPoint:GetAttribute("Occupied") == true) then
+            error("Snapped point is already occupied")
+        end
+    end
+
 
     local placeableType = placeable.Name
 
@@ -164,7 +183,8 @@ function Plot:placeObject(placeable: Model, state: table)
     if (tile == nil) then
         error("Tile is nil")
     end
-
+    
+    
     local tileHeight = tile.Size.Y
     local _, placeableSize = placeable:GetBoundingBox()
 
@@ -172,6 +192,8 @@ function Plot:placeObject(placeable: Model, state: table)
     objectPosition = objectPosition + Vector3.new(0, state.Level * LEVEL_HEIGHT, 0)
 
     placeable.PrimaryPart.CFrame = CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(state.Rotation), 0)
+    
+    tile:SetAttribute("Occupied", true)
 
     if (state.Stacked) then
         local stackedOn: Model? = state.StackedOn
@@ -191,12 +213,12 @@ function Plot:placeObject(placeable: Model, state: table)
             error("Snapped point is nil")
         end
 
+        snappedPoint:SetAttribute("Occupied", true)
+
         local snappedPointPosition = snappedPoint.Position
         
         local stackedOnPosition = stackedOn.PrimaryPart.Position
         local stackedOnSize = stackedOn.PrimaryPart.Size
-
-        local stackedOnHeight = stackedOnSize.Y
 
         local stackedObjectPosition = stackedOnPosition + Vector3.new(0, (placeableSize.Y / 2), 0)
         stackedObjectPosition = stackedObjectPosition + snappedPointPosition

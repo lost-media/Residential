@@ -47,6 +47,29 @@ function Placeables.GetPlaceableFromId(id: string)
     return placeable;
 end
 
+function Placeables.GetPlaceableFromInstance(instance: Instance) : any
+    -- recursively search for the instance in the Index
+
+    local function searchForInstance(index: any, instance: Instance)
+        for key, value in pairs(index) do
+            if (value.Model == instance) then
+                return value;
+            end
+
+            if (type(value) == "table") then
+                local result = searchForInstance(value, instance);
+                if (result) then
+                    return result;
+                end
+            end
+        end
+
+        return nil;
+    end
+
+    return searchForInstance(Placeables.Index, instance);
+end
+
 Placeables.Index = {
     Residence = {
         House = {
