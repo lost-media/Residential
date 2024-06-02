@@ -1,5 +1,6 @@
 --!strict
 
+local UIS = game:GetService("UserInputService");
 local RS = game:GetService("ReplicatedStorage");
 local TS = game:GetService("TweenService");
 
@@ -11,6 +12,7 @@ local InstanceUtils = require(ClientUtils.InstanceUtils)
 local Mouse = require(ClientUtils.Mouse);
 
 local PLACEMENT_TWEEN_DURATION = 0.1;
+local ROTATION_INCREMENT = 90;
 
 local PlacementController = Knit.CreateController {
     Name = "PlacementController";
@@ -19,6 +21,7 @@ local PlacementController = Knit.CreateController {
         Placing = false;
         CurrentPlaceable = nil;
         OriginalPlaceable = nil;
+        Rotation = 0;
     };
 
     Plot = nil;
@@ -28,22 +31,29 @@ function PlacementController:KnitInit()
     print("PlacementController initialized");
 
     self.Mouse = Mouse.new();
-    self.Mouse:SetFilterType(Enum.RaycastFilterType.Include);
+    self.Mouse:SetFilterType(Enum.RaycastFilterType.Exclude);
 end
 
 function PlacementController:KnitStart()
     print("PlacementController started");
 
+    self.PlotController = Knit.GetController("PlotController");
+
+    if (self.PlotController == nil) then
+        warn("PlotController not found");
+        return;
+    end
+
     -- Bind render stepped
     game:GetService("RunService").RenderStepped:Connect(function()
 
         if (self.State.Placing == true) then
-            self:RenderStepped(self.Mouse:GetPosition());
+            self:RenderStepped();
         end
     end);
 
     -- Bind mouse click
-    game:GetService("UserInputService").InputBegan:Connect(function(input)
+    UIS.InputBegan:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseButton1) then
             if (self.State.Placing == true) then
                 print("Placing");
@@ -52,6 +62,8 @@ function PlacementController:KnitStart()
                 print("Not placing");
                 self:StartPlacing(Placeables.Road["Normal Road"]);
             end
+        elseif (input.KeyCode == Enum.KeyCode.R) then
+            self:Rotate();
         end
     end);
 end
@@ -67,13 +79,18 @@ function PlacementController:StartPlacing(placeable: Model)
         return;
     end
 
-    local PlotController = Knit.GetController("PlotController");
+    local plot = self.PlotController:GetPlot();
+    if (plot == nil) then
+        warn("No plot found");
+        return;
+    end
 
-    local tiles: Folder = PlotController:GetPlot():FindFirstChild("Tiles");
+    local tiles: Folder = plot:FindFirstChild("Tiles");
 
-    self.Mouse:SetTargetFilter({
-        tiles,
-    });
+    if (tiles == nil) then
+        warn("Tiles folder not found in plot");
+        return;
+    end
 
     self.State.Placing = true;
     self.State.OriginalPlaceable = placeable;
@@ -87,6 +104,11 @@ function PlacementController:StartPlacing(placeable: Model)
     -- Dim the model and uncollide it
     InstanceUtils:dimModel(clone);
     InstanceUtils:uncollideModel(clone);
+
+    self.Mouse:SetTargetFilter({
+        clone,
+        InstanceUtils:getAllPlayerCharacters(),
+    });
 
     -- Choose a random tile to place the placeable on initially
     local randomTile: BasePart? = InstanceUtils:getRandomInstance(tiles:GetChildren());
@@ -115,25 +137,31 @@ function PlacementController:StopPlacing()
     self.State.OriginalPlaceable = nil;
 end
 
-function PlacementController:RenderStepped(mouse: Vector2)
+function PlacementController:RenderStepped()
     if (self.State.Placing == false) then
         return;
     end
 
-    local plot = Knit.GetController("PlotController"):GetPlot();
+    local plot = self.PlotController:GetPlot();
 
     if (plot == nil) then
         return;
     end
 
     -- Raycast to the ground
-    local target: BasePart? = self.Mouse:GetTarget();
+    local target: Vector3 = self.Mouse:GetHit();
 
     if (target == nil) then
         return;
     end
 
-    self:MovePlaceableToTile(target);
+    local closestTile: BasePart? = InstanceUtils:getClosestInstance(plot:FindFirstChild("Tiles"):GetChildren(), target);
+
+    if (closestTile == nil) then
+        return;
+    end
+
+    self:MovePlaceableToTile(closestTile);
 end
 
 function PlacementController:MovePlaceableToTile(tile: BasePart, instant: boolean?)
@@ -141,9 +169,13 @@ function PlacementController:MovePlaceableToTile(tile: BasePart, instant: boolea
         return;
     end
 
-    local plot = Knit.GetController("PlotController"):GetPlot();
+    local plot = self.PlotController:GetPlot();
 
     if (plot == nil) then
+        return;
+    end
+
+    if (tile:IsDescendantOf(plot) == false) then
         return;
     end
 
@@ -155,17 +187,25 @@ function PlacementController:MovePlaceableToTile(tile: BasePart, instant: boolea
     -- Tween the placeable's position
 
     if (instant == true) then
-        self.State.CurrentPlaceable.PrimaryPart.CFrame = CFrame.new(objectPosition);
+        self.State.CurrentPlaceable.PrimaryPart.CFrame = CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(self.State.Rotation), 0);
         return;
     end
     
     local tweenInfo = TweenInfo.new(PLACEMENT_TWEEN_DURATION, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, 0, false, 0);
 
     local tween = TS:Create(self.State.CurrentPlaceable.PrimaryPart, tweenInfo, {
-        CFrame = CFrame.new(objectPosition);
+        CFrame = CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(self.State.Rotation), 0)
     });
 
     tween:Play();
+end
+
+function PlacementController:Rotate()
+    if (self.State.CurrentPlaceable == nil) then
+        return;
+    end
+
+    self.State.Rotation = (self.State.Rotation + ROTATION_INCREMENT) % 360;
 end
 
 return PlacementController;

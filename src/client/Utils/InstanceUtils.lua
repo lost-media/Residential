@@ -63,12 +63,26 @@ function InstanceUtils:getRandomInstance(instances: {BasePart}?) : BasePart?
     if (instances == nil) then
         return nil
     end
-    
+
     if (#instances == 0) then
         return nil
     end
 
     return instances[math.random(1, #instances)]
+end
+
+function InstanceUtils:getAllPlayerCharacters() : {Model}
+    local playerCharacters: {Model} = {}
+
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        local character = player.Character
+
+        if (character) then
+            table.insert(playerCharacters, character)
+        end
+    end
+
+    return playerCharacters
 end
 
 
