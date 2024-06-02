@@ -59,6 +59,20 @@ Placeables.Index = {
 
                 Properties = {
                     MaxResidents = 2,
+                },
+
+                Stacking = {
+                    Allowed = true,
+                    SnapPoints = {
+                        Top = {"TopSnap1"},
+                        Bottom = {"BottomSnap1"},
+                    },
+                    AllowedModels = {
+                        ["Residence/House/Starter House"] = {
+                            MaxStack = 3,
+                            OrientationStrict = false,
+                        }
+                    }
                 }
             }
         },

@@ -142,10 +142,6 @@ function Plot:placeObject(placeable: Model, state: table)
         error("State is nil")
     end
 
-    if (state.Tile == nil) then
-        error("Tile is nil")
-    end
-
     local placeableType = placeable.Name
 
     if (self.placeables[placeableType] == nil) then
@@ -158,6 +154,8 @@ function Plot:placeObject(placeable: Model, state: table)
     placeable:SetAttribute("Level", state.Level)
     placeable:SetAttribute("Rotation", state.Rotation)
     placeable:SetAttribute("Tile", state.Tile.Name)
+    placeable:SetAttribute("Stacked", state.Stacked or false)
+
 
     placeable.Parent = self.model.Placeables
 
@@ -174,6 +172,50 @@ function Plot:placeObject(placeable: Model, state: table)
     objectPosition = objectPosition + Vector3.new(0, state.Level * LEVEL_HEIGHT, 0)
 
     placeable.PrimaryPart.CFrame = CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(state.Rotation), 0)
+
+    if (state.Stacked) then
+        local stackedOn: Model? = state.StackedOn
+        if (stackedOn == nil) then
+            error("Stacked object is nil")
+        end
+
+        local stackedOnPlaceable = self:getPlaceable(stackedOn)
+
+        if (stackedOnPlaceable == nil) then
+            error("Stacked object is not on the plot")
+        end
+
+        -- Get snapped point
+        local snappedPoint = state.SnappedPoint;
+        if (snappedPoint == nil) then
+            error("Snapped point is nil")
+        end
+
+        local snappedPointPosition = snappedPoint.Position
+        
+        local stackedOnPosition = stackedOn.PrimaryPart.Position
+        local stackedOnSize = stackedOn.PrimaryPart.Size
+
+        local stackedOnHeight = stackedOnSize.Y
+
+        local stackedObjectPosition = stackedOnPosition + Vector3.new(0, (placeableSize.Y / 2), 0)
+        stackedObjectPosition = stackedObjectPosition + snappedPointPosition
+
+        placeable.PrimaryPart.CFrame = CFrame.new(stackedObjectPosition) * CFrame.Angles(0, math.rad(state.Rotation), 0)
+        
+
+    end
+end
+
+function Plot:getPlaceable(placeable: Model) : Model?
+    for _, placeableType in pairs(self.placeables) do
+        for _, v in ipairs(placeableType) do
+            if v == placeable then
+                return v
+            end
+        end
+    end
+    return nil
 end
 
 function Plot:updateBuildingStatus()
