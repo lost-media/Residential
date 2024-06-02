@@ -7,12 +7,15 @@ local TS = game:GetService("TweenService");
 local Placeables: Folder = RS.Placeables;
 local ClientUtils: Folder = script.Parent.Parent.Utils;
 
+local PlaceablesModule = require(RS.Shared.Placeables);
 local Knit = require(RS.Packages.Knit);
 local InstanceUtils = require(ClientUtils.InstanceUtils)
 local Mouse = require(ClientUtils.Mouse);
 
 local PLACEMENT_TWEEN_DURATION = 0.1;
 local ROTATION_INCREMENT = 90;
+local LEVEL_HEIGHT = 6; -- The height of each level for stacking in studs
+local LEVEL_MAX = 5;
 
 local PlacementController = Knit.CreateController {
     Name = "PlacementController";
@@ -21,7 +24,10 @@ local PlacementController = Knit.CreateController {
         Placing = false;
         CurrentPlaceable = nil;
         OriginalPlaceable = nil;
+        OriginalIdentifier = nil;
+        Tile = nil;
         Rotation = 0;
+        Level = 0; -- For stacking, used for calculating the height of the placeable
     };
 
     Plot = nil;
@@ -56,26 +62,36 @@ function PlacementController:KnitStart()
     UIS.InputBegan:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseButton1) then
             if (self.State.Placing == true) then
-                print("Placing");
-                self:StopPlacing();
+                self:ConfirmPlacement();
             else
                 print("Not placing");
-                self:StartPlacing(Placeables.Road["Normal Road"]);
+                self:StartPlacing("Road/Normal Road");
             end
         elseif (input.KeyCode == Enum.KeyCode.R) then
             self:Rotate();
+        elseif (input.KeyCode == Enum.KeyCode.E) then
+            self.State.Level = math.min(self.State.Level + 1, LEVEL_MAX);
+        elseif (input.KeyCode == Enum.KeyCode.Q) then
+            self.State.Level = math.max(0, self.State.Level - 1);
         end
     end);
 end
 
-function PlacementController:StartPlacing(placeable: Model)
+function PlacementController:StartPlacing(identifier: string)
     if (self.State.Placing == true) then
         warn("Already placing a placeable");
         return;
     end
 
+    if (identifier == nil) then
+        warn("No placeable identifier provided");
+        return;
+    end
+
+    local placeable = PlaceablesModule.GetPlaceableFromId(identifier);
+
     if (placeable == nil) then
-        warn("No placeable provided");
+        warn("Placeable not found");
         return;
     end
 
@@ -94,9 +110,10 @@ function PlacementController:StartPlacing(placeable: Model)
 
     self.State.Placing = true;
     self.State.OriginalPlaceable = placeable;
+    self.State.OriginalIdentifier = identifier;
 
     -- Clone the placeable model
-    local clone = placeable:Clone();
+    local clone = placeable.Model:Clone();
     self.State.CurrentPlaceable = clone;
 
     clone.Parent = workspace.Debris;
@@ -161,6 +178,8 @@ function PlacementController:RenderStepped()
         return;
     end
 
+    self.State.Tile = closestTile;
+
     self:MovePlaceableToTile(closestTile);
 end
 
@@ -183,8 +202,7 @@ function PlacementController:MovePlaceableToTile(tile: BasePart, instant: boolea
     local _, placeableSize = self.State.CurrentPlaceable:GetBoundingBox();
     
     local objectPosition = tile.Position + Vector3.new(0, (placeableSize.Y / 2) + (tileHeight / 2), 0);
-    
-    -- Tween the placeable's position
+    objectPosition = objectPosition + Vector3.new(0, self.State.Level * LEVEL_HEIGHT, 0);
 
     if (instant == true) then
         self.State.CurrentPlaceable.PrimaryPart.CFrame = CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(self.State.Rotation), 0);
@@ -206,6 +224,37 @@ function PlacementController:Rotate()
     end
 
     self.State.Rotation = (self.State.Rotation + ROTATION_INCREMENT) % 360;
+end
+
+function PlacementController:ConfirmPlacement()
+    if (self.State.CurrentPlaceable == nil) then
+        return;
+    end
+
+    local plot = self.PlotController:GetPlot();
+
+    if (plot == nil) then
+        return;
+    end
+
+    local tile = self.State.Tile;
+
+    if (tile == nil) then
+        return;
+    end
+    
+    local PlotService = Knit.GetService("PlotService");
+
+    local passedState = {
+        Rotation = self.State.Rotation,
+        Level = self.State.Level,
+        Tile = tile,
+    }
+
+    PlotService.PlaceOnPlot:Fire(
+        self.State.OriginalIdentifier,
+        passedState
+    );
 end
 
 return PlacementController;

@@ -132,8 +132,8 @@ function Plot:isOccupied(tile: BasePart) : boolean
     return false
 end
 
-function Plot:placeObject(x: number, y: number, placeable)
-    placeable:place(self, x, y)
+function Plot:placeObject(placeable, state: table)
+    
 end
 
 function Plot:updateBuildingStatus()

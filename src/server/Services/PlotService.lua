@@ -11,6 +11,7 @@ local PlotService = Knit.CreateService {
     Name = "PlotService";
     Client = {
         PlotAssigned = Knit.CreateSignal();
+        PlaceOnPlot = Knit.CreateSignal();
     };
 
     Plots = {};
@@ -18,6 +19,12 @@ local PlotService = Knit.CreateService {
 
 function PlotService:KnitInit()
     print("PlotService initialized");
+
+    -- Set up event connections
+
+    self.Client.PlaceOnPlot:Connect(function(...)
+        self:PlaceOnPlot(...);
+    end);
 
     -- Create a Plot instance for each model in the Plots folder
 
@@ -73,6 +80,52 @@ function PlotService:RemovePlayerFromPlot(player: Player)
     end
 end
 
+function PlotService:GetPlotFromInstance(instance: Model)
+    for i, plot in ipairs(self.Plots) do
+        if (plot:getInstance() == instance) then
+            return plot;
+        end
+    end
 
+    return nil;
+end
+
+function PlotService:GetPlotFromPlayer(player: Player)
+    local plot = player:GetAttribute("Plot");
+
+    if (plot == nil) then
+        warn("PlotService: Player is not assigned to a plot");
+        return nil;
+    end
+
+    return self.Plots[plot];
+end
+
+function PlotService:PlaceOnPlot(
+    player: Player,
+    placeableIdentifier: string,
+    state: table
+)
+    if (placeableIdentifier == nil) then
+        warn("PlotService: No placeable identifier provided");
+        return;
+    end
+
+    if (state == nil) then
+        warn("PlotService: No state provided");
+        return;
+    end
+
+    local plot = self:GetPlotFromPlayer(player);
+
+    if (plot == nil) then
+        return;
+    end
+
+    print("PlotService: Placing " .. placeableIdentifier .. " on plot " .. plot.id);
+
+    plot:placeObject(placeableIdentifier, state);
+
+end
 
 return PlotService;
