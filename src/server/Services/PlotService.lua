@@ -124,8 +124,11 @@ function PlotService:PlaceOnPlot(
 
     print("PlotService: Placing " .. placeableIdentifier .. " on plot " .. plot.id);
 
-    plot:placeObject(placeableIdentifier, state);
+    local PlaceableService = Knit.GetService("PlaceableService");
 
+    local placeable = PlaceableService:CreatePlaceableFromIdentifier(placeableIdentifier);
+    
+    plot:placeObject(placeable, state);
 end
 
 return PlotService;

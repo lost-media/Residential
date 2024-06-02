@@ -3,6 +3,7 @@ Plot.__index = Plot
 
 local DEFAULT_PLOT_SIZE = 8;
 local TILE_SIZE = 6;
+local LEVEL_HEIGHT = 6;
 
 --[[
 
@@ -132,8 +133,47 @@ function Plot:isOccupied(tile: BasePart) : boolean
     return false
 end
 
-function Plot:placeObject(placeable, state: table)
-    
+function Plot:placeObject(placeable: Model, state: table)
+    if (placeable == nil) then
+        error("Placeable is nil")
+    end
+
+    if (state == nil) then
+        error("State is nil")
+    end
+
+    if (state.Tile == nil) then
+        error("Tile is nil")
+    end
+
+    local placeableType = placeable.Name
+
+    if (self.placeables[placeableType] == nil) then
+        self.placeables[placeableType] = {}
+    end
+
+    table.insert(self.placeables[placeableType], placeable)
+
+    placeable:SetAttribute("Plot", self.id)
+    placeable:SetAttribute("Level", state.Level)
+    placeable:SetAttribute("Rotation", state.Rotation)
+    placeable:SetAttribute("Tile", state.Tile.Name)
+
+    placeable.Parent = self.model.Placeables
+
+    local tile = self:getTile(state.Tile)
+
+    if (tile == nil) then
+        error("Tile is nil")
+    end
+
+    local tileHeight = tile.Size.Y
+    local _, placeableSize = placeable:GetBoundingBox()
+
+    local objectPosition = tile.Position + Vector3.new(0, (placeableSize.Y / 2) + (tileHeight / 2), 0)
+    objectPosition = objectPosition + Vector3.new(0, state.Level * LEVEL_HEIGHT, 0)
+
+    placeable.PrimaryPart.CFrame = CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(state.Rotation), 0)
 end
 
 function Plot:updateBuildingStatus()

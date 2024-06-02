@@ -2,6 +2,7 @@ local RS = game:GetService("ReplicatedStorage");
 local ServerUtil: Folder = script.Parent.Parent.Utils;
 local Placeables: Folder = RS.Placeables;
 
+local PlaceablesModule = require(RS.Shared.Placeables);
 local Knit = require(RS.Packages.Knit);
 local Weld = require(RS.Shared.Weld);
 local PlaceableType = require(RS.Shared.Enums.PlaceableType);
@@ -57,6 +58,17 @@ function PlaceableService:PlaceableTypeIsValid(placeableType: string) : boolean
     end
 
     return false;
+end
+
+function PlaceableService:CreatePlaceableFromIdentifier(identifier: string) : Model?
+    local model =  PlaceablesModule.GetPlaceableFromId(identifier);
+
+    if (model == nil) then
+        warn("PlaceableService: Invalid identifier: " .. identifier);
+        return nil;
+    end
+
+    return model.Model:Clone()
 end
 
 return PlaceableService;
