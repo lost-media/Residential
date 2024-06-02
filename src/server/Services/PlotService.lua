@@ -9,7 +9,9 @@ local PLOTS_LOCATION: Folder = workspace.Plots
 
 local PlotService = Knit.CreateService {
     Name = "PlotService";
-    Client = {};
+    Client = {
+        PlotAssigned = Knit.CreateSignal();
+    };
 
     Plots = {};
 };
@@ -54,6 +56,8 @@ function PlotService:AssignPlot(player: Player)
     end
 
     plot:assignPlayer(player);
+
+    self.Client.PlotAssigned:Fire(player, plot:getInstance());
 end
 
 function PlotService:RemovePlayerFromPlot(player: Player)

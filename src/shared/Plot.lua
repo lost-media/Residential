@@ -58,6 +58,10 @@ function Plot.new(model: Model, id: number)
     return self
 end
 
+function Plot:getInstance()
+    return self.model
+end
+
 function Plot:getPlayer() : Player?
     return self.player
 end
