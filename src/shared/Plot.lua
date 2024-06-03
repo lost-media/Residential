@@ -1,3 +1,5 @@
+local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit);
+
 Plot = {}
 Plot.__index = Plot
 
@@ -134,9 +136,15 @@ function Plot:isOccupied(tile: BasePart) : boolean
     return false
 end
 
-function Plot:placeObject(placeable: Model, state: table)
-    if (placeable == nil) then
-        error("Placeable is nil")
+function Plot:placeObject(placeableId: string, state: table)
+    if (placeableId == nil) then
+        error("Placeable ID is nil")
+    end
+
+    local PlaceableService = Knit.GetService("PlaceableService")
+
+    if (PlaceableService == nil) then
+        error("PlaceableService is nil")
     end
 
     if (state == nil) then
@@ -145,6 +153,12 @@ function Plot:placeObject(placeable: Model, state: table)
     
     if (state.Stacked == false and state.Tile:GetAttribute("Occupied") == true) then
         error("Tile is already occupied")
+    end
+
+    local tile = self:getTile(state.Tile)
+
+    if (tile == nil) then
+        error("Tile is nil")
     end
 
     -- Snap point
@@ -159,7 +173,19 @@ function Plot:placeObject(placeable: Model, state: table)
             error("Snapped point is already occupied")
         end
     end
+    
 
+    local placeable = PlaceableService:CreatePlaceableFromIdentifier(placeableId)
+
+    if (placeable == nil) then
+        error("Placeable is nil")
+    end
+
+    local placeableInfo = PlaceableService:GetPlaceable(placeableId)
+
+    if (placeableInfo == nil) then
+        error("Placeable info is nil")
+    end
 
     local placeableType = placeable.Name
 
@@ -169,6 +195,8 @@ function Plot:placeObject(placeable: Model, state: table)
 
     table.insert(self.placeables[placeableType], placeable)
 
+    -- Add all server-side attributes to the placeable
+    placeable:SetAttribute("Id", placeableId)
     placeable:SetAttribute("Plot", self.id)
     placeable:SetAttribute("Level", state.Level)
     placeable:SetAttribute("Rotation", state.Rotation)
@@ -177,12 +205,6 @@ function Plot:placeObject(placeable: Model, state: table)
 
 
     placeable.Parent = self.model.Placeables
-
-    local tile = self:getTile(state.Tile)
-
-    if (tile == nil) then
-        error("Tile is nil")
-    end
     
     
     local tileHeight = tile.Size.Y
@@ -208,24 +230,21 @@ function Plot:placeObject(placeable: Model, state: table)
         end
 
         -- Get snapped point
-        local snappedPoint = state.SnappedPoint;
+        local snappedPoint: Attachment? = state.SnappedPoint;
         if (snappedPoint == nil) then
             error("Snapped point is nil")
         end
 
-        snappedPoint:SetAttribute("Occupied", true)
+        local snappedPointsTaken: {Attachment} = state.SnappedPointsTaken or {state.SnappedPoint}
 
-        local snappedPointPosition = snappedPoint.Position
-        
-        local stackedOnPosition = stackedOn.PrimaryPart.Position
-        local stackedOnSize = stackedOn.PrimaryPart.Size
+        for _, taken in ipairs(snappedPointsTaken) do
+            taken:SetAttribute("Occupied", true)
+        end
 
-        local stackedObjectPosition = stackedOnPosition + Vector3.new(0, (placeableSize.Y / 2), 0)
-        stackedObjectPosition = stackedObjectPosition + snappedPointPosition
+        local snappedPointPosition = snappedPoint.WorldCFrame.Position
+        local stackedObjectPosition = snappedPointPosition + Vector3.new(0, (placeableSize.Y / 2), 0)
 
         placeable.PrimaryPart.CFrame = CFrame.new(stackedObjectPosition) * CFrame.Angles(0, math.rad(state.Rotation), 0)
-        
-
     end
 end
 

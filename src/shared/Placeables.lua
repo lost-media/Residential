@@ -75,6 +75,7 @@ Placeables.Index = {
         House = {
             ["Starter House"] = {
                 Name = "Starter House",
+                Id = "Residence/House/Starter House",
                 Description = "A small house for beginners",
                 Price = 1000,
                 Model = Residence["Starter House"],
@@ -98,25 +99,13 @@ Placeables.Index = {
                     }
                 }
             }
-        },
-        Apartment = {
-            ["Starter Apartment"] = {
-                Name = "Starter Apartment",
-                Description = "A small apartment for beginners",
-                Price = 2000,
-                Model = Residence["Starter Apartment"],
-                BuildTime = 10,
-
-                Properties = {
-                    MaxResidents = 4,
-                }
-            }
         }
     },
 
     Road = {
         ["Normal Road"] = {
             Name = "Normal Road",
+            Id = "Road/Normal Road",
             Description = "A normal road",
             Price = 100,
             Model = Roads["Normal Road"],
@@ -130,6 +119,7 @@ Placeables.Index = {
 
         ["Curved Road"] = {
             Name = "Curved Road",
+            Id = "Road/Curved Road",
             Description = "A curved road",
             Price = 100,
             Model = Roads["Curved Road"],
@@ -140,12 +130,80 @@ Placeables.Index = {
                 Capacity = 1,
             }
         },
+        ["Elevated Road"] = {
+            Name = "Elevated Road",
+            Id = "Road/Elevated Road",
+            Description = "An elevated road",
+            Price = 100,
+            Model = Roads["Elevated Road"],
+            BuildTime = 0,
+
+            Properties = {
+                Speed = 1,
+                Capacity = 1,
+            },
+
+            Stacking = {
+                Allowed = true,
+                AllowedModels = {
+                    ["Road/Elevated Road"] = {
+                        MaxStack = 3,
+                        OrientationStrict = false,
+                        SnapPoints = {
+                            "TopSnap1",
+                            "TopSnap2",
+                        },
+                        SnapPointsTaken = {
+                            "TopSnap1",
+                            "TopSnap2",
+                        },
+                        MountingPoint = "CentralSnapPoint"
+                    },
+                    ["Road/Streetlight"] = {
+                        MaxStack = 3,
+                        OrientationStrict = false,
+                        SnapPoints = {
+                            "TopSnap1",
+                            "TopSnap2",
+                        },
+                    }
+                }
+            }
+        },
+
+        ["Streetlight"] = {
+            Name = "Streetlight",
+            Id = "Road/Streetlight",
+            Description = "A streetlight",
+            Price = 100,
+            Model = Roads["Streetlight"],
+            BuildTime = 0,
+
+            Properties = {
+                Speed = 1,
+                Capacity = 1,
+            },
+
+            Stacking = {
+                Allowed = true,
+                AllowedModels = {
+                    ["Road/Elevated Road"] = {
+                        MaxStack = 3,
+                        OrientationStrict = false,
+                        SnapPoints = {
+                            "CentralSnapPoint"
+                        }
+                    }
+                }
+            }
+        },
     },
 
     Commercial = {
         Store = {
             ["Starter Store"] = {
                 Name = "Starter Store",
+                Id = "Commercial/Store/Starter Store",
                 Description = "A small store for beginners",
                 Price = 1000,
                 Model = Commercial["Starter Store"],
@@ -163,6 +221,7 @@ Placeables.Index = {
         Factory = {
             ["Starter Factory"] = {
                 Name = "Starter Factory",
+                Id = "Industrial/Factory/Starter Factory",
                 Description = "A small factory for beginners",
                 Price = 1000,
                 Model = Industrial["Starter Factory"],

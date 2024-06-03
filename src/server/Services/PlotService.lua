@@ -121,15 +121,11 @@ function PlotService:PlaceOnPlot(
     if (plot == nil) then
         return;
     end
-
-    local PlaceableService = Knit.GetService("PlaceableService");
-    local placeable = PlaceableService:CreatePlaceableFromIdentifier(placeableIdentifier);
     
-    local success, err = plot:placeObject(placeable, state);
+    local success, err = plot:placeObject(placeableIdentifier, state);
 
     if (err) then
         warn("PlotService: Failed to place object: ");
-        placeable:Destroy();
         return;
     end
 end

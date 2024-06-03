@@ -12,16 +12,22 @@ local Knit = require(RS.Packages.Knit);
 local InstanceUtils = require(ClientUtils.InstanceUtils)
 local Mouse = require(ClientUtils.Mouse);
 
-local PLACEMENT_TWEEN_DURATION = 0.1;
+local PLACEMENT_TWEEN_DURATION = 0.05;
 local ROTATION_INCREMENT = 90;
 local LEVEL_HEIGHT = 6; -- The height of each level for stacking in studs
 local LEVEL_MAX = 5;
-local SNAPPING_THRESHOLD = 5;
+local SNAPPING_THRESHOLD = 8;
+local STARTING_PLACEABLE = "Road/Elevated Road";
+local PLACEABLE_CYCLE = {
+    "Road/Elevated Road",
+    "Road/Streetlight",
+}
 
 local PlacementController = Knit.CreateController {
     Name = "PlacementController";
 
     State = {
+        CanPlace = false;
         Placing = false;
         CurrentPlaceable = nil;
         OriginalPlaceable = nil;
@@ -33,6 +39,7 @@ local PlacementController = Knit.CreateController {
         Stacked = false;
         StackedOn = nil;
         SnappedPoint = nil;
+        SnappedPointsTaken = {};
     };
 
     Plot = nil;
@@ -71,14 +78,16 @@ function PlacementController:KnitStart()
                 self:ConfirmPlacement();
             else
                 print("Not placing");
-                self:StartPlacing("Residence/House/Starter House");
+                self:StartPlacing(STARTING_PLACEABLE);
             end
         elseif (input.KeyCode == Enum.KeyCode.R) then
             self:Rotate();
         elseif (input.KeyCode == Enum.KeyCode.E) then
-            self.State.Level = math.min(self.State.Level + 1, LEVEL_MAX);
+            self:StopPlacing();
+            self:StartPlacing(PLACEABLE_CYCLE[1]);
         elseif (input.KeyCode == Enum.KeyCode.Q) then
-            self.State.Level = math.max(0, self.State.Level - 1);
+            self:StopPlacing();
+            self:StartPlacing(PLACEABLE_CYCLE[2]);
         end
     end);
 end
@@ -167,12 +176,19 @@ function PlacementController:StopPlacing()
     self.State.CurrentPlaceable = nil;
     self.State.OriginalPlaceable = nil;
     self.State.OriginalIdentifier = nil;
+    self.State.Tile = nil;
+    self.State.Level = 0;
+    self.State.Stacked = false;
+    self.State.StackedOn = nil;
+    self.State.SnappedPoint = nil;
+    self.State.SnappedPointsTaken = {};
 
     if self.SelectionBox then
         self.SelectionBox:Destroy();
     end
 
     self.SelectionBox = nil;
+
 end
 
 function PlacementController:RenderStepped()
@@ -201,6 +217,16 @@ function PlacementController:RenderStepped()
         return;
     end
 
+    if (self.State.CurrentPlaceable == nil) then
+        return;
+    end
+
+    if (self.State.CanPlace == false) then
+        self.SelectionBox.Color3 = Color3.fromRGB(255, 0, 0);
+    else
+        self.SelectionBox.Color3 = Color3.fromRGB(0, 255, 0);
+    end
+
     local snapped = self:SnapToClosestPoint();
     if (snapped == false) then
 
@@ -215,6 +241,7 @@ function PlacementController:RenderStepped()
         self.State.Stacked = false;
         self.State.StackedOn = nil;
         self.State.SnappedPoint = nil;
+        
     end
 
     if (closestTile:GetAttribute("Occupied") == true) then
@@ -254,6 +281,8 @@ function PlacementController:MovePlaceableToTile(tile: BasePart, instant: boolea
     local tween = TS:Create(self.State.CurrentPlaceable.PrimaryPart, tweenInfo, {
         CFrame = CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(self.State.Rotation), 0)
     });
+
+    self.State.CanPlace = true;
 
     tween:Play();
 end
@@ -302,12 +331,13 @@ function PlacementController:ConfirmPlacement()
         Stacked = self.State.Stacked,
         StackedOn = self.State.StackedOn,
         SnappedPoint = self.State.SnappedPoint,
+        SnappedPointsTaken = self.State.SnappedPointsTaken,
     }
 
     PlotService.PlaceOnPlot:Fire(
         self.State.OriginalIdentifier,
         passedState
-    );
+    )
 end
 
 function PlacementController:SnapToClosestPoint() : boolean
@@ -344,7 +374,87 @@ function PlacementController:SnapToClosestPoint() : boolean
 
     if closestSnapPoint and closestDistance < SNAPPING_THRESHOLD then
         local currentCFrame = self.State.CurrentPlaceable.PrimaryPart.CFrame
-        if self:IsOrientationCompatible(currentCFrame, closestSnapPoint.WorldCFrame) then
+        -- Make sure that there is a top snap point that has the same position as the closest snap point
+
+        -- get the placeable that the snap point is attached to
+        local placeable = self:GetPlaceableFromAttachment(closestSnapPoint);
+        if not placeable then
+            return false;
+        end
+
+        local id = placeable:GetAttribute("Id");
+        if id == nil then
+            return false;
+        end
+
+        -- check if the orientation is strict for the placeable
+        local placeableItem = PlaceablesModule.GetPlaceableFromId(id);
+
+        if not placeableItem then
+            return false;
+        end
+
+        local placeableStack = placeableItem.Stacking;
+
+        if not placeableStack then
+            return false;
+        end
+
+        if (placeableStack.Allowed ~= true) then
+            return false;
+        end
+
+        local currentModelStackConfigs = placeableStack.AllowedModels[self.State.OriginalIdentifier];
+        if not currentModelStackConfigs then
+            return false;
+        end
+
+        -- get the snap points that the current placeable can snap to
+        local currentPlaceableSnapPointsConfigs = currentModelStackConfigs.SnapPoints;
+
+        if not currentPlaceableSnapPointsConfigs then
+            return false;
+        end
+
+        local snapPointName = closestSnapPoint.Name;
+
+        if not table.find(currentPlaceableSnapPointsConfigs, snapPointName) then
+            return false;
+        end
+
+        local snapPointsTaken: {string}? = currentModelStackConfigs.SnapPointsTaken;
+
+        local topBottomSnappingPoints = self:GetBottomSnapPoints(self.State.CurrentPlaceable);
+        local stackedPlaceableTopSnappingPoints = {}
+
+        for _, attachmentName in ipairs(currentPlaceableSnapPointsConfigs) do
+            for _, attachment in ipairs(placeable.PrimaryPart:GetChildren()) do
+                if attachment:IsA("Attachment") and attachment.Name == attachmentName then
+                    table.insert(stackedPlaceableTopSnappingPoints, attachment);
+                end
+            end
+        end
+
+        -- Make sure each one of SnapPointsTaken is not occupied
+        
+        local pointsTaken = {}
+
+        if snapPointsTaken then
+            for _, snapPointTaken in ipairs(snapPointsTaken) do
+                for _, attachment in ipairs(placeable.PrimaryPart:GetChildren()) do
+                    if attachment:IsA("Attachment") and attachment.Name == snapPointTaken then
+                        if (attachment:GetAttribute("Occupied") == true) then
+                            return false;
+                        end
+                        table.insert(pointsTaken, attachment);
+                    end
+                end
+            end
+        else
+            pointsTaken = {closestSnapPoint}
+        end
+
+        if (currentModelStackConfigs.OrientationStrict == true and self:IsOrientationCompatible(topBottomSnappingPoints, stackedPlaceableTopSnappingPoints)  or currentModelStackConfigs.OrientationStrict == false) then
 
             -- calculate the new position and adjust the height
 
@@ -357,7 +467,21 @@ function PlacementController:SnapToClosestPoint() : boolean
             self.State.Level = placeableSnappedTo:GetAttribute("Level") + 1;
 
             local _, placeableSize = self.State.CurrentPlaceable:GetBoundingBox();
-            local objectPosition = closestSnapPoint.WorldCFrame.Position;
+
+
+            local mountingPoint: Attachment? = nil
+            if (currentModelStackConfigs.MountingPoint) then
+                mountingPoint = placeableSnappedTo.PrimaryPart:FindFirstChild(currentModelStackConfigs.MountingPoint);
+            end
+
+            if (mountingPoint == nil) then
+                mountingPoint = closestSnapPoint
+            end
+
+            self.State.SnappedPoint = mountingPoint;
+            self.State.SnappedPointsTaken = pointsTaken;
+
+            local objectPosition = mountingPoint.WorldCFrame.Position;
             objectPosition = objectPosition + Vector3.new(0, placeableSize.Y / 2, 0);
                         
             local tweenInfo = TweenInfo.new(PLACEMENT_TWEEN_DURATION, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, 0, false, 0);
@@ -381,7 +505,7 @@ function PlacementController:GetAllSnapPoints(plot) : {Attachment}
     local snapPoints = {}
     for _, placeable in ipairs(plot.Placeables:GetChildren()) do
         for _, attachment in ipairs(placeable.PrimaryPart:GetChildren()) do
-            if attachment:IsA("Attachment") and (attachment.Name:find("TopSnap") or attachment.Name:find("BottomSnap")) then
+            if attachment:IsA("Attachment") then
                 
                 if (attachment:GetAttribute("Occupied") == true) then
                     continue;
@@ -389,6 +513,16 @@ function PlacementController:GetAllSnapPoints(plot) : {Attachment}
 
                 table.insert(snapPoints, attachment)
             end
+        end
+    end
+    return snapPoints
+end
+
+function PlacementController:GetBottomSnapPoints(model: Model) : {Attachment}
+    local snapPoints = {}
+    for _, attachment in ipairs(model.PrimaryPart:GetChildren()) do
+        if attachment:IsA("Attachment") and attachment.Name:find("Bottom") then
+            table.insert(snapPoints, attachment)
         end
     end
     return snapPoints
@@ -408,8 +542,20 @@ function PlacementController:GetPlaceableFromAttachment(attachment: Attachment) 
     return nil
 end
 
-function PlacementController:IsOrientationCompatible(cframe1, cframe2)
-    -- TODO: Implement this
+function PlacementController:IsOrientationCompatible(topPlaceableAttachments: {Attachment}, bottomPlaceableAttachments: {Attachment}) : boolean
+    if #topPlaceableAttachments ~= #bottomPlaceableAttachments then
+        return false
+    end
+
+    for i, topAttachment in ipairs(topPlaceableAttachments) do
+        for j, bottomAttachment in ipairs(bottomPlaceableAttachments) do
+            -- compare the position of the attachments
+            if (topAttachment.WorldCFrame.Position - bottomAttachment.WorldCFrame.Position).Magnitude > 0.05 then
+                return false
+            end
+        end
+    end
+
     return true
 end
 

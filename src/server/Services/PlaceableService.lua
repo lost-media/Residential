@@ -60,6 +60,10 @@ function PlaceableService:PlaceableTypeIsValid(placeableType: string) : boolean
     return false;
 end
 
+function PlaceableService:GetPlaceable(id: string)
+    return PlaceablesModule.GetPlaceableFromId(id);
+end
+
 function PlaceableService:CreatePlaceableFromIdentifier(identifier: string) : Model?
     local model =  PlaceablesModule.GetPlaceableFromId(identifier);
 
