@@ -166,6 +166,14 @@ Placeables.Index = {
                             "TopSnap1",
                             "TopSnap2",
                         },
+                    },
+                    ["Road/Stoplight"] = {
+                        MaxStack = 3,
+                        OrientationStrict = false,
+                        SnapPoints = {
+                            "TopSnap3",
+                            "TopSnap4",
+                        },
                     }
                 }
             }
@@ -177,6 +185,33 @@ Placeables.Index = {
             Description = "A streetlight",
             Price = 100,
             Model = Roads["Streetlight"],
+            BuildTime = 0,
+
+            Properties = {
+                Speed = 1,
+                Capacity = 1,
+            },
+
+            Stacking = {
+                Allowed = true,
+                AllowedModels = {
+                    ["Road/Elevated Road"] = {
+                        MaxStack = 3,
+                        OrientationStrict = false,
+                        SnapPoints = {
+                            "CentralSnapPoint"
+                        }
+                    }
+                }
+            }
+        },
+
+        ["Stoplight"] = {
+            Name = "Stoplight",
+            Id = "Road/Stoplight",
+            Description = "A streetlight",
+            Price = 100,
+            Model = Roads["Stoplight"],
             BuildTime = 0,
 
             Properties = {

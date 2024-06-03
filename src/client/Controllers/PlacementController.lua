@@ -21,6 +21,7 @@ local STARTING_PLACEABLE = "Road/Elevated Road";
 local PLACEABLE_CYCLE = {
     "Road/Elevated Road",
     "Road/Streetlight",
+    "Road/Stoplight",
 }
 
 local PlacementController = Knit.CreateController {
@@ -42,6 +43,7 @@ local PlacementController = Knit.CreateController {
         SnappedPointsTaken = {};
     };
 
+    CycleNum = 1;
     Plot = nil;
     SelectionBox = nil;
 };
@@ -83,11 +85,20 @@ function PlacementController:KnitStart()
         elseif (input.KeyCode == Enum.KeyCode.R) then
             self:Rotate();
         elseif (input.KeyCode == Enum.KeyCode.E) then
+            self.CycleNum += 1;
+            if (self.CycleNum > #PLACEABLE_CYCLE) then
+                self.CycleNum = 1;
+            end
+
             self:StopPlacing();
-            self:StartPlacing(PLACEABLE_CYCLE[1]);
+            self:StartPlacing(PLACEABLE_CYCLE[self.CycleNum]);
         elseif (input.KeyCode == Enum.KeyCode.Q) then
+            self.CycleNum -= 1;
+            if (self.CycleNum < 1) then
+                self.CycleNum = #PLACEABLE_CYCLE;
+            end
             self:StopPlacing();
-            self:StartPlacing(PLACEABLE_CYCLE[2]);
+            self:StartPlacing(PLACEABLE_CYCLE[self.CycleNum]);
         end
     end);
 end

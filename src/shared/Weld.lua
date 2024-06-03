@@ -7,7 +7,7 @@ function Weld.WeldPartsToPrimaryPart(model: Model)
         return;
     end
 
-    for _, part in ipairs(model:GetChildren()) do
+    for _, part in ipairs(model:GetDescendants()) do
         if part:IsA("BasePart") and part ~= primaryPart then
             local weld = Instance.new("WeldConstraint");
             weld.Name = "Weld";
