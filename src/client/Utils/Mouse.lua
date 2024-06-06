@@ -4,9 +4,11 @@ local UserInputService = game:GetService('UserInputService')
 local RunService = game:GetService('RunService')
 local Camera = workspace.Camera
 
-export type MouseImpl = {
-    __index: MouseImpl,
+
+export type IMouse = {
+    __index: IMouse,
     new: () -> Mouse,
+	
 	GetViewSize: (self: Mouse) -> Vector2,
 	GetPosition: (self: Mouse) -> Vector2,
 	GetUnitRay: (self: Mouse) -> Ray,
@@ -17,31 +19,27 @@ export type MouseImpl = {
 	GetHit: (self: Mouse) -> Vector3?,
 	GetTarget: (self: Mouse) -> Instance?,
 	GetTargetFilter: (self: Mouse) -> {Instance},
-	SetTargetFilter: (self: Mouse, object: Instance | {Instance}) -> nil,
+	SetTargetFilter: (self: Mouse, object: Instance | {Instance}) -> (),
 	GetRayLength: (self: Mouse) -> number,
-	SetRayLength: (self: Mouse, length: number) -> nil,
+	SetRayLength: (self: Mouse, length: number) -> (),
 	GetFilterType: (self: Mouse) -> Enum.RaycastFilterType,
-	SetFilterType: (self: Mouse, filterType: Enum.RaycastFilterType) -> nil,
-	EnableIcon: (self: Mouse) -> nil,
-	DisableIcon: (self: Mouse) -> nil,
+	SetFilterType: (self: Mouse, filterType: Enum.RaycastFilterType) -> (),
+	EnableIcon: (self: Mouse) -> (),
+	DisableIcon: (self: Mouse) -> (),
 	GetModelOfTarget: (self: Mouse) -> Model?,
 
 }
 
-type Mouse = typeof(setmetatable({} :: {
+export type Mouse = typeof(setmetatable({} :: {
 	currentPosition: Vector2,
 	previousPosition: Vector2,
 	filterDescendants: {Instance},
 	filterType: Enum.RaycastFilterType,
 	rayLength: number,
 	ticks: number,
+}, {} :: IMouse))
 
-	x: number,
-	y: number,
-
-}, {} :: MouseImpl))
-
-local Mouse: MouseImpl = {} :: MouseImpl
+local Mouse: IMouse = {} :: IMouse
 Mouse.__index = Mouse
 
 local function onRenderStep(mouse: Mouse)
@@ -54,7 +52,7 @@ local function onRenderStep(mouse: Mouse)
 end
 
 function Mouse.new()
-	local self = {};
+	local self = setmetatable({}, Mouse);
 	self.filterDescendants = {};
 	self.filterType = Enum.RaycastFilterType.Exclude;
 	self.rayLength = 500;
@@ -62,8 +60,6 @@ function Mouse.new()
 	self.previousPosition = Vector2.new(0, 0);
 	self.ticks = 1;
 	
-	setmetatable(self, Mouse);
-
 	RunService:BindToRenderStep('MeasureMouseMovement', Enum.RenderPriority.Input.Value, function(step)
 		onRenderStep(self);
 	end)
@@ -81,7 +77,7 @@ end
 
 function Mouse:GetUnitRay()
 	local position = self:GetPosition()
-	return Camera:ViewportPointToRay(position.x, position.y)
+	return Camera:ViewportPointToRay(position.X, position.Y)
 end
 
 function Mouse:GetOrigin()
@@ -136,7 +132,7 @@ end
 function Mouse:SetRayLength(length)
 	local dataType = typeof(length)
 	assert(dataType == 'number' and length >= 0, 'length expected a number, received: ' .. dataType)
-	self.rayLength = length
+	self.rayLength = length;
 end
 
 function Mouse:GetFilterType()
@@ -153,7 +149,7 @@ function Mouse:SetFilterType(filterType)
 end
 
 function Mouse:EnableIcon()
-	UserInputService.MouseIconEnabled = true
+	UserInputService.MouseIconEnabled = true;
 end
 
 function Mouse:DisableIcon()

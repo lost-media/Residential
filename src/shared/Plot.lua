@@ -1,6 +1,36 @@
+--!strict
+
+local RS = game:GetService("ReplicatedStorage");
+local State = require(RS.Shared.Types.PlacementState);
 local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit);
 
-Plot = {}
+export type IPlot = {
+    __index: IPlot,
+    new: (model: Model, id: number) -> Plot,
+    getInstance: (self: Plot) -> Model,
+    getPlayer: (self: Plot) -> Player?,
+    assignPlayer: (self: Plot, player: Player) -> (),
+    removePlayer: (self: Plot) -> (),
+    getTile: (self: Plot, tile: BasePart) -> BasePart?,
+    getTileAt: (self: Plot, x: number, y: number) -> BasePart?,
+    isAdjacentTo: (self: Plot, tile1: BasePart, tile2: BasePart) -> boolean,
+    isOccupied: (self: Plot, tile: BasePart) -> boolean,
+    placeObject: (self: Plot, placeableId: string, state: State.PlacementState) -> (),
+    getPlaceable: (self: Plot, placeable: Model) -> Model?,
+    updateBuildingStatus: (self: Plot) -> (),
+}
+
+type Plot = typeof(setmetatable({} :: {
+    player: Player?,
+    placeables: {Model},
+    tiles: {BasePart},
+
+    id: number,
+    model: Model,
+    size: number,
+}, {} :: IPlot))
+
+local Plot: IPlot = {} :: IPlot
 Plot.__index = Plot
 
 local DEFAULT_PLOT_SIZE = 8;
@@ -22,7 +52,7 @@ local LEVEL_HEIGHT = 6;
 
 ]]--
 
-function Plot.new(model: Model, id: number)
+function Plot.new(model, id)
 
     -- Validate the model before creating the Plot instance
 
@@ -52,9 +82,11 @@ function Plot.new(model: Model, id: number)
     self.model = model
     self.size = DEFAULT_PLOT_SIZE
 
-    self.model.Name = id
+    self.model.Name = tostring(id)
 
-    for i, v: BasePart in ipairs(model.Tiles:GetChildren()) do
+    local tiles: Folder = model:FindFirstChild("Tiles") :: Folder;
+
+    for i, v : BasePart in ipairs(tiles:GetChildren()) do
         self.tiles[i] = v
         v:SetAttribute("Occupied", false)
     end
@@ -66,11 +98,11 @@ function Plot:getInstance()
     return self.model
 end
 
-function Plot:getPlayer() : Player?
+function Plot:getPlayer()
     return self.player
 end
 
-function Plot:assignPlayer(player: Player)
+function Plot:assignPlayer(player)
     if (self.player ~= nil) then
         error("Plot already has a player assigned")
     end
@@ -136,7 +168,7 @@ function Plot:isOccupied(tile: BasePart) : boolean
     return false
 end
 
-function Plot:placeObject(placeableId: string, state: table)
+function Plot:placeObject(placeableId: string, state)
     if (placeableId == nil) then
         error("Placeable ID is nil")
     end
