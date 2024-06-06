@@ -4,7 +4,47 @@ local UserInputService = game:GetService('UserInputService')
 local RunService = game:GetService('RunService')
 local Camera = workspace.Camera
 
-local function onRenderStep(mouse, step)
+export type MouseImpl = {
+    __index: MouseImpl,
+    new: () -> Mouse,
+	GetViewSize: (self: Mouse) -> Vector2,
+	GetPosition: (self: Mouse) -> Vector2,
+	GetUnitRay: (self: Mouse) -> Ray,
+	GetOrigin: (self: Mouse) -> Vector3,
+	GetDelta: (self: Mouse) -> Vector2,
+	ScreenPointToRay: (self: Mouse) -> RaycastParams,
+	CastRay: (self: Mouse) -> RaycastResult,
+	GetHit: (self: Mouse) -> Vector3?,
+	GetTarget: (self: Mouse) -> Instance?,
+	GetTargetFilter: (self: Mouse) -> {Instance},
+	SetTargetFilter: (self: Mouse, object: Instance | {Instance}) -> nil,
+	GetRayLength: (self: Mouse) -> number,
+	SetRayLength: (self: Mouse, length: number) -> nil,
+	GetFilterType: (self: Mouse) -> Enum.RaycastFilterType,
+	SetFilterType: (self: Mouse, filterType: Enum.RaycastFilterType) -> nil,
+	EnableIcon: (self: Mouse) -> nil,
+	DisableIcon: (self: Mouse) -> nil,
+	GetModelOfTarget: (self: Mouse) -> Model?,
+
+}
+
+type Mouse = typeof(setmetatable({} :: {
+	currentPosition: Vector2,
+	previousPosition: Vector2,
+	filterDescendants: {Instance},
+	filterType: Enum.RaycastFilterType,
+	rayLength: number,
+	ticks: number,
+
+	x: number,
+	y: number,
+
+}, {} :: MouseImpl))
+
+local Mouse: MouseImpl = {} :: MouseImpl
+Mouse.__index = Mouse
+
+local function onRenderStep(mouse: Mouse)
 	if (mouse.ticks % 2 == 0) then
 		mouse.currentPosition = mouse:GetPosition()
 	else
@@ -13,24 +53,22 @@ local function onRenderStep(mouse, step)
 	mouse.ticks = mouse.ticks % 10 + 1
 end
 
-local Mouse = {}
-Mouse.__index = Mouse
-
 function Mouse.new()
-	local m = {}
-	m.filterDescendants = {}
-	m.filterType = Enum.RaycastFilterType.Exclude
-	m.rayLength = 500
-	m.currentPosition = Vector2.new(0, 0)
-	m.previousPosition = Vector2.new(0, 0)
-	m.ticks = 1
+	local self = {};
+	self.filterDescendants = {};
+	self.filterType = Enum.RaycastFilterType.Exclude;
+	self.rayLength = 500;
+	self.currentPosition = Vector2.new(0, 0);
+	self.previousPosition = Vector2.new(0, 0);
+	self.ticks = 1;
 	
+	setmetatable(self, Mouse);
+
 	RunService:BindToRenderStep('MeasureMouseMovement', Enum.RenderPriority.Input.Value, function(step)
-		onRenderStep(m, step)
+		onRenderStep(self);
 	end)
 
-	setmetatable(m, Mouse)
-	return m
+	return self;
 end
 
 function Mouse:GetViewSize()
@@ -80,12 +118,12 @@ function Mouse:GetTargetFilter()
 	return self.filterDescendants
 end
 
-function Mouse:SetTargetFilter(object)
+function Mouse:SetTargetFilter(object: Instance | {Instance})
 	local dataType = typeof(object)
 	if dataType == 'Instance' then
-		self.filterDescendants = {object}
+		self.filterDescendants = {object :: Instance}
 	elseif dataType == 'table' then
-		self.filterDescendants = object
+		self.filterDescendants = object :: {Instance}
 	else
 		error('object expected an instance or a table of instances, received: '..dataType)
 	end
