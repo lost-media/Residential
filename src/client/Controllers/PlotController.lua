@@ -21,6 +21,7 @@ function PlotController:KnitStart()
     local PlotService = Knit.GetService("PlotService");
 
     PlotService.PlotAssigned:Connect(function(plot)
+        print("PlotController: Plot assigned");
         PlotController.Plot = plot;
     end)
 end
