@@ -5,14 +5,14 @@ local RS = game:GetService("ReplicatedStorage");
 local State = require(RS.Shared.Types.PlacementState);
 local Mouse = require(script.Parent.Parent.Utils.Mouse);
 
-export type IPlacementClient = {
+type IPlacementClient = {
     __index: IPlacementClient,
     new: () -> PlacementClient,
 
     Update: (self: PlacementClient, deltaTime: number) -> (),
 }
 
-type PlacementClient = typeof(setmetatable({} :: {
+export type PlacementClient = typeof(setmetatable({} :: {
     mouse: Mouse.Mouse,
     state: State.PlacementState,
 }, {} :: IPlacementClient))
@@ -24,6 +24,7 @@ function PlacementClient.new()
     local self = setmetatable({}, PlacementClient);
 
     self.mouse = Mouse.new();
+
     self.state = {
         isPlacing = false,
         canConfirmPlacement = false,
@@ -38,6 +39,11 @@ function PlacementClient.new()
         isStacked = false,
     };
 
+    -- Set up render stepped
+    game:GetService("RunService").RenderStepped:Connect(function(deltaTime: number)
+        self:Update(deltaTime);
+    end);
+    
     return self;
 end
 
@@ -46,6 +52,8 @@ function PlacementClient:Update(deltaTime: number)
     if (not self.state.isPlacing) then
         return;
     end
+
+    
 
     self.Mouse.currentPosition = self.Mouse:GetPosition();
 end

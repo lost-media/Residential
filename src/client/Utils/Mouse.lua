@@ -5,7 +5,7 @@ local RunService = game:GetService('RunService')
 local Camera = workspace.Camera
 
 
-export type IMouse = {
+type IMouse = {
     __index: IMouse,
     new: () -> Mouse,
 	
