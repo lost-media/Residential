@@ -2,11 +2,15 @@
 
 local RS = game:GetService("ReplicatedStorage");
 
+local Signal = require(RS.Packages.Signal);
 local Knit = require(RS.Packages.Knit);
+local PlotTypes = require(RS.Shared.Types.Plot);
 
 local PlotController = Knit.CreateController {
     Name = "PlotController";
     Plot = nil;
+
+    OnPlotAssigned = Signal.new();
 };
 
 function PlotController:KnitInit()
@@ -20,9 +24,11 @@ function PlotController:KnitStart()
     
     local PlotService = Knit.GetService("PlotService");
 
-    PlotService.PlotAssigned:Connect(function(plot)
+    PlotService.PlotAssigned:Connect(function(plot: PlotTypes.Plot)
         print("PlotController: Plot assigned");
-        PlotController.Plot = plot;
+        self.Plot = plot;
+
+        self.OnPlotAssigned:Fire(plot);
     end)
 end
 
