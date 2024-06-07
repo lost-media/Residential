@@ -56,6 +56,15 @@ export type StructuresCollection = {
     Road: {
         [string]: Road,
     },
+    Industrial: {
+        [string]: Industrial,
+    },
+    Residence: {
+        [string]: Residence,
+    },
+    Commercial: {
+        [string]: Commercial,
+    },
     
 }
 
@@ -66,6 +75,7 @@ export type Structure = {
     Price: number,
     Model: Model,
     BuildTime: number,
+    FullArea: boolean, -- If the structure occupies the whole area of the tile
 
     Stacking: Stacked?,
 
@@ -83,6 +93,8 @@ export type Stacked = {
         [string]: {
             MaxStack: number,
             OrientationStrict: boolean,
+            RequiredSnapPoints: {string}, -- Snap points required to stack
+            OccupiedSnapPoints: {string}, -- Snap points occupied by the structure
         },
     },
 } | {
@@ -128,6 +140,7 @@ local Structures: StructuresCollection = {
             Price = 100,
             Model = Road["Normal Road"],
             BuildTime = 1,
+            FullArea = true,
 
             Properties = {
                 Speed = 1,
@@ -135,7 +148,21 @@ local Structures: StructuresCollection = {
             },
 
             Stacking = {
-                Allowed = false,
+                Allowed = true,
+                AllowedModels = {
+                    ["Road/Normal Road"] = {
+                        MaxStack = 3,
+                        OrientationStrict = false,
+                        RequiredSnapPoints = {
+                            "Top1",
+                            "Top2"
+                        },
+                        OccupiedSnapPoints = {
+                            "Top1",
+                            "Top2"
+                        }
+                    }
+                }
             }
         }
     }

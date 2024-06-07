@@ -72,6 +72,10 @@ function StructuresUtils.CanStackStructureWith(structureId: string, otherStructu
         return false;
     end
 
+    if (structure.Stacking.AllowedModels == nil) then
+        return false;
+    end
+
     return structure.Stacking.AllowedModels[otherStructureId] ~= nil;
 end
 

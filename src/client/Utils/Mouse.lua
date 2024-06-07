@@ -185,4 +185,22 @@ function Mouse:GetClosestInstanceToMouseFromParent(parent: Instance)
 	return nil
 end
 
+function Mouse:GetClosestAttachmentToMouse(attachments: {Attachment})
+	local hit = self:GetHit()
+	if hit then
+		local closestAttachment = nil
+		local closestDistance = math.huge
+		for _, attachment in ipairs(attachments) do
+			local distance = (attachment.WorldCFrame.Position - hit).Magnitude
+			if distance < closestDistance then
+				closestDistance = distance
+				closestAttachment = attachment
+			end
+		end
+		return closestAttachment
+	end
+
+	return nil
+end
+
 return Mouse
