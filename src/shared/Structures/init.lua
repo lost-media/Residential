@@ -94,7 +94,9 @@ export type Stacked = {
             MaxStack: number,
             OrientationStrict: boolean,
             RequiredSnapPoints: {string}, -- Snap points required to stack
-            OccupiedSnapPoints: {string}, -- Snap points occupied by the structure
+            OccupiedSnapPoints: {string}, -- Snap points occupied by the structure, this also
+            -- determines the snap point to snap to when stacking
+            WhitelistedSnapPoints: {string}?, -- Snap points that can be used to stack
         },
     },
 } | {
@@ -157,12 +159,51 @@ local Structures: StructuresCollection = {
                             "Top1",
                             "Top2"
                         },
+                        WhitelistedSnapPoints = {
+                            "Center",
+                        },
                         OccupiedSnapPoints = {
+                            ["Center"] = "Center", -- If mouse is near Top2, snap to Center
+                        }
+                    },
+
+                    ["Road/Streetlight"] = {
+                        OrientationStrict = false,
+
+                        WhitelistedSnapPoints = {
                             "Top1",
-                            "Top2"
+                            "Top2",
+                        },
+
+                        RequiredSnapPoints = {
+                            "Top1",
+                            "Top2",
+                        },
+                        OccupiedSnapPoints = {
+                            ["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
+                            ["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
                         }
                     }
                 }
+            }
+        },
+
+        ["Streetlight"] = {
+            Name = "Streetlight",
+            Id = "Road/Streetlight",
+            Description = "A normal streetlight",
+            Price = 100,
+            Model = Road["Streetlight"],
+            BuildTime = 1,
+            FullArea = false,
+
+            Properties = {
+                Speed = 1,
+                Capacity = 1,
+            },
+
+            Stacking = {
+                Allowed = false
             }
         }
     }

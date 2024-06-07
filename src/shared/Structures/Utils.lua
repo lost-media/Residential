@@ -79,4 +79,75 @@ function StructuresUtils.CanStackStructureWith(structureId: string, otherStructu
     return structure.Stacking.AllowedModels[otherStructureId] ~= nil;
 end
 
+function StructuresUtils.GetStackingRequiredSnapPointsWith(structureId: string, otherStructureId: string) : {string}?
+    local canStack = StructuresUtils.CanStackStructureWith(structureId, otherStructureId);
+
+    if (canStack == false) then
+        return;
+    end
+
+    local structure = StructuresUtils.GetStructureFromId(structureId);
+    local stackingData = structure.Stacking.AllowedModels[otherStructureId];
+
+    return stackingData.RequiredSnapPoints;
+end
+
+function StructuresUtils.GetStackingWhitelistedSnapPointsWith(structureId: string, otherStructureId: string) : {string}?
+    local canStack = StructuresUtils.CanStackStructureWith(structureId, otherStructureId);
+
+    if (canStack == false) then
+        return;
+    end
+
+    local structure = StructuresUtils.GetStructureFromId(structureId);
+    local stackingData = structure.Stacking.AllowedModels[otherStructureId];
+
+    return stackingData.WhitelistedSnapPoints;
+end
+
+function StructuresUtils.GetStackingOccupiedSnapPointsWith(structureId: string, otherStructureId: string) : {string}?
+    local canStack = StructuresUtils.CanStackStructureWith(structureId, otherStructureId);
+
+    if (canStack == false) then
+        return;
+    end
+
+    local structure = StructuresUtils.GetStructureFromId(structureId);
+    local stackingData = structure.Stacking.AllowedModels[otherStructureId];
+
+    return stackingData.OccupiedSnapPoints;
+end
+
+function StructuresUtils.GetMountedAttachmentPointFromStructures(model: Model?, otherStructureId: string, attachment: Attachment) : Attachment?
+    if (model == nil) then
+        return;
+    end
+
+    local structureId: string? = model:GetAttribute("Id");
+    if (structureId == nil) then
+        return;
+    end
+
+    local canStack = StructuresUtils.CanStackStructureWith(structureId, otherStructureId);
+
+    if (canStack == false) then
+        return;
+    end
+
+    local structure = StructuresUtils.GetStructureFromId(structureId);
+    local stackingData = structure.Stacking.AllowedModels[otherStructureId];
+
+    local occupiedSnapPoints = StructuresUtils.GetStackingOccupiedSnapPointsWith(structureId, otherStructureId);
+
+    if (occupiedSnapPoints == nil) then
+        return;
+    end
+
+    if (occupiedSnapPoints[attachment.Name] == nil) then
+        return;
+    end
+
+    return model.PrimaryPart:FindFirstChild(occupiedSnapPoints[attachment.Name]);
+end
+
 return StructuresUtils

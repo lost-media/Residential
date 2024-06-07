@@ -179,7 +179,13 @@ function PlacementClient:StartPlacement(structureId: string)
         return;
     end
 
-    self:GenerateGhostStructureFromId(structureId);
+    local model = self:GenerateGhostStructureFromId(structureId);
+
+    local selectionBox = Instance.new("SelectionBox");
+    selectionBox.Color3 = Color3.fromRGB(0, 255, 0);
+    selectionBox.LineThickness = 0.05;
+    selectionBox.Adornee = model;
+    selectionBox.Parent = model.PrimaryPart;
 
     -- Set up render stepped
     self.onRenderStep = RunService.RenderStepped:Connect(function(dt: number)
@@ -278,13 +284,15 @@ function PlacementClient:Update(deltaTime: number)
         end
 
         -- Snap the ghost structure to the tile
-        self:SnapToTile(closestInstance);
+        --self:SnapToTile(closestInstance);
     end
 
-    -- Check if the part is from a structurerrr
+    -- Check if the part is from a structure
     if (self:PartIsFromStructure(closestInstance) == true) then
         local structure: Model = self:GetStructureFromPart(closestInstance);
         if (structure == nil) then
+            self.signals.OnStructureHover:Fire(nil);
+            self:RemoveStacked();
             return;
         end
 
@@ -298,24 +306,33 @@ function PlacementClient:Update(deltaTime: number)
 
         if (isStackable == false) then
             -- If the structure is not stackable, then just snap to the structures tile
-            self.state.isStacked = false;
-            self.state.tile = structureTile;
-
+            self:RemoveStacked();
             -- Error if the structure is already occupied
             
         else
-                -- get the attachments of the structure
-            local attachments = self:GetAttachmentsFromStructure(structure);
+            -- get the attachments of the structure
+            local whitelistedSnapPoints = StructuresUtils.GetStackingWhitelistedSnapPointsWith(structureId, self.state.structureId);
+            
+            if (whitelistedSnapPoints ~= nil) then
+                whitelistedSnapPoints = self:GetAttachmentsFromStringList(whitelistedSnapPoints);
+            else
+                whitelistedSnapPoints = {};
+            end
+
+            local attachments = (#whitelistedSnapPoints > 0) and whitelistedSnapPoints or self:GetAttachmentsFromStructure(structure);
+            
             -- Get the closest attachment to the mouse
             local closestAttachment = mouse:GetClosestAttachmentToMouse(attachments);
             
             if (closestAttachment == nil) then
+                self:RemoveStacked();
                 return;
             end
 
             -- check if the attachment is occupied
 
             if (closestAttachment:GetAttribute("Occupied") == true) then
+                self:RemoveStacked();
                 return;
             end
 
@@ -325,26 +342,74 @@ function PlacementClient:Update(deltaTime: number)
 
             self.state.isStacked = true;
 
-            if (self.state.mountedAttachment == nil or self.state.mountedAttachment ~= closestAttachment) then
-                self.signals.OnStackedAttachmentChanged:Fire(closestAttachment, self.state.mountedAttachment);
+            local attachmentPointToSnapTo = StructuresUtils.GetMountedAttachmentPointFromStructures(structure, self.state.structureId, closestAttachment);
+            
+            if (attachmentPointToSnapTo == nil) then
+                self:RemoveStacked();
+                return;
+            end
+
+            if (self.state.mountedAttachment == nil or self.state.mountedAttachment ~= attachmentPointToSnapTo) then
+                self.signals.OnStackedAttachmentChanged:Fire(attachmentPointToSnapTo, self.state.mountedAttachment);
             end
 
             self.state.attachments = attachments;
-            self.state.mountedAttachment = closestAttachment;
+            self.state.mountedAttachment = attachmentPointToSnapTo;
             self.state.stackedStructure = structure;
             self.state.tile = structureTile;
 
             self.signals.OnTileChanged:Fire(structureTile);
-
-            self:SnapToAttachment(closestAttachment);
+            
+            --self:SnapToAttachment(attachmentPointToSnapTo);
         end
+
+    else
+        self.signals.OnStructureHover:Fire(nil);
+        self:RemoveStacked();
 
 
     end
 
     --self:SnapToTile(self.state.tile);
     --self:SnapToAttachment(self.state.attachments[1]);
+    self:UpdatePosition();
+end
+
+function PlacementClient:GetAttachmentsFromStringList(attachments: {string}?) : {Attachment}
+    if (attachments == nil) then
+        return {};
+    end
+
+    if (self.state.stackedStructure == nil) then
+        return {};
+    end
     
+    local attachmentInstances = {};
+
+    for _, attachmentName in ipairs(attachments) do
+        local attachment = self.state.stackedStructure.PrimaryPart:FindFirstChild(attachmentName);
+        if (attachment ~= nil) then
+            table.insert(attachmentInstances, attachment);
+        end
+    end
+
+    return attachmentInstances;
+end
+
+function PlacementClient:RemoveStacked()
+    self.state.isStacked = false;
+    self.state.mountedAttachment = nil;
+    self.state.attachments = {};
+    self.state.stackedStructure = nil;
+end
+
+function PlacementClient:UpdatePosition()
+    -- Completely state dependent
+    if (self.state.isStacked) then
+        self:SnapToAttachment(self.state.mountedAttachment, self.state.tile);
+    else
+        self:SnapToTile(self.state.tile);
+    end
 end
 
 function PlacementClient:SnapToTile(tile: BasePart)
@@ -362,7 +427,7 @@ function PlacementClient:SnapToTile(tile: BasePart)
     self:MoveModelToCF(ghostStructure, newCFrame, false);
 end
 
-function PlacementClient:SnapToAttachment(attachment: Attachment)
+function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart)
     local ghostStructure = self.state.ghostStructure;
 
     if (ghostStructure == nil) then
@@ -372,7 +437,7 @@ function PlacementClient:SnapToAttachment(attachment: Attachment)
     local _, ghostStructureSize = ghostStructure:GetBoundingBox();
     local tileHeight = self.state.tile.Size.Y;
 
-    local newCFrame = CFrame.new(attachment.WorldCFrame.Position) * CFrame.new(0, ghostStructureSize.Y, 0);
+    local newCFrame = CFrame.new(Vector3.new(attachment.WorldCFrame.Position.X, tile.Position.Y, attachment.WorldCFrame.Position.Z)) * CFrame.new(0, ghostStructureSize.Y, 0);
     newCFrame = newCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0);
     newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0);
     self:MoveModelToCF(ghostStructure, newCFrame, false);
