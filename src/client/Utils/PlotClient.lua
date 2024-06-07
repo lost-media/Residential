@@ -17,14 +17,10 @@ export type PlotClient = typeof(setmetatable({} :: {
 local PlotClient: IPlotClient = {} :: IPlotClient;
 PlotClient.__index = PlotClient;
 
-local function plotIsValid(plot: PlotTypes.Plot): boolean
-    return (plot.Tiles and plot.Structures and plot.Debris);
-end
-
 function PlotClient.new(plot: PlotTypes.Plot)
     local self = setmetatable({}, PlotClient);
 
-    if (plotIsValid(plot) == false) then
+    if (PlotTypes.isPlotValid(plot) == false) then
         error("PlotClient: Invalid plot object");
     end
 

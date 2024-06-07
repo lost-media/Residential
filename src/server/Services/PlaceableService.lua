@@ -1,6 +1,6 @@
 local RS = game:GetService("ReplicatedStorage");
 local ServerUtil: Folder = script.Parent.Parent.Utils;
-local Placeables: Folder = RS.Placeables;
+local Placeables: Folder = RS.Structures;
 
 local PlaceablesModule = require(RS.Shared.Placeables);
 local Knit = require(RS.Packages.Knit);

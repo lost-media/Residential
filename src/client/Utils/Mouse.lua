@@ -27,6 +27,7 @@ type IMouse = {
 	EnableIcon: (self: Mouse) -> (),
 	DisableIcon: (self: Mouse) -> (),
 	GetModelOfTarget: (self: Mouse) -> Model?,
+	GetClosestInstanceToMouseFromParent: (self: Mouse, parent: Instance) -> Instance?,
 
 }
 
@@ -161,6 +162,26 @@ function Mouse:GetModelOfTarget()
 	if target then
 		return target:IsA('BasePart') and target:FindFirstAncestorWhichIsA('Model') or nil
 	end
+	return nil
+end
+
+function Mouse:GetClosestInstanceToMouseFromParent(parent: Instance)
+	local hit = self:GetHit()
+	if hit then
+		local closestInstance = nil
+		local closestDistance = math.huge
+		for _, descendant in ipairs(parent:GetDescendants()) do
+			if descendant:IsA('BasePart') then
+				local distance = (descendant.Position - hit).Magnitude
+				if distance < closestDistance then
+					closestDistance = distance
+					closestInstance = descendant
+				end
+			end
+		end
+		return closestInstance
+	end
+
 	return nil
 end
 

@@ -64,8 +64,8 @@ function Plot.new(model, id)
         error("Model does not have a Tiles folder")
     end
 
-    if (model:FindFirstChild("Placeables") == nil) then
-        error("Model does not have a Placeables folder")
+    if (model:FindFirstChild("Structures") == nil) then
+        error("Model does not have a Structures folder")
     end
 
     if (id == nil) then

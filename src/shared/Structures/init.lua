@@ -44,6 +44,14 @@
             }
 --]]
 
+local RS = game:GetService("ReplicatedStorage")
+
+local StructuresFolder = RS.Structures
+local Road: Folder = StructuresFolder.Road
+local Industrial: Folder = StructuresFolder.Industrial
+local Residence: Folder = StructuresFolder.Residence
+local Commercial: Folder = StructuresFolder.Commercial
+
 export type StructuresCollection = {
     Road: {
         [string]: Road,
@@ -67,7 +75,7 @@ export type Structure = {
 };
 
 export type Stacked = {
-    Allowed: boolean,
+    Allowed: true,
     SnapPoints: {
         [string]: {string},
     },
@@ -77,7 +85,9 @@ export type Stacked = {
             OrientationStrict: boolean,
         },
     },
-}
+} | {
+    Allowed: false,
+} | nil
 
 export type Road = Structure & {
     Properties: {
@@ -111,7 +121,23 @@ export type Commercial = Structure & {
 
 local Structures: StructuresCollection = {
     Road = {
-        
+        ["Normal Road"] = {
+            Name = "Normal Road",
+            Id = "Road/Normal Road",
+            Description = "A normal road",
+            Price = 100,
+            Model = Road["Normal Road"],
+            BuildTime = 1,
+
+            Properties = {
+                Speed = 1,
+                Capacity = 1,
+            },
+
+            Stacking = {
+                Allowed = false,
+            }
+        }
     }
 } :: StructuresCollection
 
