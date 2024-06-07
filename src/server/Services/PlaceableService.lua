@@ -69,11 +69,11 @@ function PlaceableService:PlaceableTypeIsValid(placeableType: string) : boolean
 end
 
 function PlaceableService:GetPlaceable(id: string)
-    return PlaceablesModule.GetPlaceableFromId(id);
+    return StructuresModule.GetPlaceableFromId(id);
 end
 
 function PlaceableService:CreatePlaceableFromIdentifier(identifier: string) : Model?
-    local model =  PlaceablesModule.GetPlaceableFromId(identifier);
+    local model =  StructuresModule.GetPlaceableFromId(identifier);
 
     if (model == nil) then
         warn("PlaceableService: Invalid identifier: " .. identifier);

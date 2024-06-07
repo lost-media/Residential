@@ -152,20 +152,6 @@ local Structures: StructuresCollection = {
             Stacking = {
                 Allowed = true,
                 AllowedModels = {
-                    ["Road/Normal Road"] = {
-                        MaxStack = 3,
-                        OrientationStrict = false,
-                        RequiredSnapPoints = {
-                            "Top1",
-                            "Top2"
-                        },
-                        WhitelistedSnapPoints = {
-                            "Center",
-                        },
-                        OccupiedSnapPoints = {
-                            ["Center"] = "Center", -- If mouse is near Top2, snap to Center
-                        }
-                    },
 
                     ["Road/Streetlight"] = {
                         OrientationStrict = false,

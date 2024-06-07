@@ -342,6 +342,7 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
             self:RemoveStacked();
             
             -- Error if the structure is already occupied
+        self:AttemptToSnapToTile(structureTile);
             self.state.canConfirmPlacement = false;
         else
             -- get the attachments of the structure
