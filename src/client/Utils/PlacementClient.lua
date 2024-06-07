@@ -162,6 +162,7 @@ function PlacementClient:GenerateGhostStructureFromId(structureId: string)
     ghostStructure.Parent = workspace;
 
     self.highlightInstance = self:MakeHighlight(ghostStructure);
+    self.selectionBox = self:MakeSelectionBox(ghostStructure);
 
     self.state.ghostStructure = ghostStructure;
     --dimModel(ghostStructure);
@@ -205,6 +206,16 @@ function PlacementClient:MakeHighlight(instance: Instance)
     highlight.Adornee = instance;
 
     return highlight;
+end
+
+function PlacementClient:MakeSelectionBox(instance: Instance)
+    local selectionBox = Instance.new("SelectionBox");
+    selectionBox.Parent = instance;
+    selectionBox.Color3 = Color3.fromRGB(0, 255, 0);
+    selectionBox.LineThickness = 0.05;
+    selectionBox.Adornee = instance;
+
+    return selectionBox;
 end
 
 function PlacementClient:StopPlacement()
@@ -456,11 +467,13 @@ function PlacementClient:SnapToTile(tile: BasePart)
         return;
     end
 
-    local _, ghostStructureSize = ghostStructure:GetBoundingBox();
+    local tileHeight = tile.Size.Y;
 
-    local newCFrame = CFrame.new(tile.Position) * CFrame.new(0, ghostStructureSize.Y, 0);
+    local pos = tile.Position + Vector3.new(0, tileHeight / 2 + .5, 0);
+    local newCFrame = CFrame.new(pos);
     newCFrame = newCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0);
     newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0);
+    
     self:MoveModelToCF(ghostStructure, newCFrame, false);
 end
 
@@ -471,10 +484,27 @@ function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart
         return;
     end
 
-    local _, ghostStructureSize = ghostStructure:GetBoundingBox();
-    local tileHeight = self.state.tile.Size.Y;
+    if (self.structureCollectionEntry == nil) then
+        return;
+    end
 
-    local newCFrame = CFrame.new(Vector3.new(attachment.WorldCFrame.Position.X, tile.Position.Y, attachment.WorldCFrame.Position.Z)) * CFrame.new(0, ghostStructureSize.Y, 0);
+    local _, ghostStructureSize = ghostStructure:GetBoundingBox();
+    local tileHeight = tile.Size.Y;
+    
+    if (self.structureCollectionEntry.FullArea == false) then
+        tileHeight = tileHeight / 2;
+    end
+
+    local pos = attachment.WorldPosition;
+    local yVal = (tile.Position + Vector3.new(0, tileHeight, 0)).Y;
+
+    if (self.structureCollectionEntry.FullArea == false) then
+        yVal = pos.Y + tileHeight;
+    end
+
+    pos = Vector3.new(pos.X, yVal, pos.Z);
+
+    local newCFrame = CFrame.new(pos)
     newCFrame = newCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0);
     newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0);
     self:MoveModelToCF(ghostStructure, newCFrame, false);
