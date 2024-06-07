@@ -34,7 +34,7 @@ function PlacementController:KnitStart()
     if (plot == nil) then
         PlotService.OnPlotAssigned:Connect(function(plotN: PlotTypes.Plot)
             self.Plot = plotN;
-            self:StartPlacement("Road/Normal Road");
+            self:StartPlacement("Road/Streetlight");
         end);
     end
 end

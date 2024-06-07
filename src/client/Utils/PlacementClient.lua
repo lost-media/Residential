@@ -161,8 +161,10 @@ function PlacementClient:GenerateGhostStructureFromId(structureId: string)
     local ghostStructure = structure:Clone();
     ghostStructure.Parent = workspace;
 
+    self.highlightInstance = self:MakeHighlight(ghostStructure);
+
     self.state.ghostStructure = ghostStructure;
-    dimModel(ghostStructure);
+    --dimModel(ghostStructure);
     uncollideModel(ghostStructure);
     
     return ghostStructure;
@@ -181,12 +183,6 @@ function PlacementClient:StartPlacement(structureId: string)
 
     local model = self:GenerateGhostStructureFromId(structureId);
 
-    local selectionBox = Instance.new("SelectionBox");
-    selectionBox.Color3 = Color3.fromRGB(0, 255, 0);
-    selectionBox.LineThickness = 0.05;
-    selectionBox.Adornee = model;
-    selectionBox.Parent = model.PrimaryPart;
-
     -- Set up render stepped
     self.onRenderStep = RunService.RenderStepped:Connect(function(dt: number)
         self:Update(dt);
@@ -199,6 +195,16 @@ function PlacementClient:StartPlacement(structureId: string)
     end);
 
     self.signals.OnPlacementStarted:Fire();
+end
+
+function PlacementClient:MakeHighlight(instance: Instance)
+    local highlight = Instance.new("Highlight");
+    highlight.Parent = instance;
+    highlight.FillColor = Color3.fromRGB(0, 255, 0);
+    highlight.FillTransparency = 0.5;
+    highlight.Adornee = instance;
+
+    return highlight;
 end
 
 function PlacementClient:StopPlacement()
@@ -277,15 +283,30 @@ function PlacementClient:Update(deltaTime: number)
 
     -- Check if its a tile
     if (self:PartIsTile(closestInstance) == true) then
-        local currentTile = self.state.tile;
-        if (currentTile == nil or currentTile ~= closestInstance) then
-            self.state.tile = closestInstance;
-            self.signals.OnTileChanged:Fire(closestInstance);
-        end
-
-        -- Snap the ghost structure to the tile
-        --self:SnapToTile(closestInstance);
+        self:AttemptToSnapToTile(closestInstance);
+    else
+        self:AttemptToSnapToAttachment(closestInstance);
     end
+
+    self:UpdatePosition();
+    self:UpdateHighlight();
+end
+
+function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
+    local currentTile = self.state.tile;
+    if (currentTile == nil or currentTile ~= closestInstance) then
+        self.state.tile = closestInstance;
+        self.signals.OnTileChanged:Fire(closestInstance);
+    end
+
+    self:RemoveStacked();
+
+    -- Snap the ghost structure to the tile
+    self.state.canConfirmPlacement = true;
+end
+
+function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
+    local mouse: Mouse.Mouse = self.mouse;
 
     -- Check if the part is from a structure
     if (self:PartIsFromStructure(closestInstance) == true) then
@@ -293,6 +314,7 @@ function PlacementClient:Update(deltaTime: number)
         if (structure == nil) then
             self.signals.OnStructureHover:Fire(nil);
             self:RemoveStacked();
+            
             return;
         end
 
@@ -307,8 +329,9 @@ function PlacementClient:Update(deltaTime: number)
         if (isStackable == false) then
             -- If the structure is not stackable, then just snap to the structures tile
             self:RemoveStacked();
-            -- Error if the structure is already occupied
             
+            -- Error if the structure is already occupied
+            self.state.canConfirmPlacement = false;
         else
             -- get the attachments of the structure
             local whitelistedSnapPoints = StructuresUtils.GetStackingWhitelistedSnapPointsWith(structureId, self.state.structureId);
@@ -346,6 +369,7 @@ function PlacementClient:Update(deltaTime: number)
             
             if (attachmentPointToSnapTo == nil) then
                 self:RemoveStacked();
+                --dwdwself.state.canConfirmPlacement = false;
                 return;
             end
 
@@ -359,6 +383,8 @@ function PlacementClient:Update(deltaTime: number)
             self.state.tile = structureTile;
 
             self.signals.OnTileChanged:Fire(structureTile);
+
+            self.state.canConfirmPlacement = true;
             
             --self:SnapToAttachment(attachmentPointToSnapTo);
         end
@@ -366,13 +392,8 @@ function PlacementClient:Update(deltaTime: number)
     else
         self.signals.OnStructureHover:Fire(nil);
         self:RemoveStacked();
-
-
+        self.state.canConfirmPlacement = false;
     end
-
-    --self:SnapToTile(self.state.tile);
-    --self:SnapToAttachment(self.state.attachments[1]);
-    self:UpdatePosition();
 end
 
 function PlacementClient:GetAttachmentsFromStringList(attachments: {string}?) : {Attachment}
@@ -409,6 +430,22 @@ function PlacementClient:UpdatePosition()
         self:SnapToAttachment(self.state.mountedAttachment, self.state.tile);
     else
         self:SnapToTile(self.state.tile);
+    end
+end
+
+function PlacementClient:UpdateHighlight()
+    if (self.state.ghostStructure == nil) then
+        return;
+    end
+
+    if (self.state.highlightInstance == nil) then
+        self.state.highlightInstance = self:MakeHighlight(self.state.ghostStructure);
+    end
+
+    if (self.state.canConfirmPlacement == true) then
+        self.state.highlightInstance.FillColor = Color3.fromRGB(0, 255, 0);
+    else
+        self.state.highlightInstance.FillColor = Color3.fromRGB(255, 0, 0);
     end
 end
 
