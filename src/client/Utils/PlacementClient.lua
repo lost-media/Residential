@@ -1,26 +1,40 @@
 --!strict
 
 local RS = game:GetService("ReplicatedStorage");
+local RunService = game:GetService("RunService");
 
 local State = require(RS.Shared.Types.PlacementState);
+local Plot = require(RS.Shared.Types.Plot);
 local Mouse = require(script.Parent.Parent.Utils.Mouse);
 
 type IPlacementClient = {
     __index: IPlacementClient,
-    new: () -> PlacementClient,
+    new: (plot: Plot.Plot) -> PlacementClient,
 
+    GetMouse: (self: PlacementClient) -> Mouse.Mouse,
     Update: (self: PlacementClient, deltaTime: number) -> (),
+    Destroy: (self: PlacementClient) -> (),
 }
 
 export type PlacementClient = typeof(setmetatable({} :: {
+
     mouse: Mouse.Mouse,
+    plot: Plot.Plot,
     state: State.PlacementState,
+    onRenderStep: RBXScriptConnection,
+
 }, {} :: IPlacementClient))
 
 local PlacementClient = {};
 PlacementClient.__index = PlacementClient;
 
-function PlacementClient.new()
+function PlacementClient.new(plot: Plot.Plot)
+
+    -- Validate the plot before creating the PlacementClient instance
+    if (Plot.isPlotValid(plot) == false) then
+        error("Plot is invalid");
+    end
+
     local self = setmetatable({}, PlacementClient);
 
     self.mouse = Mouse.new();
@@ -40,11 +54,15 @@ function PlacementClient.new()
     };
 
     -- Set up render stepped
-    game:GetService("RunService").RenderStepped:Connect(function(deltaTime: number)
-        self:Update(deltaTime);
+    self.onRenderStep = RunService.RenderStepped:Connect(function()
+        self.mouse.currentPosition = self.mouse:GetPosition();
     end);
     
     return self;
+end
+
+function PlacementClient:GetMouse()
+    return self.mouse;
 end
 
 function PlacementClient:Update(deltaTime: number)
@@ -53,9 +71,10 @@ function PlacementClient:Update(deltaTime: number)
         return;
     end
 
-    
+end
 
-    self.Mouse.currentPosition = self.Mouse:GetPosition();
+function PlacementClient:Destroy()
+    self.onRenderStep:Disconnect();
 end
 
 return PlacementClient;
