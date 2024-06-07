@@ -3,6 +3,7 @@ local ServerUtil: Folder = script.Parent.Parent.Utils;
 local Placeables: Folder = RS.Structures;
 
 local PlaceablesModule = require(RS.Shared.Placeables);
+local StructuresUtils = require(RS.Shared.Structures.Utils);
 local Knit = require(RS.Packages.Knit);
 local Weld = require(RS.Shared.Weld);
 local PlaceableType = require(RS.Shared.Enums.PlaceableType);
@@ -41,6 +42,13 @@ function PlaceableService:KnitInit()
         end
 
         for _, model in ipairs(folder:GetChildren()) do
+            local id = StructuresUtils.GetIdFromStructure(model);
+            if (id == nil) then
+                warn("PlaceableService: Invalid ID for model: " .. model.Name);
+                continue;
+            end
+
+            model:SetAttribute("Id", id);
             table.insert(PlaceableService.Placeables[folder.Name], model);
         end
     end
