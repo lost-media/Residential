@@ -160,6 +160,37 @@ local Structures: StructuresCollection = {
                 Allowed = true,
                 AllowedModels = {
 
+                    ["Road/Test"] = {
+                        Orientation = {
+                            Strict = true,
+                            SnapPointsToMatch = {
+                                {
+                                    ["Center"] = "Bottom1",
+                                    ["Top1"] = "Bottom2"
+                                },
+                                {
+                                    ["Center"] = "Bottom1",
+                                    ["Top2"] = "Bottom2"
+                                }
+                            }
+                        },
+
+                        WhitelistedSnapPoints = {
+                            "Top1",
+                            "Top2",
+                        },
+
+                        RequiredSnapPoints = {
+                            "Top1",
+                            "Top2",
+                        },
+                        
+                        OccupiedSnapPoints = {
+                            ["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
+                            ["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
+                        }
+                    },
+
                     ["Road/Streetlight"] = {
                         Orientation = {
                             Strict = false,
@@ -262,6 +293,25 @@ local Structures: StructuresCollection = {
             Description = "A normal streetlight",
             Price = 100,
             Model = Road["Streetlight"],
+            BuildTime = 1,
+            FullArea = false,
+
+            Properties = {
+                Speed = 1,
+                Capacity = 1,
+            },
+
+            Stacking = {
+                Allowed = false
+            }
+        },
+
+        ["Test"] = {
+            Name = "Test",
+            Id = "Road/Test",
+            Description = "A normal test",
+            Price = 100,
+            Model = Road["Test"],
             BuildTime = 1,
             FullArea = false,
 

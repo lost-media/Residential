@@ -168,9 +168,9 @@ function Plot:isOccupied(tile: BasePart) : boolean
     return false
 end
 
-function Plot:placeObject(placeableId: string, state)
-    if (placeableId == nil) then
-        error("Placeable ID is nil")
+function Plot:placeObject(structureId: string, state)
+    if (structureId == nil) then
+        error("Structure ID is nil")
     end
 
     local PlaceableService = Knit.GetService("PlaceableService")
@@ -183,11 +183,11 @@ function Plot:placeObject(placeableId: string, state)
         error("State is nil")
     end
     
-    if (state.Stacked == false and state.Tile:GetAttribute("Occupied") == true) then
+    if (state.isStacked == false and state.tile:GetAttribute("Occupied") == true) then
         error("Tile is already occupied")
     end
 
-    local tile = self:getTile(state.Tile)
+    local tile = self:getTile(state.tile)
 
     if (tile == nil) then
         error("Tile is nil")
@@ -195,8 +195,8 @@ function Plot:placeObject(placeableId: string, state)
 
     -- Snap point
 
-    if (state.Stacked) then
-        local snappedPoint = state.SnappedPoint
+    if (state.isStacked) then
+        local snappedPoint = state.mountedAttachment
         if (snappedPoint == nil) then
             error("Snapped point is nil")
         end
@@ -207,13 +207,13 @@ function Plot:placeObject(placeableId: string, state)
     end
     
 
-    local placeable = PlaceableService:CreatePlaceableFromIdentifier(placeableId)
+    local placeable = PlaceableService:CreatePlaceableFromIdentifier(structureId)
 
     if (placeable == nil) then
         error("Placeable is nil")
     end
 
-    local placeableInfo = PlaceableService:GetPlaceable(placeableId)
+    local placeableInfo = PlaceableService:GetPlaceable(structureId)
 
     if (placeableInfo == nil) then
         error("Placeable info is nil")
@@ -228,29 +228,29 @@ function Plot:placeObject(placeableId: string, state)
     table.insert(self.placeables[placeableType], placeable)
 
     -- Add all server-side attributes to the placeable
-    placeable:SetAttribute("Id", placeableId)
+    placeable:SetAttribute("Id", structureId)
     placeable:SetAttribute("Plot", self.id)
-    placeable:SetAttribute("Level", state.Level)
-    placeable:SetAttribute("Rotation", state.Rotation)
-    placeable:SetAttribute("Tile", state.Tile.Name)
-    placeable:SetAttribute("Stacked", state.Stacked or false)
+    placeable:SetAttribute("Level", state.level)
+    placeable:SetAttribute("Rotation", state.rotation)
+    placeable:SetAttribute("Tile", state.tile.Name)
+    placeable:SetAttribute("Stacked", state.isStacked or false)
 
 
-    placeable.Parent = self.model.Placeables
+    placeable.Parent = self.model.Structures
     
     
     local tileHeight = tile.Size.Y
     local _, placeableSize = placeable:GetBoundingBox()
 
     local objectPosition = tile.Position + Vector3.new(0, (placeableSize.Y / 2) + (tileHeight / 2), 0)
-    objectPosition = objectPosition + Vector3.new(0, state.Level * LEVEL_HEIGHT, 0)
+    objectPosition = objectPosition + Vector3.new(0, state.level * LEVEL_HEIGHT, 0)
 
-    placeable.PrimaryPart.CFrame = CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(state.Rotation), 0)
+    placeable.PrimaryPart.CFrame = CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(state.rotation), 0)
     
     tile:SetAttribute("Occupied", true)
 
-    if (state.Stacked) then
-        local stackedOn: Model? = state.StackedOn
+    if (state.isStacked) then
+        local stackedOn: Model? = state.stackedStructure;
         if (stackedOn == nil) then
             error("Stacked object is nil")
         end
@@ -262,7 +262,7 @@ function Plot:placeObject(placeableId: string, state)
         end
 
         -- Get snapped point
-        local snappedPoint: Attachment? = state.SnappedPoint;
+        local snappedPoint: Attachment? = state.mountedAttachment;
         if (snappedPoint == nil) then
             error("Snapped point is nil")
         end
@@ -276,7 +276,7 @@ function Plot:placeObject(placeableId: string, state)
         local snappedPointPosition = snappedPoint.WorldCFrame.Position
         local stackedObjectPosition = snappedPointPosition + Vector3.new(0, (placeableSize.Y / 2), 0)
 
-        placeable.PrimaryPart.CFrame = CFrame.new(stackedObjectPosition) * CFrame.Angles(0, math.rad(state.Rotation), 0)
+        placeable.PrimaryPart.CFrame = CFrame.new(stackedObjectPosition) * CFrame.Angles(0, math.rad(state.rotation), 0)
     end
 end
 

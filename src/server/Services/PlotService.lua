@@ -11,7 +11,7 @@ local PlotService = Knit.CreateService {
     Name = "PlotService";
     Client = {
         PlotAssigned = Knit.CreateSignal();
-        PlaceOnPlot = Knit.CreateSignal();
+        --PlaceStructure = Knit.CreateSignal();
     };
 
     Plots = {};
@@ -22,9 +22,7 @@ function PlotService:KnitInit()
 
     -- Set up event connections
 
-    self.Client.PlaceOnPlot:Connect(function(...)
-        self:PlaceOnPlot(...);
-    end);
+    
 
     -- Create a Plot instance for each model in the Plots folder
 
@@ -101,13 +99,13 @@ function PlotService:GetPlotFromPlayer(player: Player)
     return self.Plots[plot];
 end
 
-function PlotService:PlaceOnPlot(
+function PlotService:PlaceStructure(
     player: Player,
-    placeableIdentifier: string,
+    structureId: string,
     state: table
 )
-    if (placeableIdentifier == nil) then
-        warn("PlotService: No placeable identifier provided");
+    if (structureId == nil) then
+        warn("PlotService: No structure identifier provided");
         return;
     end
 
@@ -122,12 +120,17 @@ function PlotService:PlaceOnPlot(
         return;
     end
     
-    local success, err = plot:placeObject(placeableIdentifier, state);
+    print(state)
+    local success, err = plot:placeObject(structureId, state);
 
     if (err) then
         warn("PlotService: Failed to place object: ");
         return;
     end
+end
+
+function PlotService.Client:PlaceStructure(player: Player, structureId: string, state: table)
+    self.Server:PlaceStructure(player, structureId, state);
 end
 
 return PlotService;
