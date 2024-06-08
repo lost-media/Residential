@@ -280,6 +280,37 @@ local Structures: StructuresCollection = {
 							["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
 						},
 					},
+
+					["Road/Test"] = {
+						Orientation = {
+							Strict = true,
+							SnapPointsToMatch = {
+								{
+									["Center"] = "Bottom1",
+									["Top1"] = "Bottom2",
+								},
+								{
+									["Center"] = "Bottom1",
+									["Top2"] = "Bottom2",
+								},
+							},
+						},
+
+						WhitelistedSnapPoints = {
+							"Top1",
+							"Top2",
+						},
+
+						RequiredSnapPoints = {
+							"Top1",
+							"Top2",
+						},
+
+						OccupiedSnapPoints = {
+							["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
+							["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
+						},
+					},
 				},
 			},
 		},
