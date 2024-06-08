@@ -174,6 +174,7 @@ local Structures: StructuresCollection = {
                             "Top1",
                             "Top2",
                         },
+                        
                         OccupiedSnapPoints = {
                             ["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
                             ["Top2"] = "Top2", -- If mouse is near Top2, snap to Center

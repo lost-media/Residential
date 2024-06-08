@@ -1,6 +1,7 @@
 --!strict
 
 local RS = game:GetService("ReplicatedStorage");
+local UIS = game:GetService("UserInputService");
 
 local Knit = require(RS.Packages.Knit);
 local PlacementClient = require(script.Parent.Parent.Utils.PlacementClient);
@@ -19,6 +20,12 @@ local PlacementController: PlacementController = Knit.CreateController {
 
     Plot = nil;
     PlacementClient = nil;
+    StructuresIndex = 1;
+    StructuresList = {
+        "Road/Streetlight",
+        "Road/Normal Road",
+        "Road/Elevated Normal Road",
+    }
 }
 
 function PlacementController:KnitInit()
@@ -34,9 +41,30 @@ function PlacementController:KnitStart()
     if (plot == nil) then
         PlotService.OnPlotAssigned:Connect(function(plotN: PlotTypes.Plot)
             self.Plot = plotN;
-            self:StartPlacement("Road/Elevated Normal Road");
+            self:StartPlacement("Road/Streetlight");
         end);
     end
+
+    UIS.InputBegan:Connect(function(input: InputObject)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1) then
+            self:StopPlacement();
+        end
+        if (input.KeyCode == Enum.KeyCode.E) then
+            self.StructuresIndex = self.StructuresIndex + 1;
+            if (self.StructuresIndex > #self.StructuresList) then
+                self.StructuresIndex = 1;
+            end
+            self:StopPlacement();
+            self:StartPlacement(self.StructuresList[self.StructuresIndex]);
+        elseif (input.KeyCode == Enum.KeyCode.Q) then
+            self.StructuresIndex = self.StructuresIndex - 1;
+            if (self.StructuresIndex < 1) then
+                self.StructuresIndex = #self.StructuresList;
+            end
+            self:StopPlacement();
+            self:StartPlacement(self.StructuresList[self.StructuresIndex]);
+        end
+    end);
 end
 
 --[[
@@ -63,6 +91,7 @@ function PlacementController:StopPlacement()
     if (self.PlacementClient ~= nil) then
         self.PlacementClient:Destroy();
         -- Garbage collect the PlacementClient instance
+        
         self.PlacementClient = nil;
     end
 end
