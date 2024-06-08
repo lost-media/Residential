@@ -46,6 +46,7 @@ export type PlacementClient = typeof(setmetatable({} :: {
     state: ClientState,
     onRenderStep: RBXScriptConnection,
     signals: {
+        OnPlacementConfirmed: Signal.Signal,
         OnPlacementStarted: Signal.Signal,
         OnPlacementEnded: Signal.Signal,
         OnTileChanged: Signal.Signal,
@@ -53,12 +54,13 @@ export type PlacementClient = typeof(setmetatable({} :: {
         OnStructureHover: Signal.Signal,
         OnStacked: Signal.Signal,
         OnStackedAttachmentChanged: Signal.Signal,
+        OnUnstacked: Signal.Signal,
     },
     structureCollectionEntry: table,
 
 }, {} :: IPlacementClient))
 
-type ClientState = {
+export type ClientState = {
     isPlacing: boolean,
     canConfirmPlacement: boolean,
 
@@ -136,6 +138,7 @@ function PlacementClient.new(plot: Plot.Plot)
 
     -- Signals
     self.signals = {
+        OnPlacementConfirmed = Signal.new(),
         OnPlacementStarted = Signal.new(),
         OnPlacementEnded = Signal.new(),
         OnTileChanged = Signal.new(),
@@ -143,6 +146,7 @@ function PlacementClient.new(plot: Plot.Plot)
         OnStructureHover = Signal.new(),
         OnStacked = Signal.new(),
         OnStackedAttachmentChanged = Signal.new(),
+        OnUnstacked = Signal.new(),
     };
 
 
@@ -160,6 +164,11 @@ function PlacementClient:GenerateGhostStructureFromId(structureId: string)
 
     local ghostStructure = structure:Clone();
     ghostStructure.Parent = workspace;
+
+    self.mouse:SetTargetFilter({
+        ghostStructure,
+        game.Players.LocalPlayer.Character,
+    });
 
     self.highlightInstance = self:MakeHighlight(ghostStructure);
     self.selectionBox = self:MakeSelectionBox(ghostStructure);
@@ -193,9 +202,26 @@ function PlacementClient:StartPlacement(structureId: string)
         if (input.KeyCode == Enum.KeyCode.R) then
             self:Rotate();
         end
+        if (input.UserInputType == Enum.UserInputType.MouseButton1) then
+            self:ConfirmPlacement();
+        end
+    end);
+
+    self.signals.OnUnstacked:Connect(function()
+        print("UNSTACKED");
     end);
 
     self.signals.OnPlacementStarted:Fire();
+end
+
+function PlacementClient:ConfirmPlacement()
+    if (self:CanPlaceStructure(self.state.ghostStructure) == false) then
+        return;
+    end
+
+    --self:StopPlacement();
+
+    self.signals.OnPlacementConfirmed:Fire(self.state.structureId, self.state);
 end
 
 function PlacementClient:MakeHighlight(instance: Instance)
@@ -221,6 +247,14 @@ end
 function PlacementClient:StopPlacement()
     self.state.isPlacing = false;
     self.onRenderStep:Disconnect();
+    self.onInputBegan:Disconnect();
+
+    if (self.state.ghostStructure ~= nil) then
+        self.state.ghostStructure:Destroy();
+    end
+
+    self.signals.OnPlacementEnded:Fire();
+
 end
 
 function PlacementClient:GetMouse()
@@ -297,6 +331,8 @@ function PlacementClient:Update(deltaTime: number)
         self:AttemptToSnapToTile(closestInstance);
     else
         self:AttemptToSnapToAttachment(closestInstance);
+
+       
     end
 
     self:UpdatePosition();
@@ -309,6 +345,8 @@ function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
         self.state.tile = closestInstance;
         self.signals.OnTileChanged:Fire(closestInstance);
     end
+
+    self.state.level = 0;
 
     self:RemoveStacked();
 
@@ -342,7 +380,9 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
             self:RemoveStacked();
             
             -- Error if the structure is already occupied
-        self:AttemptToSnapToTile(structureTile);
+            self.state.tile = structureTile;
+            self:AttemptToSnapToTile(structureTile);
+            
             self.state.canConfirmPlacement = false;
         else
             -- get the attachments of the structure
@@ -381,7 +421,6 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
             
             if (attachmentPointToSnapTo == nil) then
                 self:RemoveStacked();
-                --dwdwself.state.canConfirmPlacement = false;
                 return;
             end
 
@@ -392,13 +431,36 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
             self.state.attachments = attachments;
             self.state.mountedAttachment = attachmentPointToSnapTo;
             self.state.stackedStructure = structure;
-            self.state.tile = structureTile;
 
-            self.signals.OnTileChanged:Fire(structureTile);
-
-            self.state.canConfirmPlacement = true;
+            local orientationStrict = StructuresUtils.IsOrientationStrict(structureId, self.state.structureId);
             
-            --self:SnapToAttachment(attachmentPointToSnapTo);
+            self.state.orientationStrict = orientationStrict;
+
+            if (self.state.orientationStrict == true) then
+               
+                self:AttemptToSnapRotationOnStrictOrientation();
+            end
+
+            -- change tile to the structure tile
+
+            if (structureTile == nil) then
+                self:RemoveStacked();
+            end
+
+            if (self.state.tile == nil or self.state.tile ~= structureTile) then
+                self.signals.OnTileChanged:Fire(structureTile);
+
+                
+            end
+
+            self.state.tile = structureTile;
+            self.state.canConfirmPlacement = true;
+
+            if (self.structureCollectionEntry.FullArea == false) then
+                self.state.level = structure:GetAttribute("Level") or 0;
+            else
+                self.state.level = structure:GetAttribute("Level") + 1 or 0;
+            end
         end
 
     else
@@ -468,6 +530,10 @@ function PlacementClient:SnapToTile(tile: BasePart)
         return;
     end
 
+    if (tile == nil) then
+        return;
+    end
+
     local tileHeight = tile.Size.Y;
 
     local pos = tile.Position + Vector3.new(0, tileHeight / 2 + .5, 0);
@@ -478,7 +544,7 @@ function PlacementClient:SnapToTile(tile: BasePart)
     self:MoveModelToCF(ghostStructure, newCFrame, false);
 end
 
-function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart)
+function PlacementClient:GetSimulatedStackCFrame(tile: BasePart, attachment: Attachment)
     local ghostStructure = self.state.ghostStructure;
 
     if (ghostStructure == nil) then
@@ -489,7 +555,10 @@ function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart
         return;
     end
 
-    local _, ghostStructureSize = ghostStructure:GetBoundingBox();
+    if (tile == nil or attachment == nil) then
+        return;
+    end
+
     local tileHeight = tile.Size.Y;
     
     if (self.structureCollectionEntry.FullArea == false) then
@@ -505,10 +574,24 @@ function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart
 
     pos = Vector3.new(pos.X, yVal, pos.Z);
 
-    local newCFrame = CFrame.new(pos)
-    newCFrame = newCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0);
-    newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0);
-    self:MoveModelToCF(ghostStructure, newCFrame, false);
+    local newCFrame = CFrame.new(pos);
+    --newCFrame = newCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0);
+
+    -- Don't rotate or level the structure
+    return newCFrame;
+end
+
+function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart)
+    local ghostStructure = self.state.ghostStructure;
+    local simulatedCFrame = self:GetSimulatedStackCFrame(tile, attachment);
+
+    if (simulatedCFrame == nil) then
+        return;
+    end
+
+    simulatedCFrame = simulatedCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0);
+
+    self:MoveModelToCF(ghostStructure, simulatedCFrame, false);
 end
 
 function PlacementClient:MoveModelToCF(model: Model, cframe: CFrame, instant: boolean)
@@ -524,6 +607,14 @@ function PlacementClient:Rotate()
     self.state.rotation = self.state.rotation + ROTATION_STEP;
     if (self.state.rotation >= 360) then
         self.state.rotation = 0;
+    end
+
+    if (self.state.isStacked and self.state.orientationStrict) then
+        local validRotations = self:GetValidRotationsWithStrictOrientation();
+        if (#validRotations == 0 or table.find(validRotations, self.state.rotation) == nil) then
+            self.state.canConfirmPlacement = false;
+            return;
+        end
     end
 
     self.signals.OnRotate:Fire(self.state.rotation);
@@ -557,7 +648,119 @@ function PlacementClient:GetAllAttachmentsFromPlot(tile: BasePart)
     return attachments;
 end
 
+function PlacementClient:GetValidRotationsWithStrictOrientation()
+    -- Clone the ghost structure and test the rotation
+    local clone = self.state.ghostStructure:Clone();
+
+    local rotations = {};
+
+    for i = 0, 360, ROTATION_STEP do
+        local newCFrame = self:GetSimulatedStackCFrame(self.state.tile, self.state.mountedAttachment);
+        
+        if (newCFrame == nil) then
+            return rotations;
+        end
+
+        newCFrame = newCFrame * CFrame.Angles(0, math.rad(i), 0);
+        --newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0);
+
+        clone:PivotTo(newCFrame);
+
+        -- Check if the attachment points match
+        local stackedStructureId = self.state.stackedStructure:GetAttribute("Id");
+        if (stackedStructureId == nil) then
+            return;
+        end
+
+        local attachmentPointsThatMatch = StructuresUtils.GetAttachmentsThatMatchSnapPoints(stackedStructureId, self.state.structureId, self.state.stackedStructure, clone);
+        
+        local allMatch = false
+
+        for _, dict in ipairs(attachmentPointsThatMatch) do
+            local match = true
+            for key, value in pairs(dict) do
+                local distance = (key.WorldCFrame.Position - value.WorldCFrame.Position).Magnitude;
+                
+                if distance > 0.1 then
+                    match = false
+                    break
+                end
+            end
+            if match then
+                allMatch = true
+                break
+            end
+        end
+
+        if (allMatch) then
+            table.insert(rotations, i);
+        end
+    end
+
+    clone:Destroy();
+    return rotations;
+end
+
+function PlacementClient:AttemptToSnapRotationOnStrictOrientation()
+    if (self.state.stackedStructure == nil) then
+        return;
+    end
+
+    -- get the entry from the structure collection
+    local structureId = self.state.stackedStructure:GetAttribute("Id");
+    local structureEntry = StructuresUtils.GetStructureFromId(structureId);
+
+    if (structureEntry == nil) then
+        return;
+    end
+    
+    if (StructuresUtils.IsOrientationStrict(structureId, self.state.structureId) == false) then
+        return;
+    end
+
+
+    local ghostStructure = self.state.ghostStructure;
+
+    if (ghostStructure == nil) then
+        return;
+    end
+
+    local rotations = self:GetValidRotationsWithStrictOrientation();
+
+    if (rotations == nil) then
+        self.state.canConfirmPlacement = false;
+        return;
+    end
+
+    if (#rotations == 0) then
+        self.state.canConfirmPlacement = false;
+        return;
+    end
+
+    if (table.find(rotations, self.state.rotation) == nil) then
+        self.state.rotation = rotations[1];
+        self.signals.OnRotate:Fire(self.state.rotation);
+    end
+    
+    --self:AttemptToSnapToAttachment(self.state.mountedAttachment);
+end
+
+function PlacementClient:CanPlaceStructure(model: Model)
+    local ghostStructure = model;
+
+    if (ghostStructure == nil) then
+        return false;
+    end
+
+    if (self.state.canConfirmPlacement == false) then
+        return false;
+    end
+
+    return true;
+end
+
 function PlacementClient:Destroy()
+    self:StopPlacement();
     self.onRenderStep:Disconnect();
 end
 

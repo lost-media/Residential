@@ -92,7 +92,7 @@ export type Stacked = {
     AllowedModels: {
         [string]: {
             MaxStack: number,
-            OrientationStrict: boolean,
+            Orientation: Orientation,
             RequiredSnapPoints: {string}, -- Snap points required to stack
             OccupiedSnapPoints: {string}, -- Snap points occupied by the structure, this also
             -- determines the snap point to snap to when stacking
@@ -102,6 +102,13 @@ export type Stacked = {
 } | {
     Allowed: false,
 } | nil
+
+export type Orientation = {
+    Strict: false,
+} | {
+    Strict: true,
+    SnapPointsToMatch: {{[string]: string}} -- Keys are snap points of the base model, values are snap points of the model to stack
+}
 
 export type Road = Structure & {
     Properties: {
@@ -153,8 +160,114 @@ local Structures: StructuresCollection = {
                 Allowed = true,
                 AllowedModels = {
 
+                    ["Road/Test"] = {
+                        Orientation = {
+                            Strict = true,
+                            SnapPointsToMatch = {
+                                {
+                                    ["Center"] = "Bottom1",
+                                    ["Top1"] = "Bottom2"
+                                },
+                                {
+                                    ["Center"] = "Bottom1",
+                                    ["Top2"] = "Bottom2"
+                                }
+                            }
+                        },
+
+                        WhitelistedSnapPoints = {
+                            "Top1",
+                            "Top2",
+                        },
+
+                        RequiredSnapPoints = {
+                            "Top1",
+                            "Top2",
+                        },
+                        
+                        OccupiedSnapPoints = {
+                            ["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
+                            ["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
+                        }
+                    },
+
                     ["Road/Streetlight"] = {
-                        OrientationStrict = false,
+                        Orientation = {
+                            Strict = false,
+                        },
+
+                        WhitelistedSnapPoints = {
+                            "Top1",
+                            "Top2",
+                        },
+
+                        RequiredSnapPoints = {
+                            "Top1",
+                            "Top2",
+                        },
+                        
+                        OccupiedSnapPoints = {
+                            ["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
+                            ["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
+                        }
+                    },
+
+                    ["Road/Elevated Normal Road"] = {
+                        Orientation = {
+                            Strict = true,
+                            SnapPointsToMatch = {
+                                {
+                                    ["Top1"] = "Bottom1",
+                                    ["Top2"] = "Bottom2",
+                                },
+                                {
+                                    ["Top1"] = "Bottom2",
+                                    ["Top2"] = "Bottom1",
+                                }
+                            }
+                        },
+
+                        WhitelistedSnapPoints = {
+                            "Top1",
+                            "Top2",
+                        },
+
+                        RequiredSnapPoints = {
+                            "Top1",
+                            "Top2",
+                        },
+                        OccupiedSnapPoints = {
+                            ["Top1"] = "Center", -- If mouse is near Top1, snap to Center
+                            ["Top2"] = "Center", -- If mouse is near Top2, snap to Center
+                            ["Center"] = "Center",
+                        }
+                    }
+                }
+            }
+        },
+
+        ["Elevated Normal Road"] = {
+            Name = "Elevated Normal Road",
+            Id = "Road/Elevated Normal Road",
+            Description = "A normal elevated road",
+            Price = 100,
+            Model = Road["Elevated Normal Road"],
+            BuildTime = 1,
+            FullArea = true,
+
+            Properties = {
+                Speed = 1,
+                Capacity = 1,
+            },
+
+            Stacking = {
+                Allowed = true,
+                AllowedModels = {
+
+                    ["Road/Streetlight"] = {
+                        Orientation = {
+                            Strict = false,
+                        },
 
                         WhitelistedSnapPoints = {
                             "Top1",
@@ -180,6 +293,25 @@ local Structures: StructuresCollection = {
             Description = "A normal streetlight",
             Price = 100,
             Model = Road["Streetlight"],
+            BuildTime = 1,
+            FullArea = false,
+
+            Properties = {
+                Speed = 1,
+                Capacity = 1,
+            },
+
+            Stacking = {
+                Allowed = false
+            }
+        },
+
+        ["Test"] = {
+            Name = "Test",
+            Id = "Road/Test",
+            Description = "A normal test",
+            Price = 100,
+            Model = Road["Test"],
             BuildTime = 1,
             FullArea = false,
 
