@@ -15,52 +15,52 @@
 --]]
 
 return {
-    EMPTY = {
-        name = "Empty",
-        isBuilding = false,
-        properties = {}
-    },
+	EMPTY = {
+		name = "Empty",
+		isBuilding = false,
+		properties = {},
+	},
 
-    RESIDENCE = {
-        name = "Residence",
-        isBuilding = true,
-        properties = {
-            population = 0,
-            populationCapacity = 0,
-            populationGrowthRate = 0,
-            populationGrowthTime = 0
-        }
-    },
+	RESIDENCE = {
+		name = "Residence",
+		isBuilding = true,
+		properties = {
+			population = 0,
+			populationCapacity = 0,
+			populationGrowthRate = 0,
+			populationGrowthTime = 0,
+		},
+	},
 
-    COMMERCIAL = {
-        name = "Commercial",
-        isBuilding = true,
-        properties = {
-            revenue = 0,
-            revenueCapacity = 0,
-            revenueGrowthRate = 0,
-            revenueGrowthTime = 0
-        }
-    },
+	COMMERCIAL = {
+		name = "Commercial",
+		isBuilding = true,
+		properties = {
+			revenue = 0,
+			revenueCapacity = 0,
+			revenueGrowthRate = 0,
+			revenueGrowthTime = 0,
+		},
+	},
 
-    INDUSTRIAL = {
-        name = "Industrial",
-        isBuilding = true,
-        properties = {
-            production = 0,
-            productionCapacity = 0,
-            productionCost = 0,
-            productionTime = 0
-        }
-    },
+	INDUSTRIAL = {
+		name = "Industrial",
+		isBuilding = true,
+		properties = {
+			production = 0,
+			productionCapacity = 0,
+			productionCost = 0,
+			productionTime = 0,
+		},
+	},
 
-    ROAD = {
-        name = "Road",
-        isBuilding = false,
-        properties = {
-            cost = 0,
-            speed = 0,
-            capacity = 0
-        }
-    }
+	ROAD = {
+		name = "Road",
+		isBuilding = false,
+		properties = {
+			cost = 0,
+			speed = 0,
+			capacity = 0,
+		},
+	},
 }

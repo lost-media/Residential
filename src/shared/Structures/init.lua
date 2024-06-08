@@ -53,278 +53,275 @@ local Residence: Folder = StructuresFolder.Residence
 local Commercial: Folder = StructuresFolder.Commercial
 
 export type StructuresCollection = {
-    Road: {
-        [string]: Road,
-    },
-    Industrial: {
-        [string]: Industrial,
-    },
-    Residence: {
-        [string]: Residence,
-    },
-    Commercial: {
-        [string]: Commercial,
-    },
-    
+	Road: {
+		[string]: Road,
+	},
+	Industrial: {
+		[string]: Industrial,
+	},
+	Residence: {
+		[string]: Residence,
+	},
+	Commercial: {
+		[string]: Commercial,
+	},
 }
 
 export type Structure = {
-    Name: string,
-    Id: string,
-    Description: string,
-    Price: number,
-    Model: Model,
-    BuildTime: number,
-    FullArea: boolean, -- If the structure occupies the whole area of the tile
+	Name: string,
+	Id: string,
+	Description: string,
+	Price: number,
+	Model: Model,
+	BuildTime: number,
+	FullArea: boolean, -- If the structure occupies the whole area of the tile
 
-    Stacking: Stacked?,
+	Stacking: Stacked?,
 
-    Properties: {
-        [string]: any,
-    },
-};
+	Properties: {
+		[string]: any,
+	},
+}
 
 export type Stacked = {
-    Allowed: true,
-    SnapPoints: {
-        [string]: {string},
-    },
-    AllowedModels: {
-        [string]: {
-            MaxStack: number,
-            Orientation: Orientation,
-            RequiredSnapPoints: {string}, -- Snap points required to stack
-            OccupiedSnapPoints: {string}, -- Snap points occupied by the structure, this also
-            -- determines the snap point to snap to when stacking
-            WhitelistedSnapPoints: {string}?, -- Snap points that can be used to stack
-        },
-    },
+	Allowed: true,
+	SnapPoints: {
+		[string]: { string },
+	},
+	AllowedModels: {
+		[string]: {
+			MaxStack: number,
+			Orientation: Orientation,
+			RequiredSnapPoints: { string }, -- Snap points required to stack
+			OccupiedSnapPoints: { string }, -- Snap points occupied by the structure, this also
+			-- determines the snap point to snap to when stacking
+			WhitelistedSnapPoints: { string }?, -- Snap points that can be used to stack
+		},
+	},
 } | {
-    Allowed: false,
+	Allowed: false,
 } | nil
 
 export type Orientation = {
-    Strict: false,
+	Strict: false,
 } | {
-    Strict: true,
-    SnapPointsToMatch: {{[string]: string}} -- Keys are snap points of the base model, values are snap points of the model to stack
+	Strict: true,
+	SnapPointsToMatch: { { [string]: string } }, -- Keys are snap points of the base model, values are snap points of the model to stack
 }
 
 export type Road = Structure & {
-    Properties: {
-        Speed: number,
-        Capacity: number,
-    }
+	Properties: {
+		Speed: number,
+		Capacity: number,
+	},
 }
 
 export type Industrial = Structure & {
-    Properties : {
-        ProductionRate: number,
-        ProductionCapacity: number,
-        ProductionCost: number,
-        ProductionTime: number,
-    }
+	Properties: {
+		ProductionRate: number,
+		ProductionCapacity: number,
+		ProductionCost: number,
+		ProductionTime: number,
+	},
 }
 
 export type Residence = Structure & {
-    Properties: {
-        MaxResidents: number,
-        Population: number,
-        PopulationCapacity: number,
-        PopulationGrowthRate: number,
-        PopulationGrowthTime: number,
-    }
+	Properties: {
+		MaxResidents: number,
+		Population: number,
+		PopulationCapacity: number,
+		PopulationGrowthRate: number,
+		PopulationGrowthTime: number,
+	},
 }
 
-export type Commercial = Structure & {
-
-}
+export type Commercial = Structure & {}
 
 local Structures: StructuresCollection = {
-    Road = {
-        ["Normal Road"] = {
-            Name = "Normal Road",
-            Id = "Road/Normal Road",
-            Description = "A normal road",
-            Price = 100,
-            Model = Road["Normal Road"],
-            BuildTime = 1,
-            FullArea = true,
+	Road = {
+		["Normal Road"] = {
+			Name = "Normal Road",
+			Id = "Road/Normal Road",
+			Description = "A normal road",
+			Price = 100,
+			Model = Road["Normal Road"],
+			BuildTime = 1,
+			FullArea = true,
 
-            Properties = {
-                Speed = 1,
-                Capacity = 1,
-            },
+			Properties = {
+				Speed = 1,
+				Capacity = 1,
+			},
 
-            Stacking = {
-                Allowed = true,
-                AllowedModels = {
+			Stacking = {
+				Allowed = true,
+				AllowedModels = {
 
-                    ["Road/Test"] = {
-                        Orientation = {
-                            Strict = true,
-                            SnapPointsToMatch = {
-                                {
-                                    ["Center"] = "Bottom1",
-                                    ["Top1"] = "Bottom2"
-                                },
-                                {
-                                    ["Center"] = "Bottom1",
-                                    ["Top2"] = "Bottom2"
-                                }
-                            }
-                        },
+					["Road/Test"] = {
+						Orientation = {
+							Strict = true,
+							SnapPointsToMatch = {
+								{
+									["Center"] = "Bottom1",
+									["Top1"] = "Bottom2",
+								},
+								{
+									["Center"] = "Bottom1",
+									["Top2"] = "Bottom2",
+								},
+							},
+						},
 
-                        WhitelistedSnapPoints = {
-                            "Top1",
-                            "Top2",
-                        },
+						WhitelistedSnapPoints = {
+							"Top1",
+							"Top2",
+						},
 
-                        RequiredSnapPoints = {
-                            "Top1",
-                            "Top2",
-                        },
-                        
-                        OccupiedSnapPoints = {
-                            ["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
-                            ["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
-                        }
-                    },
+						RequiredSnapPoints = {
+							"Top1",
+							"Top2",
+						},
 
-                    ["Road/Streetlight"] = {
-                        Orientation = {
-                            Strict = false,
-                        },
+						OccupiedSnapPoints = {
+							["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
+							["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
+						},
+					},
 
-                        WhitelistedSnapPoints = {
-                            "Top1",
-                            "Top2",
-                        },
+					["Road/Streetlight"] = {
+						Orientation = {
+							Strict = false,
+						},
 
-                        RequiredSnapPoints = {
-                            "Top1",
-                            "Top2",
-                        },
-                        
-                        OccupiedSnapPoints = {
-                            ["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
-                            ["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
-                        }
-                    },
+						WhitelistedSnapPoints = {
+							"Top1",
+							"Top2",
+						},
 
-                    ["Road/Elevated Normal Road"] = {
-                        Orientation = {
-                            Strict = true,
-                            SnapPointsToMatch = {
-                                {
-                                    ["Top1"] = "Bottom1",
-                                    ["Top2"] = "Bottom2",
-                                },
-                                {
-                                    ["Top1"] = "Bottom2",
-                                    ["Top2"] = "Bottom1",
-                                }
-                            }
-                        },
+						RequiredSnapPoints = {
+							"Top1",
+							"Top2",
+						},
 
-                        WhitelistedSnapPoints = {
-                            "Top1",
-                            "Top2",
-                        },
+						OccupiedSnapPoints = {
+							["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
+							["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
+						},
+					},
 
-                        RequiredSnapPoints = {
-                            "Top1",
-                            "Top2",
-                        },
-                        OccupiedSnapPoints = {
-                            ["Top1"] = "Center", -- If mouse is near Top1, snap to Center
-                            ["Top2"] = "Center", -- If mouse is near Top2, snap to Center
-                            ["Center"] = "Center",
-                        }
-                    }
-                }
-            }
-        },
+					["Road/Elevated Normal Road"] = {
+						Orientation = {
+							Strict = true,
+							SnapPointsToMatch = {
+								{
+									["Top1"] = "Bottom1",
+									["Top2"] = "Bottom2",
+								},
+								{
+									["Top1"] = "Bottom2",
+									["Top2"] = "Bottom1",
+								},
+							},
+						},
 
-        ["Elevated Normal Road"] = {
-            Name = "Elevated Normal Road",
-            Id = "Road/Elevated Normal Road",
-            Description = "A normal elevated road",
-            Price = 100,
-            Model = Road["Elevated Normal Road"],
-            BuildTime = 1,
-            FullArea = true,
+						WhitelistedSnapPoints = {
+							"Top1",
+							"Top2",
+						},
 
-            Properties = {
-                Speed = 1,
-                Capacity = 1,
-            },
+						RequiredSnapPoints = {
+							"Top1",
+							"Top2",
+						},
+						OccupiedSnapPoints = {
+							["Top1"] = "Center", -- If mouse is near Top1, snap to Center
+							["Top2"] = "Center", -- If mouse is near Top2, snap to Center
+							["Center"] = "Center",
+						},
+					},
+				},
+			},
+		},
 
-            Stacking = {
-                Allowed = true,
-                AllowedModels = {
+		["Elevated Normal Road"] = {
+			Name = "Elevated Normal Road",
+			Id = "Road/Elevated Normal Road",
+			Description = "A normal elevated road",
+			Price = 100,
+			Model = Road["Elevated Normal Road"],
+			BuildTime = 1,
+			FullArea = true,
 
-                    ["Road/Streetlight"] = {
-                        Orientation = {
-                            Strict = false,
-                        },
+			Properties = {
+				Speed = 1,
+				Capacity = 1,
+			},
 
-                        WhitelistedSnapPoints = {
-                            "Top1",
-                            "Top2",
-                        },
+			Stacking = {
+				Allowed = true,
+				AllowedModels = {
 
-                        RequiredSnapPoints = {
-                            "Top1",
-                            "Top2",
-                        },
-                        OccupiedSnapPoints = {
-                            ["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
-                            ["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
-                        }
-                    }
-                }
-            }
-        },
+					["Road/Streetlight"] = {
+						Orientation = {
+							Strict = false,
+						},
 
-        ["Streetlight"] = {
-            Name = "Streetlight",
-            Id = "Road/Streetlight",
-            Description = "A normal streetlight",
-            Price = 100,
-            Model = Road["Streetlight"],
-            BuildTime = 1,
-            FullArea = false,
+						WhitelistedSnapPoints = {
+							"Top1",
+							"Top2",
+						},
 
-            Properties = {
-                Speed = 1,
-                Capacity = 1,
-            },
+						RequiredSnapPoints = {
+							"Top1",
+							"Top2",
+						},
+						OccupiedSnapPoints = {
+							["Top1"] = "Top1", -- If mouse is near Top1, snap to Center
+							["Top2"] = "Top2", -- If mouse is near Top2, snap to Center
+						},
+					},
+				},
+			},
+		},
 
-            Stacking = {
-                Allowed = false
-            }
-        },
+		["Streetlight"] = {
+			Name = "Streetlight",
+			Id = "Road/Streetlight",
+			Description = "A normal streetlight",
+			Price = 100,
+			Model = Road["Streetlight"],
+			BuildTime = 1,
+			FullArea = false,
 
-        ["Test"] = {
-            Name = "Test",
-            Id = "Road/Test",
-            Description = "A normal test",
-            Price = 100,
-            Model = Road["Test"],
-            BuildTime = 1,
-            FullArea = false,
+			Properties = {
+				Speed = 1,
+				Capacity = 1,
+			},
 
-            Properties = {
-                Speed = 1,
-                Capacity = 1,
-            },
+			Stacking = {
+				Allowed = false,
+			},
+		},
 
-            Stacking = {
-                Allowed = false
-            }
-        }
-    }
+		["Test"] = {
+			Name = "Test",
+			Id = "Road/Test",
+			Description = "A normal test",
+			Price = 100,
+			Model = Road["Test"],
+			BuildTime = 1,
+			FullArea = false,
+
+			Properties = {
+				Speed = 1,
+				Capacity = 1,
+			},
+
+			Stacking = {
+				Allowed = false,
+			},
+		},
+	},
 } :: StructuresCollection
 
 return Structures
