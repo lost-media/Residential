@@ -1,14 +1,13 @@
 --!strict
 
-local UserInputService = game:GetService('UserInputService')
-local RunService = game:GetService('RunService')
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local Camera = workspace.Camera
 
-
 type IMouse = {
-    __index: IMouse,
-    new: () -> Mouse,
-	
+	__index: IMouse,
+	new: () -> Mouse,
+
 	GetViewSize: (self: Mouse) -> Vector2,
 	GetPosition: (self: Mouse) -> Vector2,
 	GetUnitRay: (self: Mouse) -> Ray,
@@ -18,8 +17,8 @@ type IMouse = {
 	CastRay: (self: Mouse) -> RaycastResult,
 	GetHit: (self: Mouse) -> Vector3?,
 	GetTarget: (self: Mouse) -> Instance?,
-	GetTargetFilter: (self: Mouse) -> {Instance},
-	SetTargetFilter: (self: Mouse, object: Instance | {Instance}) -> (),
+	GetTargetFilter: (self: Mouse) -> { Instance },
+	SetTargetFilter: (self: Mouse, object: Instance | { Instance }) -> (),
 	GetRayLength: (self: Mouse) -> number,
 	SetRayLength: (self: Mouse, length: number) -> (),
 	GetFilterType: (self: Mouse) -> Enum.RaycastFilterType,
@@ -28,23 +27,25 @@ type IMouse = {
 	DisableIcon: (self: Mouse) -> (),
 	GetModelOfTarget: (self: Mouse) -> Model?,
 	GetClosestInstanceToMouseFromParent: (self: Mouse, parent: Instance) -> Instance?,
-
 }
 
-export type Mouse = typeof(setmetatable({} :: {
-	currentPosition: Vector2,
-	previousPosition: Vector2,
-	filterDescendants: {Instance},
-	filterType: Enum.RaycastFilterType,
-	rayLength: number,
-	ticks: number,
-}, {} :: IMouse))
+export type Mouse = typeof(setmetatable(
+	{} :: {
+		currentPosition: Vector2,
+		previousPosition: Vector2,
+		filterDescendants: { Instance },
+		filterType: Enum.RaycastFilterType,
+		rayLength: number,
+		ticks: number,
+	},
+	{} :: IMouse
+))
 
 local Mouse: IMouse = {} :: IMouse
 Mouse.__index = Mouse
 
 local function onRenderStep(mouse: Mouse)
-	if (mouse.ticks % 2 == 0) then
+	if mouse.ticks % 2 == 0 then
 		mouse.currentPosition = mouse:GetPosition()
 	else
 		mouse.previousPosition = mouse:GetPosition()
@@ -53,19 +54,19 @@ local function onRenderStep(mouse: Mouse)
 end
 
 function Mouse.new()
-	local self = setmetatable({}, Mouse);
-	self.filterDescendants = {};
-	self.filterType = Enum.RaycastFilterType.Exclude;
-	self.rayLength = 500;
-	self.currentPosition = Vector2.new(0, 0);
-	self.previousPosition = Vector2.new(0, 0);
-	self.ticks = 1;
-	
-	RunService:BindToRenderStep('MeasureMouseMovement', Enum.RenderPriority.Input.Value, function(step)
-		onRenderStep(self);
+	local self = setmetatable({}, Mouse)
+	self.filterDescendants = {}
+	self.filterType = Enum.RaycastFilterType.Exclude
+	self.rayLength = 500
+	self.currentPosition = Vector2.new(0, 0)
+	self.previousPosition = Vector2.new(0, 0)
+	self.ticks = 1
+
+	RunService:BindToRenderStep("MeasureMouseMovement", Enum.RenderPriority.Input.Value, function(step)
+		onRenderStep(self)
 	end)
 
-	return self;
+	return self
 end
 
 function Mouse:GetViewSize()
@@ -115,14 +116,14 @@ function Mouse:GetTargetFilter()
 	return self.filterDescendants
 end
 
-function Mouse:SetTargetFilter(object: Instance | {Instance})
+function Mouse:SetTargetFilter(object: Instance | { Instance })
 	local dataType = typeof(object)
-	if dataType == 'Instance' then
-		self.filterDescendants = {object :: Instance}
-	elseif dataType == 'table' then
-		self.filterDescendants = object :: {Instance}
+	if dataType == "Instance" then
+		self.filterDescendants = { object :: Instance }
+	elseif dataType == "table" then
+		self.filterDescendants = object :: { Instance }
 	else
-		error('object expected an instance or a table of instances, received: '..dataType)
+		error("object expected an instance or a table of instances, received: " .. dataType)
 	end
 end
 
@@ -132,8 +133,8 @@ end
 
 function Mouse:SetRayLength(length)
 	local dataType = typeof(length)
-	assert(dataType == 'number' and length >= 0, 'length expected a number, received: ' .. dataType)
-	self.rayLength = length;
+	assert(dataType == "number" and length >= 0, "length expected a number, received: " .. dataType)
+	self.rayLength = length
 end
 
 function Mouse:GetFilterType()
@@ -145,12 +146,12 @@ function Mouse:SetFilterType(filterType)
 	if table.find(filterTypes, filterType) then
 		self.filterType = filterType
 	else
-		error('Invalid raycast filter type provided')
+		error("Invalid raycast filter type provided")
 	end
 end
 
 function Mouse:EnableIcon()
-	UserInputService.MouseIconEnabled = true;
+	UserInputService.MouseIconEnabled = true
 end
 
 function Mouse:DisableIcon()
@@ -160,7 +161,7 @@ end
 function Mouse:GetModelOfTarget()
 	local target = self:GetTarget()
 	if target then
-		return target:IsA('BasePart') and target:FindFirstAncestorWhichIsA('Model') or nil
+		return target:IsA("BasePart") and target:FindFirstAncestorWhichIsA("Model") or nil
 	end
 	return nil
 end
@@ -171,7 +172,7 @@ function Mouse:GetClosestInstanceToMouseFromParent(parent: Instance)
 		local closestInstance = nil
 		local closestDistance = math.huge
 		for _, descendant in ipairs(parent:GetDescendants()) do
-			if descendant:IsA('BasePart') then
+			if descendant:IsA("BasePart") then
 				local distance = (descendant.Position - hit).Magnitude
 				if distance < closestDistance then
 					closestDistance = distance
@@ -185,7 +186,7 @@ function Mouse:GetClosestInstanceToMouseFromParent(parent: Instance)
 	return nil
 end
 
-function Mouse:GetClosestAttachmentToMouse(attachments: {Attachment})
+function Mouse:GetClosestAttachmentToMouse(attachments: { Attachment })
 	local hit = self:GetHit()
 	if hit then
 		local closestAttachment = nil
