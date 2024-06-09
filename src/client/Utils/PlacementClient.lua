@@ -9,9 +9,9 @@ local Plot = require(RS.Shared.Types.Plot)
 local Mouse = require(script.Parent.Parent.Utils.Mouse)
 local StructuresUtils = require(RS.Shared.Structures.Utils)
 local Signal = require(RS.Packages.Signal)
+local PlacementUtils = require(RS.Shared.PlacementUtils)
 
 -- Constants
-local LEVEL_HEIGHT = 8
 local ROTATION_STEP = 90
 local TRANSPARENCY_DIM_FACTOR = 2
 local TWEEN_INFO = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0)
@@ -159,9 +159,11 @@ function PlacementClient:GenerateGhostStructureFromId(structureId: string)
 	local ghostStructure = structure:Clone()
 	ghostStructure.Parent = workspace
 
+	self.mouse:SetFilterType(Enum.RaycastFilterType.Include)
 	self.mouse:SetTargetFilter({
-		ghostStructure,
-		game.Players.LocalPlayer.Character,
+		--ghostStructure,
+		--game.Players.LocalPlayer.Character,
+		self.plot,
 	})
 
 	self.highlightInstance = self:MakeHighlight(ghostStructure)
@@ -529,12 +531,7 @@ function PlacementClient:SnapToTile(tile: BasePart)
 		return
 	end
 
-	local tileHeight = tile.Size.Y
-
-	local pos = tile.Position + Vector3.new(0, tileHeight / 2 + 0.5, 0)
-	local newCFrame = CFrame.new(pos)
-	newCFrame = newCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0)
-	newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
+	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, self.state)
 
 	self:MoveModelToCF(ghostStructure, newCFrame, false)
 end
@@ -554,31 +551,7 @@ function PlacementClient:GetSimulatedStackCFrame(tile: BasePart, attachment: Att
 		return
 	end
 
-	local tileHeight = tile.Size.Y
-
-	if self.structureCollectionEntry.FullArea == false then
-		tileHeight = tileHeight / 2
-	end
-
-	local pos = attachment.WorldPosition
-	local yVal = (tile.Position + Vector3.new(0, tileHeight, 0)).Y
-
-	if self.structureCollectionEntry.FullArea == false then
-		yVal = pos.Y + tileHeight
-	end
-
-	pos = Vector3.new(pos.X, yVal, pos.Z)
-
-	local newCFrame = CFrame.new(pos)
-
-	if self.structureCollectionEntry.FullArea == true then
-		newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
-	end
-	--newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
-	--newCFrame = newCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0);
-
-	-- Don't rotate or level the structure
-	return newCFrame
+	return PlacementUtils.GetSnappedAttachmentCFrame(tile, attachment, self.structureCollectionEntry, self.state)
 end
 
 function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart)
@@ -589,7 +562,7 @@ function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart
 		return
 	end
 
-	simulatedCFrame = simulatedCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0)
+	--simulatedCFrame = simulatedCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0)
 
 	self:MoveModelToCF(ghostStructure, simulatedCFrame, false)
 end
@@ -661,7 +634,7 @@ function PlacementClient:GetValidRotationsWithStrictOrientation()
 			return rotations
 		end
 
-		newCFrame = newCFrame * CFrame.Angles(0, math.rad(i), 0)
+		newCFrame = CFrame.new(newCFrame.Position) * CFrame.Angles(0, math.rad(i), 0)
 		--newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
 
 		clone:PivotTo(newCFrame)

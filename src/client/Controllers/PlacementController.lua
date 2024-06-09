@@ -48,8 +48,6 @@ function PlacementController:KnitStart()
 			local client = self:GetClient()
 			client.signals.OnPlacementConfirmed:Connect(
 				function(structureId: string, state: PlacementClient.ClientState)
-					print("Placement confirmed", structureId, state)
-
 					PlotService:PlaceStructure(structureId, state)
 				end
 			)

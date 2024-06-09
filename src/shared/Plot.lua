@@ -4,6 +4,7 @@ local RS = game:GetService("ReplicatedStorage")
 local State = require(RS.Shared.Types.PlacementState)
 local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit)
 local StructuresUtils = require(game:GetService("ReplicatedStorage").Shared.Structures.Utils)
+local PlacementUtils = require(game:GetService("ReplicatedStorage").Shared.PlacementUtils)
 
 export type IPlot = {
 	__index: IPlot,
@@ -39,7 +40,6 @@ Plot.__index = Plot
 
 local DEFAULT_PLOT_SIZE = 8
 local TILE_SIZE = 8
-local LEVEL_HEIGHT = 8
 
 --[[
 
@@ -240,14 +240,9 @@ function Plot:placeObject(structureId: string, state)
 
 	placeable.Parent = self.model.Structures
 
-	local tileHeight = tile.Size.Y
+	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, state)
 
-	local pos = tile.Position + Vector3.new(0, tileHeight / 2 + 0.5, 0)
-	local newCFrame = CFrame.new(pos)
-	newCFrame = newCFrame * CFrame.Angles(0, math.rad(state.rotation), 0)
-	newCFrame = newCFrame * CFrame.new(0, state.level * LEVEL_HEIGHT, 0)
-
-	placeable.PrimaryPart.CFrame = newCFrame
+	placeable:PivotTo(newCFrame)
 
 	tile:SetAttribute("Occupied", true)
 
@@ -275,30 +270,10 @@ function Plot:placeObject(structureId: string, state)
 			taken:SetAttribute("Occupied", true)
 		end
 
-		local tileHeight = tile.Size.Y
-
-		if placeableInfo.FullArea == false then
-			tileHeight = tileHeight / 2
-		end
-
-		local pos = snappedPoint.WorldPosition
-		local yVal = (tile.Position + Vector3.new(0, tileHeight, 0)).Y
-
-		if placeableInfo.FullArea == false then
-			yVal = pos.Y + tileHeight
-		end
-
-		pos = Vector3.new(pos.X, yVal, pos.Z)
-
-		local newCFrame = CFrame.new(pos)
-		newCFrame = newCFrame * CFrame.Angles(0, math.rad(state.rotation), 0)
-
-		if placeableInfo.FullArea == true then
-			newCFrame = newCFrame * CFrame.new(0, state.level * LEVEL_HEIGHT, 0)
-		end
+		local cframe = PlacementUtils.GetSnappedAttachmentCFrame(tile, snappedPoint, placeableInfo, state)
 
 		-- Don't rotate or level the structure
-		placeable:SetPrimaryPartCFrame(newCFrame)
+		placeable:SetPrimaryPartCFrame(cframe)
 	end
 end
 
