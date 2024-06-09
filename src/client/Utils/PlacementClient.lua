@@ -217,8 +217,6 @@ function PlacementClient:ConfirmPlacement()
 
 	--self:StopPlacement();
 
-	print(self.state.level)
-
 	self.signals.OnPlacementConfirmed:Fire(self.state.structureId, self.state)
 end
 

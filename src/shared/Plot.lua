@@ -15,7 +15,6 @@ export type IPlot = {
 	removePlayer: (self: Plot) -> (),
 	getTile: (self: Plot, tile: BasePart) -> BasePart?,
 	getTileAt: (self: Plot, x: number, y: number) -> BasePart?,
-	isAdjacentTo: (self: Plot, tile1: BasePart, tile2: BasePart) -> boolean,
 	isOccupied: (self: Plot, tile: BasePart) -> boolean,
 	placeObject: (self: Plot, placeableId: string, state: State.PlacementState) -> (),
 	getPlaceable: (self: Plot, placeable: Model) -> Model?,
@@ -143,24 +142,6 @@ function Plot:getTileAt(x, y)
 		end
 	end
 	return nil
-end
-
--- type
-function Plot:isAdjacentTo(tile1: BasePart, tile2: BasePart): boolean
-	local tile1Pos = tile1.Position
-	local tile2Pos = tile2.Position
-
-	local tile1X = math.floor((tile1Pos.X + TILE_SIZE / 2) / TILE_SIZE)
-	local tile1Y = math.floor((tile1Pos.Z + TILE_SIZE / 2) / TILE_SIZE)
-
-	local tile2X = math.floor((tile2Pos.X + TILE_SIZE / 2) / TILE_SIZE)
-	local tile2Y = math.floor((tile2Pos.Z + TILE_SIZE / 2) / TILE_SIZE)
-
-	if math.abs(tile1X - tile2X) <= 1 and math.abs(tile1Y - tile2Y) <= 1 then
-		return true
-	end
-
-	return false
 end
 
 function Plot:isOccupied(tile: BasePart): boolean
