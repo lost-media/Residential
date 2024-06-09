@@ -68,7 +68,7 @@ function PlaceableService:PlaceableTypeIsValid(placeableType: string): boolean
 end
 
 function PlaceableService:GetPlaceable(id: string)
-	return StructuresUtils.GetStructureModelFromId(id)
+	return StructuresUtils.GetStructureFromId(id)
 end
 
 function PlaceableService:CreatePlaceableFromIdentifier(identifier: string): Model?

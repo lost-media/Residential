@@ -246,4 +246,31 @@ function StructuresUtils.GetAttachmentsThatMatchSnapPoints(
 	return attachmentsThatMatch
 end
 
+function StructuresUtils.IsIncreasingLevel(structureId1: string, structureId2: string): boolean
+	local structure1 = StructuresUtils.GetStructureFromId(structureId1)
+	local structure2 = StructuresUtils.GetStructureFromId(structureId2)
+
+	if structure1 == nil or structure2 == nil then
+		return false
+	end
+
+	if structure1.Stacking == nil then
+		return false
+	end
+
+	if structure1.Stacking.Allowed == false then
+		return false
+	end
+
+	if structure1.Stacking.AllowedModels == nil then
+		return false
+	end
+
+	if structure1.Stacking.AllowedModels[structureId2] == nil then
+		return false
+	end
+
+	return structure1.Stacking.AllowedModels[structureId2].IncreaseLevel
+end
+
 return StructuresUtils

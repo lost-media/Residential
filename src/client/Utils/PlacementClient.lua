@@ -215,6 +215,8 @@ function PlacementClient:ConfirmPlacement()
 
 	--self:StopPlacement();
 
+	print(self.state.level)
+
 	self.signals.OnPlacementConfirmed:Fire(self.state.structureId, self.state)
 end
 
@@ -450,10 +452,10 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			self.state.tile = structureTile
 			self.state.canConfirmPlacement = true
 
-			if self.structureCollectionEntry.FullArea == false then
-				self.state.level = structure:GetAttribute("Level") or 0
-			else
+			if StructuresUtils.IsIncreasingLevel(structureId, self.state.structureId) then
 				self.state.level = structure:GetAttribute("Level") + 1 or 0
+			else
+				self.state.level = structure:GetAttribute("Level") or 0
 			end
 		end
 	else
@@ -568,6 +570,11 @@ function PlacementClient:GetSimulatedStackCFrame(tile: BasePart, attachment: Att
 	pos = Vector3.new(pos.X, yVal, pos.Z)
 
 	local newCFrame = CFrame.new(pos)
+
+	if self.structureCollectionEntry.FullArea == true then
+		newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
+	end
+	--newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
 	--newCFrame = newCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0);
 
 	-- Don't rotate or level the structure
@@ -583,7 +590,6 @@ function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart
 	end
 
 	simulatedCFrame = simulatedCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0)
-	simulatedCFrame = simulatedCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
 
 	self:MoveModelToCF(ghostStructure, simulatedCFrame, false)
 end
@@ -656,7 +662,7 @@ function PlacementClient:GetValidRotationsWithStrictOrientation()
 		end
 
 		newCFrame = newCFrame * CFrame.Angles(0, math.rad(i), 0)
-		newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
+		--newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
 
 		clone:PivotTo(newCFrame)
 

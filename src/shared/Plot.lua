@@ -3,6 +3,7 @@
 local RS = game:GetService("ReplicatedStorage")
 local State = require(RS.Shared.Types.PlacementState)
 local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit)
+local StructuresUtils = require(game:GetService("ReplicatedStorage").Shared.Structures.Utils)
 
 export type IPlot = {
 	__index: IPlot,
@@ -37,8 +38,8 @@ local Plot: IPlot = {} :: IPlot
 Plot.__index = Plot
 
 local DEFAULT_PLOT_SIZE = 8
-local TILE_SIZE = 6
-local LEVEL_HEIGHT = 6
+local TILE_SIZE = 8
+local LEVEL_HEIGHT = 8
 
 --[[
 
@@ -290,7 +291,11 @@ function Plot:placeObject(structureId: string, state)
 		pos = Vector3.new(pos.X, yVal, pos.Z)
 
 		local newCFrame = CFrame.new(pos)
-		newCFrame = newCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0)
+		newCFrame = newCFrame * CFrame.Angles(0, math.rad(state.rotation), 0)
+
+		if placeableInfo.FullArea == true then
+			newCFrame = newCFrame * CFrame.new(0, state.level * LEVEL_HEIGHT, 0)
+		end
 
 		-- Don't rotate or level the structure
 		placeable:SetPrimaryPartCFrame(newCFrame)

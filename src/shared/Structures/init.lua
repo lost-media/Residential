@@ -90,6 +90,7 @@ export type Stacked = {
 	},
 	AllowedModels: {
 		[string]: {
+			IncreaseLevel: boolean?,
 			MaxStack: number,
 			Orientation: Orientation,
 			RequiredSnapPoints: { string }, -- Snap points required to stack
@@ -210,6 +211,7 @@ local Structures: StructuresCollection = {
 					},
 
 					["Road/Elevated Normal Road"] = {
+						IncreaseLevel = false,
 						Orientation = {
 							Strict = true,
 							SnapPointsToMatch = {
@@ -262,6 +264,7 @@ local Structures: StructuresCollection = {
 				AllowedModels = {
 
 					["Road/Elevated Normal Road"] = {
+						IncreaseLevel = true,
 						Orientation = {
 							Strict = true,
 							SnapPointsToMatch = {
