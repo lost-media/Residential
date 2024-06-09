@@ -1,10 +1,10 @@
 --!strict
 
 local RS = game:GetService("ReplicatedStorage")
-local State = require(RS.Shared.Types.PlacementState)
 local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit)
-local StructuresUtils = require(game:GetService("ReplicatedStorage").Shared.Structures.Utils)
 local PlacementUtils = require(game:GetService("ReplicatedStorage").Shared.PlacementUtils)
+local State = require(RS.Shared.Types.PlacementState)
+local StructuresUtils = require(game:GetService("ReplicatedStorage").Shared.Structures.Utils)
 
 export type IPlot = {
 	__index: IPlot,

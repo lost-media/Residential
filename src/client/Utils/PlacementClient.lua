@@ -1,15 +1,15 @@
 --!strict
 
 local RS = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 
-local Plot = require(RS.Shared.Types.Plot)
 local Mouse = require(script.Parent.Parent.Utils.Mouse)
-local StructuresUtils = require(RS.Shared.Structures.Utils)
-local Signal = require(RS.Packages.Signal)
 local PlacementUtils = require(RS.Shared.PlacementUtils)
+local Plot = require(RS.Shared.Types.Plot)
+local Signal = require(RS.Packages.Signal)
+local StructuresUtils = require(RS.Shared.Structures.Utils)
 
 -- Constants
 local ROTATION_STEP = 90
@@ -560,8 +560,6 @@ function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart
 		return
 	end
 
-	--simulatedCFrame = simulatedCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0)
-
 	self:MoveModelToCF(ghostStructure, simulatedCFrame, false)
 end
 
@@ -705,8 +703,6 @@ function PlacementClient:AttemptToSnapRotationOnStrictOrientation()
 		return
 	end
 
-	--self:AttemptToSnapToAttachment(self.state.mountedAttachment);
-
 	local rotations = self:GetValidRotationsWithStrictOrientation()
 
 	if rotations == nil then
@@ -723,8 +719,6 @@ function PlacementClient:AttemptToSnapRotationOnStrictOrientation()
 		self.state.rotation = rotations[1]
 		self.signals.OnRotate:Fire(self.state.rotation)
 	end
-
-	--self:AttemptToSnapToAttachment(self.state.mountedAttachment);
 end
 
 function PlacementClient:CanPlaceStructure(model: Model)

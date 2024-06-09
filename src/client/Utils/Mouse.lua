@@ -1,7 +1,7 @@
 --!strict
 
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.Camera
 
 type IMouse = {

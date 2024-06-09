@@ -2,11 +2,11 @@ local RS = game:GetService("ReplicatedStorage")
 local ServerUtil: Folder = script.Parent.Parent.Utils
 local Placeables: Folder = RS.Structures
 
+local Knit = require(RS.Packages.Knit)
+local PlaceableType = require(RS.Shared.Enums.PlaceableType)
 local StructuresModule = require(RS.Shared.Structures)
 local StructuresUtils = require(RS.Shared.Structures.Utils)
-local Knit = require(RS.Packages.Knit)
 local Weld = require(RS.Shared.Weld)
-local PlaceableType = require(RS.Shared.Enums.PlaceableType)
 
 local PlaceableService = Knit.CreateService({
 	Name = "PlaceableService",
