@@ -7,9 +7,12 @@ local UIS = game:GetService("UserInputService")
 
 local Mouse = require(script.Parent.Parent.Utils.Mouse)
 local PlacementUtils = require(RS.Shared.PlacementUtils)
-local Plot = require(RS.Shared.Types.Plot)
 local Signal = require(RS.Packages.Signal)
 local StructuresUtils = require(RS.Shared.Structures.Utils)
+
+-- Types
+local PlacementTypes = require(RS.Shared.Types.Placement)
+local Plot = require(RS.Shared.Types.Plot)
 
 -- Constants
 local ROTATION_STEP = 90
@@ -42,7 +45,7 @@ export type PlacementClient = typeof(setmetatable(
 	{} :: {
 		mouse: Mouse.Mouse,
 		plot: Plot.Plot,
-		state: ClientState,
+		state: PlacementTypes.PlacementState,
 		onRenderStep: RBXScriptConnection,
 		signals: {
 			OnPlacementConfirmed: Signal.Signal,
@@ -59,39 +62,6 @@ export type PlacementClient = typeof(setmetatable(
 	},
 	{} :: IPlacementClient
 ))
-
-export type ClientState = {
-	isPlacing: boolean,
-	canConfirmPlacement: boolean,
-
-	structureId: string?,
-	ghostStructure: Model?,
-	tile: BasePart?,
-
-	rotation: number,
-	level: number,
-
-	mountedAttachment: Attachment,
-	attachments: { Attachment },
-	stackedStructure: Model,
-
-	isStacked: boolean,
-}
-
-local function dimModel(model: Model)
-	-- If the model is already dimmed, no need to dim it again
-	if model:GetAttribute("Dimmed") == true then
-		return
-	end
-
-	for _, instance in ipairs(model:GetDescendants()) do
-		if instance:IsA("BasePart") then
-			instance.Transparency = 1 - (1 - instance.Transparency) / TRANSPARENCY_DIM_FACTOR
-		end
-	end
-
-	model:SetAttribute("Dimmed", true)
-end
 
 local function uncollideModel(model: Model)
 	for _, instance in ipairs(model:GetDescendants()) do

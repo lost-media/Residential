@@ -1,10 +1,10 @@
 --!strict
 
 local RS = game:GetService("ReplicatedStorage")
+
 local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit)
+local PlacementTypes = require(RS.Shared.Types.Placement)
 local PlacementUtils = require(game:GetService("ReplicatedStorage").Shared.PlacementUtils)
-local State = require(RS.Shared.Types.PlacementState)
-local StructuresUtils = require(game:GetService("ReplicatedStorage").Shared.Structures.Utils)
 
 export type IPlot = {
 	__index: IPlot,
@@ -16,8 +16,8 @@ export type IPlot = {
 	getTile: (self: Plot, tile: BasePart) -> BasePart?,
 	getTileAt: (self: Plot, x: number, y: number) -> BasePart?,
 	isOccupied: (self: Plot, tile: BasePart) -> boolean,
-	placeObject: (self: Plot, placeableId: string, state: State.PlacementState) -> (),
-	getPlaceable: (self: Plot, placeable: Model) -> Model?,
+	placeObject: (self: Plot, placeableId: string, state: PlacementTypes.PlacementState) -> (),
+	getPlaceable: (self: Plot, structure: Model) -> Model?,
 	updateBuildingStatus: (self: Plot) -> (),
 }
 
@@ -145,23 +145,23 @@ function Plot:getTileAt(x, y)
 end
 
 function Plot:isOccupied(tile: BasePart): boolean
-	for _, placeable in ipairs(self.placeables) do
-		if placeable:isOccupying(tile) then
+	for _, structure in ipairs(self.placeables) do
+		if structure:isOccupying(tile) then
 			return true
 		end
 	end
 	return false
 end
 
-function Plot:placeObject(structureId: string, state)
+function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementState)
 	if structureId == nil then
 		error("Structure ID is nil")
 	end
 
-	local PlaceableService = Knit.GetService("PlaceableService")
+	local StructureService = Knit.GetService("StructureService")
 
-	if PlaceableService == nil then
-		error("PlaceableService is nil")
+	if StructureService == nil then
+		error("StructureService is nil")
 	end
 
 	if state == nil then
@@ -191,39 +191,39 @@ function Plot:placeObject(structureId: string, state)
 		end
 	end
 
-	local placeable = PlaceableService:CreatePlaceableFromIdentifier(structureId)
+	local structure = StructureService:CreateStructureFromIdentifier(structureId)
 
-	if placeable == nil then
+	if structure == nil then
 		error("Placeable is nil")
 	end
 
-	local placeableInfo = PlaceableService:GetPlaceable(structureId)
+	local placeableInfo = StructureService:GetStructureEntry(structureId)
 
 	if placeableInfo == nil then
 		error("Placeable info is nil")
 	end
 
-	local placeableType = placeable.Name
+	local placeableType = structure.Name
 
 	if self.placeables[placeableType] == nil then
 		self.placeables[placeableType] = {}
 	end
 
-	table.insert(self.placeables[placeableType], placeable)
+	table.insert(self.placeables[placeableType], structure)
 
-	-- Add all server-side attributes to the placeable
-	placeable:SetAttribute("Id", structureId)
-	placeable:SetAttribute("Plot", self.id)
-	placeable:SetAttribute("Level", state.level)
-	placeable:SetAttribute("Rotation", state.rotation)
-	placeable:SetAttribute("Tile", state.tile.Name)
-	placeable:SetAttribute("Stacked", state.isStacked or false)
+	-- Add all server-side attributes to the structure
+	structure:SetAttribute("Id", structureId)
+	structure:SetAttribute("Plot", self.id)
+	structure:SetAttribute("Level", state.level)
+	structure:SetAttribute("Rotation", state.rotation)
+	structure:SetAttribute("Tile", state.tile.Name)
+	structure:SetAttribute("Stacked", state.isStacked or false)
 
-	placeable.Parent = self.model.Structures
+	structure.Parent = self.model.Structures
 
 	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, state)
 
-	placeable:PivotTo(newCFrame)
+	structure:PivotTo(newCFrame)
 
 	tile:SetAttribute("Occupied", true)
 
@@ -254,14 +254,14 @@ function Plot:placeObject(structureId: string, state)
 		local cframe = PlacementUtils.GetSnappedAttachmentCFrame(tile, snappedPoint, placeableInfo, state)
 
 		-- Don't rotate or level the structure
-		placeable:SetPrimaryPartCFrame(cframe)
+		structure:SetPrimaryPartCFrame(cframe)
 	end
 end
 
-function Plot:getPlaceable(placeable: Model): Model?
+function Plot:getPlaceable(structure: Model): Model?
 	for _, placeableType in pairs(self.placeables) do
 		for _, v in ipairs(placeableType) do
-			if v == placeable then
+			if v == structure then
 				return v
 			end
 		end
@@ -270,8 +270,8 @@ function Plot:getPlaceable(placeable: Model): Model?
 end
 
 function Plot:updateBuildingStatus()
-	for _, placeable in ipairs(self.placeables) do
-		placeable:updateStatus()
+	for _, structure in ipairs(self.placeables) do
+		structure:updateStatus()
 	end
 end
 
