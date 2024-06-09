@@ -240,12 +240,13 @@ function Plot:placeObject(structureId: string, state)
 	placeable.Parent = self.model.Structures
 
 	local tileHeight = tile.Size.Y
-	local _, placeableSize = placeable:GetBoundingBox()
 
-	local objectPosition = tile.Position + Vector3.new(0, (placeableSize.Y / 2) + (tileHeight / 2), 0)
-	objectPosition = objectPosition + Vector3.new(0, state.level * LEVEL_HEIGHT, 0)
+	local pos = tile.Position + Vector3.new(0, tileHeight / 2 + 0.5, 0)
+	local newCFrame = CFrame.new(pos)
+	newCFrame = newCFrame * CFrame.Angles(0, math.rad(state.rotation), 0)
+	newCFrame = newCFrame * CFrame.new(0, state.level * LEVEL_HEIGHT, 0)
 
-	placeable.PrimaryPart.CFrame = CFrame.new(objectPosition) * CFrame.Angles(0, math.rad(state.rotation), 0)
+	placeable.PrimaryPart.CFrame = newCFrame
 
 	tile:SetAttribute("Occupied", true)
 
@@ -273,10 +274,26 @@ function Plot:placeObject(structureId: string, state)
 			taken:SetAttribute("Occupied", true)
 		end
 
-		local snappedPointPosition = snappedPoint.WorldCFrame.Position
-		local stackedObjectPosition = snappedPointPosition + Vector3.new(0, (placeableSize.Y / 2), 0)
+		local tileHeight = tile.Size.Y
 
-		placeable.PrimaryPart.CFrame = CFrame.new(stackedObjectPosition) * CFrame.Angles(0, math.rad(state.rotation), 0)
+		if placeableInfo.FullArea == false then
+			tileHeight = tileHeight / 2
+		end
+
+		local pos = snappedPoint.WorldPosition
+		local yVal = (tile.Position + Vector3.new(0, tileHeight, 0)).Y
+
+		if placeableInfo.FullArea == false then
+			yVal = pos.Y + tileHeight
+		end
+
+		pos = Vector3.new(pos.X, yVal, pos.Z)
+
+		local newCFrame = CFrame.new(pos)
+		newCFrame = newCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0)
+
+		-- Don't rotate or level the structure
+		placeable:SetPrimaryPartCFrame(newCFrame)
 	end
 end
 

@@ -261,6 +261,36 @@ local Structures: StructuresCollection = {
 				Allowed = true,
 				AllowedModels = {
 
+					["Road/Elevated Normal Road"] = {
+						Orientation = {
+							Strict = true,
+							SnapPointsToMatch = {
+								{
+									["Top1"] = "Bottom1",
+									["Top2"] = "Bottom2",
+								},
+								{
+									["Top1"] = "Bottom2",
+									["Top2"] = "Bottom1",
+								},
+							},
+						},
+
+						WhitelistedSnapPoints = {
+							"Top1",
+							"Top2",
+						},
+
+						RequiredSnapPoints = {
+							"Top1",
+							"Top2",
+						},
+						OccupiedSnapPoints = {
+							["Top1"] = "Center", -- If mouse is near Top1, snap to Center
+							["Top2"] = "Center", -- If mouse is near Top2, snap to Center
+						},
+					},
+
 					["Road/Streetlight"] = {
 						Orientation = {
 							Strict = false,

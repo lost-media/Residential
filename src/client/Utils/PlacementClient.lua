@@ -185,6 +185,8 @@ function PlacementClient:StartPlacement(structureId: string)
 		return
 	end
 
+	self.state.ghostStructure = self:GenerateGhostStructureFromId(structureId)
+
 	-- Set up render stepped
 	self.onRenderStep = RunService.RenderStepped:Connect(function(dt: number)
 		self:Update(dt)
@@ -581,6 +583,7 @@ function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart
 	end
 
 	simulatedCFrame = simulatedCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0)
+	simulatedCFrame = simulatedCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
 
 	self:MoveModelToCF(ghostStructure, simulatedCFrame, false)
 end
@@ -653,7 +656,7 @@ function PlacementClient:GetValidRotationsWithStrictOrientation()
 		end
 
 		newCFrame = newCFrame * CFrame.Angles(0, math.rad(i), 0)
-		--newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0);
+		newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
 
 		clone:PivotTo(newCFrame)
 
@@ -669,6 +672,11 @@ function PlacementClient:GetValidRotationsWithStrictOrientation()
 			self.state.stackedStructure,
 			clone
 		)
+
+		if attachmentPointsThatMatch == nil then
+			clone:Destroy()
+			return
+		end
 
 		local allMatch = false
 
@@ -719,6 +727,8 @@ function PlacementClient:AttemptToSnapRotationOnStrictOrientation()
 	if ghostStructure == nil then
 		return
 	end
+
+	--self:AttemptToSnapToAttachment(self.state.mountedAttachment);
 
 	local rotations = self:GetValidRotationsWithStrictOrientation()
 
