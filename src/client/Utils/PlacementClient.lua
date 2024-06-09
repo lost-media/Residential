@@ -16,7 +16,7 @@ local Plot = require(RS.Shared.Types.Plot)
 
 -- Constants
 local ROTATION_STEP = 90
-local TRANSPARENCY_DIM_FACTOR = 2
+local TRANSPARENCY_DIM_FACTOR = 4
 local TWEEN_INFO = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0)
 
 type IPlacementClient = {
@@ -62,6 +62,39 @@ export type PlacementClient = typeof(setmetatable(
 	},
 	{} :: IPlacementClient
 ))
+
+local function dimModel(model: Model)
+	-- If the model is already dimmed, no need to dim it again
+	if model:GetAttribute("Dimmed") == true then
+		return
+	end
+
+	for _, instance in ipairs(model:GetDescendants()) do
+		if instance:IsA("BasePart") then
+			instance:SetAttribute("OriginalTransparency", instance.Transparency)
+			instance.Transparency = 1 - (1 - instance.Transparency) / TRANSPARENCY_DIM_FACTOR
+		end
+	end
+
+	model:SetAttribute("Dimmed", true)
+end
+
+function unDimModel(model: Model)
+	if model:GetAttribute("Dimmed") == false then
+		return
+	end
+
+	for _, instance in ipairs(model:GetDescendants()) do
+		if instance:IsA("BasePart") then
+			local originalTransparency = instance:GetAttribute("OriginalTransparency")
+			if originalTransparency ~= nil then
+				instance.Transparency = originalTransparency
+			end
+		end
+	end
+
+	model:SetAttribute("Dimmed", false)
+end
 
 local function uncollideModel(model: Model)
 	for _, instance in ipairs(model:GetDescendants()) do
@@ -129,6 +162,8 @@ function PlacementClient:GenerateGhostStructureFromId(structureId: string)
 	local ghostStructure = structure:Clone()
 	ghostStructure.Parent = workspace
 
+	-- SETTING: only including the plot makes the ghost
+	-- structure snap to the
 	self.mouse:SetFilterType(Enum.RaycastFilterType.Include)
 	self.mouse:SetTargetFilter({
 		--ghostStructure,
@@ -140,7 +175,6 @@ function PlacementClient:GenerateGhostStructureFromId(structureId: string)
 	self.selectionBox = self:MakeSelectionBox(ghostStructure)
 
 	self.state.ghostStructure = ghostStructure
-	--dimModel(ghostStructure);
 	uncollideModel(ghostStructure)
 
 	return ghostStructure
@@ -297,6 +331,8 @@ function PlacementClient:Update(deltaTime: number)
 	else
 		self:AttemptToSnapToAttachment(closestInstance)
 	end
+
+	self:UpdateLevelVisibility()
 
 	self:UpdatePosition()
 	self:UpdateHighlight()
@@ -703,6 +739,26 @@ function PlacementClient:CanPlaceStructure(model: Model)
 	end
 
 	return true
+end
+
+function PlacementClient:UpdateLevelVisibility()
+	for _, structure in ipairs(self.plot.Structures:GetChildren()) do
+		if structure:IsA("Model") then
+			local level = structure:GetAttribute("Level")
+			if level == nil then
+				level = 0
+			end
+
+			-- SETTING: make this a setting so that the player can toggle it
+			local structureLevel = level
+
+			if structureLevel == self.state.level then
+				unDimModel(structure)
+			else
+				dimModel(structure)
+			end
+		end
+	end
 end
 
 function PlacementClient:Destroy()
