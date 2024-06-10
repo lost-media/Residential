@@ -18,7 +18,7 @@ local SharedProperties = {
 }
 
 local Roads: StructureTypes.RoadCollection = {
-	["Normal Road"] = TableUtil.Reconcile(SharedProperties, {
+	["Normal Road"] = TableUtil.Reconcile({
 		Name = "Normal Road",
 		Id = "Road/Normal Road",
 		Description = "A normal road",
@@ -53,9 +53,9 @@ local Roads: StructureTypes.RoadCollection = {
 				),
 			},
 		},
-	}),
+	}, SharedProperties),
 
-	["Curved Road"] = TableUtil.Reconcile(SharedProperties, {
+	["Curved Road"] = TableUtil.Reconcile({
 		Name = "Curved Road",
 		Id = "Road/Curved Road",
 		Description = "A curved road",
@@ -72,9 +72,9 @@ local Roads: StructureTypes.RoadCollection = {
 				),
 			},
 		},
-	}),
+	}, SharedProperties),
 
-	["Intersection Road"] = TableUtil.Reconcile(SharedProperties, {
+	["Intersection Road"] = TableUtil.Reconcile({
 		Name = "Intersection Road",
 		Id = "Road/Intersection Road",
 		Description = "A curved road",
@@ -91,9 +91,67 @@ local Roads: StructureTypes.RoadCollection = {
 				),
 			},
 		},
-	}),
+	}, SharedProperties),
 
-	["Elevated Normal Road"] = TableUtil.Reconcile(SharedProperties, {
+    ["Highway Road"] = TableUtil.Reconcile({
+		Name = "Highway Road",
+		Id = "Road/Highway Road",
+		Description = "A curved road",
+		Model = RoadFolder["Highway Road"],
+
+		Stacking = {
+			Allowed = true,
+
+			AllowedModels = {
+				["Road/Streetlight"] = StackingUtils.CreateStackingData(
+					false,
+					{ "Top1", "Top2", "Top3" },
+					{ ["Top1"] = "Top1", ["Top2"] = "Top2", ["Top3"] = "Top3" }
+				),
+			},
+		},
+	}, SharedProperties),
+
+    ["Dead-End Road"] = TableUtil.Reconcile({
+		Name = "Elevated Normal Road",
+		Id = "Road/Dead-End Road",
+		Description = "A curved road",
+		Model = RoadFolder["Dead End Road"],
+
+		Stacking = {
+			Allowed = true,
+
+			AllowedModels = {
+				["Road/Streetlight"] = StackingUtils.CreateStackingData(
+					false,
+					{ "Top1", "Top2", "Top3" },
+					{ ["Top1"] = "Top1", ["Top2"] = "Top2", ["Top3"] = "Top3" }
+				),
+
+                ["Road/Elevated Normal Road"] = StackingUtils.CreateStackingData(
+					false,
+					{ "Top1", "Top2" },
+					{ ["Top1"] = "Center", ["Top2"] = "Center", ["Center"] = "Center" },
+
+					{
+						Strict = true,
+						SnapPointsToMatch = {
+							{
+								["Top1"] = "Bottom1",
+								["Top2"] = "Bottom2",
+							},
+							{
+								["Top1"] = "Bottom2",
+								["Top2"] = "Bottom1",
+							},
+						},
+					}
+				),
+			},
+		},
+	}, SharedProperties),
+
+	["Elevated Normal Road"] = TableUtil.Reconcile({
 		Name = "Elevated Normal Road",
 		Id = "Road/Elevated Normal Road",
 		Description = "A curved road",
@@ -129,36 +187,20 @@ local Roads: StructureTypes.RoadCollection = {
 				),
 			},
 		},
-	}),
+	}, SharedProperties),
 
-	["Streetlight"] = {
-		Category = "Road",
+	["Streetlight"] = TableUtil.Reconcile({
 		Name = "Streetlight",
 		Id = "Road/Streetlight",
 		Description = "A normal streetlight",
-		Price = 100,
+		Price = 500,
 		Model = RoadFolder["Streetlight"],
-		BuildTime = 1,
 		FullArea = false,
 
 		Stacking = {
 			Allowed = false,
 		},
-	},
-
-	["Test"] = {
-		Name = "Test",
-		Id = "Road/Test",
-		Description = "A normal test",
-		Price = 100,
-		Model = RoadFolder["Test"],
-		BuildTime = 1,
-		FullArea = false,
-
-		Stacking = {
-			Allowed = false,
-		},
-	},
+	}, SharedProperties),
 }
 
 return Roads
