@@ -365,6 +365,8 @@ end
 function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 	local mouse: Mouse.Mouse = self.mouse
 
+	local succesfullySnapped = true
+
 	-- Check if the part is from a structure
 	if self:PartIsFromStructure(closestInstance) == true then
 		local structure: Model = self:GetStructureFromPart(closestInstance)
@@ -392,13 +394,18 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			self:AttemptToSnapToTile(structureTile)
 
 			self.state.canConfirmPlacement = false
+
+			succesfullySnapped = false
 		else
+			self.state.stackedStructure = structure
+
 			-- get the attachments of the structure
 			local whitelistedSnapPoints =
 				StructuresUtils.GetStackingWhitelistedSnapPointsWith(structureId, self.state.structureId)
 
 			if whitelistedSnapPoints ~= nil then
-				whitelistedSnapPoints = self:GetAttachmentsFromStringList(whitelistedSnapPoints)
+				local attachmentInstances = self:GetAttachmentsFromStringList(whitelistedSnapPoints)
+				whitelistedSnapPoints = attachmentInstances
 			else
 				whitelistedSnapPoints = {}
 			end
@@ -417,9 +424,10 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			-- check if the attachment is occupied
 
 			if closestAttachment:GetAttribute("Occupied") == true then
-				self:RemoveStacked()
+				--self:RemoveStacked()
 				self.state.canConfirmPlacement = false
-				return
+				succesfullySnapped = false
+				--return
 			end
 
 			if self.state.isStacked == false then
@@ -435,17 +443,22 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			)
 
 			if attachmentPointToSnapTo == nil then
-				self:RemoveStacked()
-				return
+				--self:RemoveStacked()
+				succesfullySnapped = false
+				--return
 			end
 
 			if self.state.mountedAttachment == nil or self.state.mountedAttachment ~= attachmentPointToSnapTo then
 				self.signals.OnStackedAttachmentChanged:Fire(attachmentPointToSnapTo, self.state.mountedAttachment)
 			end
 
+			if attachmentPointToSnapTo:GetAttribute("Occupied") == true then
+				self.state.canConfirmPlacement = false
+				succesfullySnapped = false
+			end
+
 			self.state.attachments = attachments
 			self.state.mountedAttachment = attachmentPointToSnapTo
-			self.state.stackedStructure = structure
 
 			local orientationStrict = StructuresUtils.IsOrientationStrict(structureId, self.state.structureId)
 
@@ -459,6 +472,7 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 
 			if structureTile == nil then
 				self:RemoveStacked()
+				succesfullySnapped = false
 			end
 
 			if self.state.tile == nil or self.state.tile ~= structureTile then
@@ -466,7 +480,6 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			end
 
 			self.state.tile = structureTile
-			self.state.canConfirmPlacement = true
 
 			if StructuresUtils.IsIncreasingLevel(structureId, self.state.structureId) then
 				self.state.level = structure:GetAttribute("Level") + 1 or 0
@@ -478,6 +491,10 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 		self.signals.OnStructureHover:Fire(nil)
 		self:RemoveStacked()
 		self.state.canConfirmPlacement = false
+	end
+
+	if succesfullySnapped == true then
+		self.state.canConfirmPlacement = true
 	end
 end
 
@@ -548,7 +565,7 @@ function PlacementClient:UpdateSelectionBox()
 	end
 
 	if self.selectionBox == nil then
-		return;
+		return
 	end
 
 	if self.state.canConfirmPlacement == true then
@@ -557,7 +574,6 @@ function PlacementClient:UpdateSelectionBox()
 	else
 		self.selectionBox.Color3 = Color3.fromRGB(255, 0, 0)
 		self.selectionBox.SurfaceColor3 = Color3.fromRGB(255, 0, 0)
-
 	end
 end
 
@@ -572,7 +588,7 @@ function PlacementClient:SnapToTile(tile: BasePart)
 		return
 	end
 
-	if (tile:GetAttribute("Occupied") == true) then
+	if tile:GetAttribute("Occupied") == true then
 		self.state.canConfirmPlacement = false
 	end
 

@@ -32,7 +32,10 @@ type Plot = typeof(setmetatable(
 		model: Model,
 		size: number,
 
-		signals: { PlotAssigned: Signal.Signal<>; PlacedStructure: Signal.Signal<>;}
+		signals: {
+			PlotAssigned: Signal.Signal,
+			PlacedStructure: Signal.Signal,
+		},
 	},
 	{} :: IPlot
 ))
@@ -85,7 +88,7 @@ function Plot.new(model, id)
 	self.tiles = {}
 	self.signals = {
 		PlotAssigned = Signal.new(),
-		PlacedStructure = Signal.new()
+		PlacedStructure = Signal.new(),
 	}
 
 	self.id = id
@@ -278,13 +281,14 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 
 		for _, connection: Attachment in ipairs(currentRoadConnections) do
 			for _, roadConnection: Attachment in ipairs(allRoadConnections) do
-				if roadConnection ~= connection and (roadConnection.WorldCFrame.Position - connection.WorldCFrame.Position).Magnitude < 0.1 then
-					print('adjacent road connection found')
+				if
+					roadConnection ~= connection
+					and (roadConnection.WorldCFrame.Position - connection.WorldCFrame.Position).Magnitude < 0.1
+				then
+					print("adjacent road connection found")
 				end
 			end
-			
 		end
-		
 	end
 end
 
@@ -299,8 +303,7 @@ function Plot:getPlaceable(structure: Model): Model?
 	return nil
 end
 
-function Plot:getStructureRoadAttachments(structure: Model) : {Attachment}
-
+function Plot:getStructureRoadAttachments(structure: Model): { Attachment }
 	if structure == nil then
 		error("Structure is nil")
 	end
@@ -309,7 +312,7 @@ function Plot:getStructureRoadAttachments(structure: Model) : {Attachment}
 		error("Structure does not have a PrimaryPart")
 	end
 
-	if (structure:GetAttribute("Category") ~= "Road") then
+	if structure:GetAttribute("Category") ~= "Road" then
 		error("Structure is not a road")
 	end
 
@@ -326,7 +329,7 @@ function Plot:getStructureRoadAttachments(structure: Model) : {Attachment}
 	return roadConnectionsReturn
 end
 
-function Plot:getRoadConnectionAttachments() : {Attachment}
+function Plot:getRoadConnectionAttachments(): { Attachment }
 	local roadConnectionsReturn = {}
 
 	for _, structure in ipairs(self.model.Structures:GetChildren()) do
@@ -351,7 +354,7 @@ function Plot:getStructureFromRoadConnectionAttachment(attachment: Attachment): 
 		error("Attachment does not have a model ancestor")
 	end
 
-	if (model:IsDescendantOf(self.model) == false) then
+	if model:IsDescendantOf(self.model) == false then
 		error("Model is not a descendant of the plot")
 	end
 
