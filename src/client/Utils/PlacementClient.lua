@@ -46,7 +46,7 @@ export type PlacementClient = typeof(setmetatable(
 		mouse: Mouse.Mouse,
 		plot: Plot.Plot,
 		state: PlacementTypes.PlacementState,
-		onRenderStep: RBXScriptConnection,
+		connections: { [string]: RBXScriptConnection },
 		signals: {
 			OnPlacementConfirmed: Signal.Signal,
 			OnPlacementStarted: Signal.Signal,
@@ -135,6 +135,8 @@ function PlacementClient.new(plot: Plot.Plot)
 		isStacked = false,
 	}
 
+	self.connections = {}
+
 	-- Signals
 	self.signals = {
 		OnPlacementConfirmed = Signal.new(),
@@ -164,6 +166,7 @@ function PlacementClient:GenerateGhostStructureFromId(structureId: string)
 
 	-- SETTING: only including the plot makes the ghost
 	-- structure snap to the
+
 	self.mouse:SetFilterType(Enum.RaycastFilterType.Include)
 	self.mouse:SetTargetFilter({
 		--ghostStructure,
@@ -192,23 +195,22 @@ function PlacementClient:StartPlacement(structureId: string)
 	end
 
 	self.state.ghostStructure = self:GenerateGhostStructureFromId(structureId)
+	--self.state.radiusVisual = self:CreateRadiusVisual(2)
 
 	-- Set up render stepped
-	self.onRenderStep = RunService.RenderStepped:Connect(function(dt: number)
+	self.connections.onRenderStep = RunService.RenderStepped:Connect(function(dt: number)
 		self:Update(dt)
 	end)
 
-	self.onInputBegan = UIS.InputBegan:Connect(function(input: InputObject)
+	self.connections.onInputBegan = UIS.InputBegan:Connect(function(input: InputObject)
 		if input.KeyCode == Enum.KeyCode.R then
 			self:Rotate()
+		elseif input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.C then
+			self:StopPlacement()
 		end
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			self:ConfirmPlacement()
 		end
-	end)
-
-	self.signals.OnUnstacked:Connect(function()
-		print("UNSTACKED")
 	end)
 
 	self.signals.OnPlacementStarted:Fire()
@@ -218,8 +220,6 @@ function PlacementClient:ConfirmPlacement()
 	if self:CanPlaceStructure(self.state.ghostStructure) == false then
 		return
 	end
-
-	--self:StopPlacement();
 
 	self.signals.OnPlacementConfirmed:Fire(self.state.structureId, self.state)
 end
@@ -246,8 +246,8 @@ end
 
 function PlacementClient:StopPlacement()
 	self.state.isPlacing = false
-	self.onRenderStep:Disconnect()
-	self.onInputBegan:Disconnect()
+
+	self:Disconnect()
 
 	if self.state.ghostStructure ~= nil then
 		self.state.ghostStructure:Destroy()
@@ -269,7 +269,7 @@ function PlacementClient:PartIsFromStructure(part: BasePart)
 		return false
 	end
 
-	if part:IsA("Part") == false then
+	if part:IsA("BasePart") == false then
 		return false
 	end
 
@@ -336,6 +336,12 @@ function PlacementClient:Update(deltaTime: number)
 
 	self:UpdatePosition()
 	self:UpdateHighlight()
+
+	-- The radius visual should follow the ghost structure
+	if self.state.radiusVisual then
+		self.state.radiusVisual.CFrame = CFrame.new(self.state.ghostStructure.PrimaryPart.Position)
+		self.state.radiusVisual.CFrame = self.state.radiusVisual.CFrame * CFrame.Angles(0, math.rad(90), math.rad(90))
+	end
 end
 
 function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
@@ -763,7 +769,53 @@ end
 
 function PlacementClient:Destroy()
 	self:StopPlacement()
-	self.onRenderStep:Disconnect()
+	self:Disconnect()
+end
+
+function PlacementClient:Disconnect()
+	for _, connection in pairs(self.connections) do
+		connection:Disconnect()
+	end
+end
+
+function PlacementClient:CreateRadiusVisual(radius: number)
+	if self.state.ghostStructure == nil then
+		return
+	end
+
+	if self.radiusVisual then
+		self.radiusVisual:Destroy()
+	end
+
+	self.radiusVisual = Instance.new("Part")
+	self.radiusVisual.Shape = Enum.PartType.Cylinder
+	self.radiusVisual.CastShadow = false
+
+	-- radius is in tiles, and each tile is 8 studs
+	local size = Vector3.new(0.1, 0.1, 0.1)
+	local radius = radius * 8
+
+	self.radiusVisual.Size = Vector3.new(0.05, radius * 2 + 8, radius * 2 + 8)
+	-- rotate the radius visual so that it is flat
+	--self.radiusVisual.CFrame = CFrame.Angles(0, math.rad(90), math.rad(90))
+
+	--self.radiusVisual.Anchored = true
+	self.radiusVisual.CanCollide = false
+	self.radiusVisual.Transparency = 0.3
+	self.radiusVisual.Parent = workspace
+
+	-- Pulse the radius visual
+
+	local part = self.radiusVisual -- replace this with the actual part you want to pulse
+
+	local pulseTween = TweenService:Create(
+		part,
+		TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true),
+		{ Transparency = 0.7 }
+	)
+	pulseTween:Play()
+
+	return self.radiusVisual
 end
 
 return PlacementClient

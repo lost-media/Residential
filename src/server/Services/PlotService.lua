@@ -127,4 +127,16 @@ function PlotService.Client:PlaceStructure(player: Player, structureId: string, 
 	self.Server:PlaceStructure(player, structureId, state)
 end
 
+function PlotService:GetAdjacentStructuresFromTile(player: Player, tile: BasePart)
+	local plot = self:GetPlotFromPlayer(player)
+
+	if plot == nil then
+		return
+	end
+
+	local structures = {}
+
+	return structures
+end
+
 return PlotService

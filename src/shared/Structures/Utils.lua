@@ -25,6 +25,46 @@ function StructuresUtils.GetStructureFromId(structureId: string)
 	return structure
 end
 
+function StructuresUtils.IsARoad(structureId: string): boolean
+	local structure = StructuresUtils.GetStructureFromId(structureId)
+
+	if structure == nil then
+		return false
+	end
+
+	return structure.Type == "Road"
+end
+
+function StructuresUtils.IsAnIndustrial(structureId: string): boolean
+	local structure = StructuresUtils.GetStructureFromId(structureId)
+
+	if structure == nil then
+		return false
+	end
+
+	return structure.Type == "Industrial"
+end
+
+function StructuresUtils.IsAResidence(structureId: string): boolean
+	local structure = StructuresUtils.GetStructureFromId(structureId)
+
+	if structure == nil then
+		return false
+	end
+
+	return structure.Type == "Residence"
+end
+
+function StructuresUtils.IsACommercial(structureId: string): boolean
+	local structure = StructuresUtils.GetStructureFromId(structureId)
+
+	if structure == nil then
+		return false
+	end
+
+	return structure.Type == "Commercial"
+end
+
 function StructuresUtils.GetStructureModelFromId(structureId: string): Model?
 	local structureType, structureName = StructuresUtils.ParseStructureId(structureId)
 
@@ -37,6 +77,7 @@ end
 
 function StructuresUtils.GetIdFromStructure(structure: Model): string?
 	for structureType, structureCollection in pairs(StructuresCollection) do
+		print(structureCollection)
 		for structureName, structureData in pairs(structureCollection) do
 			if structureData.Model == structure then
 				return structureData.Id
