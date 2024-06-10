@@ -320,14 +320,13 @@ function PlacementClient:Update(deltaTime: number)
 
 	-- Get the closest base part to the hit position
 	local closestInstance = mouse:GetClosestInstanceToMouseFromParent(self.plot)
-	
-	
+
 	-- The radius visual should follow the ghost structure
 	if self.state.radiusVisual then
 		self.state.radiusVisual.CFrame = CFrame.new(self.state.ghostStructure.PrimaryPart.Position)
 		self.state.radiusVisual.CFrame = self.state.radiusVisual.CFrame * CFrame.Angles(0, math.rad(90), math.rad(90))
 	end
-	
+
 	if closestInstance == nil then
 		return
 	end
@@ -343,8 +342,6 @@ function PlacementClient:Update(deltaTime: number)
 
 	self:UpdatePosition()
 	self:UpdateHighlight()
-
-	
 end
 
 function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
