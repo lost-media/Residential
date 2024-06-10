@@ -195,7 +195,7 @@ function PlacementClient:StartPlacement(structureId: string)
 	end
 
 	self.state.ghostStructure = self:GenerateGhostStructureFromId(structureId)
-	--self.state.radiusVisual = self:CreateRadiusVisual(2)
+	self.state.radiusVisual = self:CreateRadiusVisual(2)
 
 	-- Set up render stepped
 	self.connections.onRenderStep = RunService.RenderStepped:Connect(function(dt: number)
@@ -320,7 +320,14 @@ function PlacementClient:Update(deltaTime: number)
 
 	-- Get the closest base part to the hit position
 	local closestInstance = mouse:GetClosestInstanceToMouseFromParent(self.plot)
-
+	
+	
+	-- The radius visual should follow the ghost structure
+	if self.state.radiusVisual then
+		self.state.radiusVisual.CFrame = CFrame.new(self.state.ghostStructure.PrimaryPart.Position)
+		self.state.radiusVisual.CFrame = self.state.radiusVisual.CFrame * CFrame.Angles(0, math.rad(90), math.rad(90))
+	end
+	
 	if closestInstance == nil then
 		return
 	end
@@ -337,11 +344,7 @@ function PlacementClient:Update(deltaTime: number)
 	self:UpdatePosition()
 	self:UpdateHighlight()
 
-	-- The radius visual should follow the ghost structure
-	if self.state.radiusVisual then
-		self.state.radiusVisual.CFrame = CFrame.new(self.state.ghostStructure.PrimaryPart.Position)
-		self.state.radiusVisual.CFrame = self.state.radiusVisual.CFrame * CFrame.Angles(0, math.rad(90), math.rad(90))
-	end
+	
 end
 
 function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
@@ -797,7 +800,7 @@ function PlacementClient:CreateRadiusVisual(radius: number)
 
 	self.radiusVisual.Size = Vector3.new(0.05, radius * 2 + 8, radius * 2 + 8)
 	-- rotate the radius visual so that it is flat
-	--self.radiusVisual.CFrame = CFrame.Angles(0, math.rad(90), math.rad(90))
+	self.radiusVisual.Color = Color3.fromRGB(50, 82, 100)
 
 	--self.radiusVisual.Anchored = true
 	self.radiusVisual.CanCollide = false
