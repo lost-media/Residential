@@ -2,9 +2,9 @@
 
 local RS = game:GetService("ReplicatedStorage")
 
-local Signal = require(RS.Packages.Signal)
 local Knit = require(RS.Packages.Knit)
 local PlotTypes = require(RS.Shared.Types.Plot)
+local Signal = require(RS.Packages.Signal)
 
 local PlotController = Knit.CreateController({
 	Name = "PlotController",

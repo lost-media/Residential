@@ -68,6 +68,7 @@ export type StructuresCollection = {
 }
 
 export type Structure = {
+	Type: "Road" | "Industrial" | "Residence" | "Commercial",
 	Name: string,
 	Id: string,
 	Description: string,
@@ -139,8 +140,43 @@ export type Residence = Structure & {
 export type Commercial = Structure & {}
 
 local Structures: StructuresCollection = {
+	Residence = {
+		["Starter House"] = {
+			Type = "Residence",
+			Name = "Starter House",
+			Id = "Residence/Starter House",
+			Description = "A small house for beginners",
+			Price = 1000,
+			Model = Residence["Starter House"],
+			BuildTime = 5,
+			FullArea = true,
+
+			Stacking = {
+				Allowed = true,
+				AllowedModels = {
+					["Residence/Starter House"] = {
+						IncreaseLevel = true,
+						MaxStack = 3,
+						Orientation = {
+							Strict = false,
+						},
+						RequiredSnapPoints = {
+							"Top1",
+						},
+						OccupiedSnapPoints = {
+							["Top1"] = "Top1",
+						},
+						WhitelistedSnapPoints = {
+							"Top1",
+						},
+					},
+				},
+			},
+		},
+	},
 	Road = {
 		["Normal Road"] = {
+			Type = "Road",
 			Name = "Normal Road",
 			Id = "Road/Normal Road",
 			Description = "A normal road",
@@ -245,7 +281,102 @@ local Structures: StructuresCollection = {
 			},
 		},
 
+		["Curved Road"] = {
+			Type = "Road",
+			Name = "Curved Road",
+			Id = "Road/Curved Road",
+			Description = "A normal road",
+			Price = 100,
+			Model = Road["Curved Road"],
+			BuildTime = 1,
+			FullArea = true,
+
+			Properties = {
+				Speed = 1,
+				Capacity = 1,
+			},
+
+			Stacking = {
+				Allowed = true,
+				AllowedModels = {
+
+					["Road/Streetlight"] = {
+						Orientation = {
+							Strict = false,
+						},
+
+						WhitelistedSnapPoints = {
+							"Top1",
+							"Top2",
+							"Top3",
+						},
+
+						RequiredSnapPoints = {
+							"Top1",
+							"Top2",
+							"Top3",
+						},
+
+						OccupiedSnapPoints = {
+							["Top1"] = "Top1",
+							["Top2"] = "Top2", -- If mouse is near Top1, snap to Center
+							["Top3"] = "Top3", -- If mouse is near Top2, snap to Center
+						},
+					},
+				},
+			},
+		},
+
+		["Intersection Road"] = {
+			Type = "Road",
+			Name = "Intersection Road",
+			Id = "Road/Intersection Road",
+			Description = "A normal road",
+			Price = 100,
+			Model = Road["Intersection Road"],
+			BuildTime = 1,
+			FullArea = true,
+
+			Properties = {
+				Speed = 1,
+				Capacity = 1,
+			},
+
+			Stacking = {
+				Allowed = true,
+				AllowedModels = {
+					["Road/Streetlight"] = {
+						Orientation = {
+							Strict = false,
+						},
+
+						WhitelistedSnapPoints = {
+							"Top1",
+							"Top2",
+							"Top3",
+							"Top4",
+						},
+
+						RequiredSnapPoints = {
+							"Top1",
+							"Top2",
+							"Top3",
+							"Top4",
+						},
+
+						OccupiedSnapPoints = {
+							["Top1"] = "Top1",
+							["Top2"] = "Top2", -- If mouse is near Top1, snap to Center
+							["Top3"] = "Top3", -- If mouse is near Top2, snap to Center
+							["Top4"] = "Top4", -- If mouse is near Top2, snap to Center
+						},
+					},
+				},
+			},
+		},
+
 		["Elevated Normal Road"] = {
+			Type = "Road",
 			Name = "Elevated Normal Road",
 			Id = "Road/Elevated Normal Road",
 			Description = "A normal elevated road",
@@ -349,6 +480,7 @@ local Structures: StructuresCollection = {
 		},
 
 		["Streetlight"] = {
+			Type = "Road",
 			Name = "Streetlight",
 			Id = "Road/Streetlight",
 			Description = "A normal streetlight",

@@ -8,9 +8,12 @@ type IPlotClient = {
 	new: (plot: PlotTypes.Plot) -> PlotClient,
 }
 
-export type PlotClient = typeof(setmetatable({} :: {
-	plot: PlotTypes.Plot,
-}, {} :: IPlotClient))
+export type PlotClient = typeof(setmetatable(
+	{} :: {
+		plot: PlotTypes.Plot,
+	},
+	{} :: IPlotClient
+))
 
 local PlotClient: IPlotClient = {} :: IPlotClient
 PlotClient.__index = PlotClient

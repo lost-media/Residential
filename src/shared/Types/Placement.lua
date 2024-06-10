@@ -11,7 +11,10 @@ export type PlacementState = {
 	rotation: number,
 	level: number,
 
-	-- Stacked properties
+	mountedAttachment: Attachment,
+	attachments: { Attachment },
+	stackedStructure: Model,
+
 	isStacked: boolean,
 }
 

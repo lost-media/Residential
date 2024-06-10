@@ -1,19 +1,22 @@
 --!strict
 
 local RS = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 
-local Plot = require(RS.Shared.Types.Plot)
 local Mouse = require(script.Parent.Parent.Utils.Mouse)
-local StructuresUtils = require(RS.Shared.Structures.Utils)
-local Signal = require(RS.Packages.Signal)
 local PlacementUtils = require(RS.Shared.PlacementUtils)
+local Signal = require(RS.Packages.Signal)
+local StructuresUtils = require(RS.Shared.Structures.Utils)
+
+-- Types
+local PlacementTypes = require(RS.Shared.Types.Placement)
+local Plot = require(RS.Shared.Types.Plot)
 
 -- Constants
 local ROTATION_STEP = 90
-local TRANSPARENCY_DIM_FACTOR = 2
+local TRANSPARENCY_DIM_FACTOR = 4
 local TWEEN_INFO = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0)
 
 type IPlacementClient = {
@@ -42,8 +45,8 @@ export type PlacementClient = typeof(setmetatable(
 	{} :: {
 		mouse: Mouse.Mouse,
 		plot: Plot.Plot,
-		state: ClientState,
-		onRenderStep: RBXScriptConnection,
+		state: PlacementTypes.PlacementState,
+		connections: { [string]: RBXScriptConnection },
 		signals: {
 			OnPlacementConfirmed: Signal.Signal,
 			OnPlacementStarted: Signal.Signal,
@@ -60,24 +63,6 @@ export type PlacementClient = typeof(setmetatable(
 	{} :: IPlacementClient
 ))
 
-export type ClientState = {
-	isPlacing: boolean,
-	canConfirmPlacement: boolean,
-
-	structureId: string?,
-	ghostStructure: Model?,
-	tile: BasePart?,
-
-	rotation: number,
-	level: number,
-
-	mountedAttachment: Attachment,
-	attachments: { Attachment },
-	stackedStructure: Model,
-
-	isStacked: boolean,
-}
-
 local function dimModel(model: Model)
 	-- If the model is already dimmed, no need to dim it again
 	if model:GetAttribute("Dimmed") == true then
@@ -86,11 +71,29 @@ local function dimModel(model: Model)
 
 	for _, instance in ipairs(model:GetDescendants()) do
 		if instance:IsA("BasePart") then
+			instance:SetAttribute("OriginalTransparency", instance.Transparency)
 			instance.Transparency = 1 - (1 - instance.Transparency) / TRANSPARENCY_DIM_FACTOR
 		end
 	end
 
 	model:SetAttribute("Dimmed", true)
+end
+
+function unDimModel(model: Model)
+	if model:GetAttribute("Dimmed") == false then
+		return
+	end
+
+	for _, instance in ipairs(model:GetDescendants()) do
+		if instance:IsA("BasePart") then
+			local originalTransparency = instance:GetAttribute("OriginalTransparency")
+			if originalTransparency ~= nil then
+				instance.Transparency = originalTransparency
+			end
+		end
+	end
+
+	model:SetAttribute("Dimmed", false)
 end
 
 local function uncollideModel(model: Model)
@@ -132,6 +135,8 @@ function PlacementClient.new(plot: Plot.Plot)
 		isStacked = false,
 	}
 
+	self.connections = {}
+
 	-- Signals
 	self.signals = {
 		OnPlacementConfirmed = Signal.new(),
@@ -159,6 +164,9 @@ function PlacementClient:GenerateGhostStructureFromId(structureId: string)
 	local ghostStructure = structure:Clone()
 	ghostStructure.Parent = workspace
 
+	-- SETTING: only including the plot makes the ghost
+	-- structure snap to the
+
 	self.mouse:SetFilterType(Enum.RaycastFilterType.Include)
 	self.mouse:SetTargetFilter({
 		--ghostStructure,
@@ -170,7 +178,6 @@ function PlacementClient:GenerateGhostStructureFromId(structureId: string)
 	self.selectionBox = self:MakeSelectionBox(ghostStructure)
 
 	self.state.ghostStructure = ghostStructure
-	--dimModel(ghostStructure);
 	uncollideModel(ghostStructure)
 
 	return ghostStructure
@@ -188,23 +195,22 @@ function PlacementClient:StartPlacement(structureId: string)
 	end
 
 	self.state.ghostStructure = self:GenerateGhostStructureFromId(structureId)
+	self.state.radiusVisual = self:CreateRadiusVisual(2)
 
 	-- Set up render stepped
-	self.onRenderStep = RunService.RenderStepped:Connect(function(dt: number)
+	self.connections.onRenderStep = RunService.RenderStepped:Connect(function(dt: number)
 		self:Update(dt)
 	end)
 
-	self.onInputBegan = UIS.InputBegan:Connect(function(input: InputObject)
+	self.connections.onInputBegan = UIS.InputBegan:Connect(function(input: InputObject)
 		if input.KeyCode == Enum.KeyCode.R then
 			self:Rotate()
+		elseif input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.C then
+			self:StopPlacement()
 		end
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			self:ConfirmPlacement()
 		end
-	end)
-
-	self.signals.OnUnstacked:Connect(function()
-		print("UNSTACKED")
 	end)
 
 	self.signals.OnPlacementStarted:Fire()
@@ -214,10 +220,6 @@ function PlacementClient:ConfirmPlacement()
 	if self:CanPlaceStructure(self.state.ghostStructure) == false then
 		return
 	end
-
-	--self:StopPlacement();
-
-	print(self.state.level)
 
 	self.signals.OnPlacementConfirmed:Fire(self.state.structureId, self.state)
 end
@@ -244,8 +246,8 @@ end
 
 function PlacementClient:StopPlacement()
 	self.state.isPlacing = false
-	self.onRenderStep:Disconnect()
-	self.onInputBegan:Disconnect()
+
+	self:Disconnect()
 
 	if self.state.ghostStructure ~= nil then
 		self.state.ghostStructure:Destroy()
@@ -267,7 +269,7 @@ function PlacementClient:PartIsFromStructure(part: BasePart)
 		return false
 	end
 
-	if part:IsA("Part") == false then
+	if part:IsA("BasePart") == false then
 		return false
 	end
 
@@ -318,7 +320,14 @@ function PlacementClient:Update(deltaTime: number)
 
 	-- Get the closest base part to the hit position
 	local closestInstance = mouse:GetClosestInstanceToMouseFromParent(self.plot)
-
+	
+	
+	-- The radius visual should follow the ghost structure
+	if self.state.radiusVisual then
+		self.state.radiusVisual.CFrame = CFrame.new(self.state.ghostStructure.PrimaryPart.Position)
+		self.state.radiusVisual.CFrame = self.state.radiusVisual.CFrame * CFrame.Angles(0, math.rad(90), math.rad(90))
+	end
+	
 	if closestInstance == nil then
 		return
 	end
@@ -330,8 +339,12 @@ function PlacementClient:Update(deltaTime: number)
 		self:AttemptToSnapToAttachment(closestInstance)
 	end
 
+	self:UpdateLevelVisibility()
+
 	self:UpdatePosition()
 	self:UpdateHighlight()
+
+	
 end
 
 function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
@@ -562,8 +575,6 @@ function PlacementClient:SnapToAttachment(attachment: Attachment, tile: BasePart
 		return
 	end
 
-	--simulatedCFrame = simulatedCFrame * CFrame.Angles(0, math.rad(self.state.rotation), 0)
-
 	self:MoveModelToCF(ghostStructure, simulatedCFrame, false)
 end
 
@@ -707,8 +718,6 @@ function PlacementClient:AttemptToSnapRotationOnStrictOrientation()
 		return
 	end
 
-	--self:AttemptToSnapToAttachment(self.state.mountedAttachment);
-
 	local rotations = self:GetValidRotationsWithStrictOrientation()
 
 	if rotations == nil then
@@ -725,8 +734,6 @@ function PlacementClient:AttemptToSnapRotationOnStrictOrientation()
 		self.state.rotation = rotations[1]
 		self.signals.OnRotate:Fire(self.state.rotation)
 	end
-
-	--self:AttemptToSnapToAttachment(self.state.mountedAttachment);
 end
 
 function PlacementClient:CanPlaceStructure(model: Model)
@@ -743,9 +750,75 @@ function PlacementClient:CanPlaceStructure(model: Model)
 	return true
 end
 
+function PlacementClient:UpdateLevelVisibility()
+	for _, structure in ipairs(self.plot.Structures:GetChildren()) do
+		if structure:IsA("Model") then
+			local level = structure:GetAttribute("Level")
+			if level == nil then
+				level = 0
+			end
+
+			-- SETTING: make this a setting so that the player can toggle it
+			local structureLevel = level
+
+			if structureLevel == self.state.level then
+				unDimModel(structure)
+			else
+				dimModel(structure)
+			end
+		end
+	end
+end
+
 function PlacementClient:Destroy()
 	self:StopPlacement()
-	self.onRenderStep:Disconnect()
+	self:Disconnect()
+end
+
+function PlacementClient:Disconnect()
+	for _, connection in pairs(self.connections) do
+		connection:Disconnect()
+	end
+end
+
+function PlacementClient:CreateRadiusVisual(radius: number)
+	if self.state.ghostStructure == nil then
+		return
+	end
+
+	if self.radiusVisual then
+		self.radiusVisual:Destroy()
+	end
+
+	self.radiusVisual = Instance.new("Part")
+	self.radiusVisual.Shape = Enum.PartType.Cylinder
+	self.radiusVisual.CastShadow = false
+
+	-- radius is in tiles, and each tile is 8 studs
+	local size = Vector3.new(0.1, 0.1, 0.1)
+	local radius = radius * 8
+
+	self.radiusVisual.Size = Vector3.new(0.05, radius * 2 + 8, radius * 2 + 8)
+	-- rotate the radius visual so that it is flat
+	self.radiusVisual.Color = Color3.fromRGB(50, 82, 100)
+
+	--self.radiusVisual.Anchored = true
+	self.radiusVisual.CanCollide = false
+	self.radiusVisual.Transparency = 0.3
+	self.radiusVisual.Parent = workspace
+
+	-- Pulse the radius visual
+
+	local part = self.radiusVisual -- replace this with the actual part you want to pulse
+
+	local pulseTween = TweenService:Create(
+		part,
+		TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true),
+		{ Transparency = 0.7 }
+	)
+	pulseTween:Play()
+
+	return self.radiusVisual
 end
 
 return PlacementClient

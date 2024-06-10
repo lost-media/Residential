@@ -1,6 +1,6 @@
 local RS = game:GetService("ReplicatedStorage")
-local Structure = require(RS.Shared.Structures)
 local PlotConfigs = require(RS.Shared.Configs.Plot)
+local Structure = require(RS.Shared.Structures)
 
 local PlacementUtils = {}
 

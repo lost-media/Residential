@@ -23,9 +23,10 @@ local PlacementController: PlacementController = Knit.CreateController({
 	StructuresIndex = 1,
 	StructuresList = {
 		"Road/Streetlight",
+		"Road/Curved Road",
 		"Road/Normal Road",
+		"Road/Intersection Road",
 		"Road/Elevated Normal Road",
-		"Road/Test",
 	},
 })
 
@@ -47,7 +48,7 @@ function PlacementController:KnitStart()
 			-- Set up events from the client
 			local client = self:GetClient()
 			client.signals.OnPlacementConfirmed:Connect(
-				function(structureId: string, state: PlacementClient.ClientState)
+				function(structureId: string, state: PlacementClient.PlacementClient)
 					PlotService:PlaceStructure(structureId, state)
 				end
 			)
