@@ -1,6 +1,7 @@
 local RS = game:GetService("ReplicatedStorage")
 local PlotConfigs = require(RS.Shared.Configs.Plot)
 local Structure = require(RS.Shared.Structures)
+local StructureTypes = require(RS.Shared.Structures.Types)
 
 local PlacementUtils = {}
 
@@ -18,7 +19,7 @@ end
 function PlacementUtils.GetSnappedAttachmentCFrame(
 	tile: BasePart,
 	snappedPoint: Attachment,
-	structureInfo: Structure.Structure,
+	structureInfo: StructureTypes.Structure,
 	state: { level: number, rotation: number }
 )
 	if tile == nil then

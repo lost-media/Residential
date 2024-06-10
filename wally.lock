@@ -5,7 +5,7 @@ registry = "test"
 [[package]]
 name = "brandon/placement"
 version = "0.1.0"
-dependencies = [["Knit", "sleitnick/knit@1.7.0"], ["Promise", "evaera/promise@4.0.0"], ["Signal", "sleitnick/signal@2.0.1"]]
+dependencies = [["Knit", "sleitnick/knit@1.7.0"], ["Promise", "evaera/promise@4.0.0"], ["Signal", "sleitnick/signal@2.0.1"], ["TableUtil", "sleitnick/table-util@1.2.1"]]
 
 [[package]]
 name = "evaera/promise"
@@ -30,4 +30,9 @@ dependencies = []
 [[package]]
 name = "sleitnick/signal"
 version = "2.0.1"
+dependencies = []
+
+[[package]]
+name = "sleitnick/table-util"
+version = "1.2.1"
 dependencies = []

@@ -23,6 +23,8 @@ local PlacementController: PlacementController = Knit.CreateController({
 	StructuresIndex = 1,
 	StructuresList = {
 		"Road/Streetlight",
+		"Road/Highway Road",
+		"Road/Dead-End Road",
 		"Road/Curved Road",
 		"Road/Normal Road",
 		"Road/Intersection Road",

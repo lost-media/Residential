@@ -174,7 +174,7 @@ function PlacementClient:GenerateGhostStructureFromId(structureId: string)
 		self.plot,
 	})
 
-	self.highlightInstance = self:MakeHighlight(ghostStructure)
+	--self.highlightInstance = self:MakeHighlight(ghostStructure)
 	self.selectionBox = self:MakeSelectionBox(ghostStructure)
 
 	self.state.ghostStructure = ghostStructure
@@ -240,6 +240,9 @@ function PlacementClient:MakeSelectionBox(instance: Instance)
 	selectionBox.Color3 = Color3.fromRGB(0, 255, 0)
 	selectionBox.LineThickness = 0.05
 	selectionBox.Adornee = instance
+
+	selectionBox.SurfaceTransparency = 0.5
+	selectionBox.SurfaceColor3 = Color3.fromRGB(0, 255, 0)
 
 	return selectionBox
 end
@@ -320,14 +323,13 @@ function PlacementClient:Update(deltaTime: number)
 
 	-- Get the closest base part to the hit position
 	local closestInstance = mouse:GetClosestInstanceToMouseFromParent(self.plot)
-	
-	
+
 	-- The radius visual should follow the ghost structure
 	if self.state.radiusVisual then
 		self.state.radiusVisual.CFrame = CFrame.new(self.state.ghostStructure.PrimaryPart.Position)
 		self.state.radiusVisual.CFrame = self.state.radiusVisual.CFrame * CFrame.Angles(0, math.rad(90), math.rad(90))
 	end
-	
+
 	if closestInstance == nil then
 		return
 	end
@@ -342,9 +344,7 @@ function PlacementClient:Update(deltaTime: number)
 	self:UpdateLevelVisibility()
 
 	self:UpdatePosition()
-	self:UpdateHighlight()
-
-	
+	self:UpdateSelectionBox()
 end
 
 function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
@@ -418,6 +418,7 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 
 			if closestAttachment:GetAttribute("Occupied") == true then
 				self:RemoveStacked()
+				self.state.canConfirmPlacement = false
 				return
 			end
 
@@ -526,10 +527,37 @@ function PlacementClient:UpdateHighlight()
 		self.state.highlightInstance = self:MakeHighlight(self.state.ghostStructure)
 	end
 
+	self.state.highlightInstance.Adornee = self.state.ghostStructure
+
 	if self.state.canConfirmPlacement == true then
-		self.state.highlightInstance.FillColor = Color3.fromRGB(0, 255, 0)
+		self.selectionBox.Color3 = Color3.fromRGB(0, 255, 0)
+		self.selectionBox.SurfaceColor3 = Color3.fromRGB(0, 255, 0)
+		--self.state.highlightInstance.FillColor = Color3.fromRGB(0, 255, 0)
+		--self.state.highlightInstance.OutlineColor = Color3.fromRGB(0, 255, 0)
 	else
-		self.state.highlightInstance.FillColor = Color3.fromRGB(255, 0, 0)
+		self.selectionBox.Color3 = Color3.fromRGB(255, 0, 0)
+		self.selectionBox.SurfaceColor3 = Color3.fromRGB(255, 0, 0)
+		--self.state.highlightInstance.FillColor = Color3.fromRGB(255, 0, 0)
+		--self.state.highlightInstance.OutlineColor = Color3.fromRGB(255, 0, 0)
+	end
+end
+
+function PlacementClient:UpdateSelectionBox()
+	if self.state.ghostStructure == nil then
+		return
+	end
+
+	if self.selectionBox == nil then
+		return;
+	end
+
+	if self.state.canConfirmPlacement == true then
+		self.selectionBox.Color3 = Color3.fromRGB(0, 255, 0)
+		self.selectionBox.SurfaceColor3 = Color3.fromRGB(0, 255, 0)
+	else
+		self.selectionBox.Color3 = Color3.fromRGB(255, 0, 0)
+		self.selectionBox.SurfaceColor3 = Color3.fromRGB(255, 0, 0)
+
 	end
 end
 
@@ -542,6 +570,10 @@ function PlacementClient:SnapToTile(tile: BasePart)
 
 	if tile == nil then
 		return
+	end
+
+	if (tile:GetAttribute("Occupied") == true) then
+		self.state.canConfirmPlacement = false
 	end
 
 	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, self.state)
