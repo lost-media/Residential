@@ -5,6 +5,7 @@ local RS = game:GetService("ReplicatedStorage")
 local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit)
 local PlacementTypes = require(RS.Shared.Types.Placement)
 local PlacementUtils = require(game:GetService("ReplicatedStorage").Shared.PlacementUtils)
+local Signal = require(game:GetService("ReplicatedStorage").Packages.Signal)
 
 export type IPlot = {
 	__index: IPlot,
@@ -30,6 +31,8 @@ type Plot = typeof(setmetatable(
 		id: number,
 		model: Model,
 		size: number,
+
+		signals: { PlotAssigned: Signal.Signal<>; PlacedStructure: Signal.Signal<>;}
 	},
 	{} :: IPlot
 ))
@@ -80,6 +83,10 @@ function Plot.new(model, id)
 	self.player = nil
 	self.placeables = {}
 	self.tiles = {}
+	self.signals = {
+		PlotAssigned = Signal.new(),
+		PlacedStructure = Signal.new()
+	}
 
 	self.id = id
 	self.model = model
@@ -218,6 +225,7 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 	structure:SetAttribute("Rotation", state.rotation)
 	structure:SetAttribute("Tile", state.tile.Name)
 	structure:SetAttribute("Stacked", state.isStacked or false)
+	structure:SetAttribute("Category", placeableInfo.Category)
 
 	tile:SetAttribute("Occupied", true)
 
@@ -247,8 +255,9 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 			error("Snapped point is nil")
 		end
 
-		local snappedPointsTaken: { Attachment } = state.SnappedPointsTaken or { state.SnappedPoint }
+		local snappedPointsTaken: { Attachment } = state.SnappedPointsTaken or { snappedPoint }
 
+		-- Set all snapped points as occupied
 		for _, taken in ipairs(snappedPointsTaken) do
 			taken:SetAttribute("Occupied", true)
 		end
@@ -257,6 +266,25 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 
 		-- Don't rotate or level the structure
 		structure:SetPrimaryPartCFrame(cframe)
+	end
+
+	self.signals.PlacedStructure:Fire(structure)
+
+	local type = placeableInfo.Category
+
+	if type == "Road" then
+		local allRoadConnections = self:getRoadConnectionAttachments()
+		local currentRoadConnections = self:getStructureRoadAttachments(structure)
+
+		for _, connection: Attachment in ipairs(currentRoadConnections) do
+			for _, roadConnection: Attachment in ipairs(allRoadConnections) do
+				if roadConnection ~= connection and (roadConnection.WorldCFrame.Position - connection.WorldCFrame.Position).Magnitude < 0.1 then
+					print('adjacent road connection found')
+				end
+			end
+			
+		end
+		
 	end
 end
 
@@ -269,6 +297,65 @@ function Plot:getPlaceable(structure: Model): Model?
 		end
 	end
 	return nil
+end
+
+function Plot:getStructureRoadAttachments(structure: Model) : {Attachment}
+
+	if structure == nil then
+		error("Structure is nil")
+	end
+
+	if structure.PrimaryPart == nil then
+		error("Structure does not have a PrimaryPart")
+	end
+
+	if (structure:GetAttribute("Category") ~= "Road") then
+		error("Structure is not a road")
+	end
+
+	local roadConnectionsReturn = {}
+
+	local roadConnections = structure.PrimaryPart:GetChildren()
+
+	for _, connection in ipairs(roadConnections) do
+		if connection:IsA("Attachment") and connection.Name == "RoadConnection" then
+			table.insert(roadConnectionsReturn, connection)
+		end
+	end
+
+	return roadConnectionsReturn
+end
+
+function Plot:getRoadConnectionAttachments() : {Attachment}
+	local roadConnectionsReturn = {}
+
+	for _, structure in ipairs(self.model.Structures:GetChildren()) do
+		local roadConnections = self:getStructureRoadAttachments(structure)
+
+		for _, connection in ipairs(roadConnections) do
+			table.insert(roadConnectionsReturn, connection)
+		end
+	end
+
+	return roadConnectionsReturn
+end
+
+function Plot:getStructureFromRoadConnectionAttachment(attachment: Attachment): Model?
+	if attachment == nil then
+		error("Attachment is nil")
+	end
+
+	local model = attachment:FindFirstAncestorWhichIsA("Model")
+
+	if model == nil then
+		error("Attachment does not have a model ancestor")
+	end
+
+	if (model:IsDescendantOf(self.model) == false) then
+		error("Model is not a descendant of the plot")
+	end
+
+	return model
 end
 
 function Plot:updateBuildingStatus()

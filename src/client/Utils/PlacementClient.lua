@@ -418,6 +418,7 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 
 			if closestAttachment:GetAttribute("Occupied") == true then
 				self:RemoveStacked()
+				self.state.canConfirmPlacement = false
 				return
 			end
 
