@@ -219,6 +219,8 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 	structure:SetAttribute("Tile", state.tile.Name)
 	structure:SetAttribute("Stacked", state.isStacked or false)
 
+	tile:SetAttribute("Occupied", true)
+
 	structure.Parent = self.model.Structures
 
 	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, state)
