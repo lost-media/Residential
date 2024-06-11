@@ -15,6 +15,7 @@ local PlacementTypes = require(RS.Shared.Types.Placement)
 local Plot = require(RS.Shared.Types.Plot)
 
 -- Constants
+local MIN_LEVEL = 0;
 local ROTATION_STEP = 90
 local TRANSPARENCY_DIM_FACTOR = 4
 local TWEEN_INFO = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0)
@@ -57,6 +58,7 @@ export type PlacementClient = typeof(setmetatable(
 			OnStacked: Signal.Signal,
 			OnStackedAttachmentChanged: Signal.Signal,
 			OnUnstacked: Signal.Signal,
+			OnLevelChanged: Signal.Signal,
 		},
 		structureCollectionEntry: table,
 	},
@@ -148,6 +150,7 @@ function PlacementClient.new(plot: Plot.Plot)
 		OnStacked = Signal.new(),
 		OnStackedAttachmentChanged = Signal.new(),
 		OnUnstacked = Signal.new(),
+		OnLevelChanged = Signal.new(),
 	}
 
 	return self
@@ -371,7 +374,7 @@ function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
 
 	-- POSSIBLE SETTING: SMART LEVELING
 	if (self:PartIsTile(hit) == true) then
-		self.state.level = 0;
+		--self.state.level = 0;
 	end
 
 	self:RemoveStacked()
@@ -904,12 +907,21 @@ function PlacementClient:CreateRadiusVisual(radius: number)
 	return self.radiusVisual
 end
 
+function PlacementClient:ChangeLevel(level: number)
+	if level < MIN_LEVEL then
+		level = MIN_LEVEL
+	end
+
+	self.state.level = level;
+	self.signals.OnLevelChanged:Fire(level)
+end
+
 function PlacementClient:RaiseLevel()
-	self.state.level = self.state.level + 1
+	self:ChangeLevel(self.state.level + 1);
 end
 
 function PlacementClient:LowerLevel()
-	self.state.level = self.state.level - 1
+	self:ChangeLevel(math.max(self.state.level - 1, MIN_LEVEL));
 end
 
 function PlacementClient:GetStructureOnTile(tile: BasePart)
