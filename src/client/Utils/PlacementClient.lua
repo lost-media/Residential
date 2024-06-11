@@ -207,6 +207,10 @@ function PlacementClient:StartPlacement(structureId: string)
 			self:Rotate()
 		elseif input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.C then
 			self:StopPlacement()
+		elseif input.KeyCode == Enum.KeyCode.Up then
+			self:RaiseLevel()
+		elseif input.KeyCode == Enum.KeyCode.Down then
+			self:LowerLevel()
 		end
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			self:ConfirmPlacement()
@@ -255,6 +259,11 @@ function PlacementClient:StopPlacement()
 	if self.state.ghostStructure ~= nil then
 		self.state.ghostStructure:Destroy()
 	end
+
+	if self.hoverPart then
+		self.hoverPart:Destroy()
+	end
+
 
 	self.signals.OnPlacementEnded:Fire()
 end
@@ -354,7 +363,16 @@ function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
 		self.signals.OnTileChanged:Fire(closestInstance)
 	end
 
-	self.state.level = 0
+	-- check to see if the current mouse.hit is a tile
+	local hit = self.mouse:GetTarget()
+	if hit == nil then
+		return
+	end
+
+	-- POSSIBLE SETTING: SMART LEVELING
+	if (self:PartIsTile(hit) == true) then
+		self.state.level = 0;
+	end
 
 	self:RemoveStacked()
 
@@ -387,7 +405,7 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 
 		if isStackable == false then
 			-- If the structure is not stackable, then just snap to the structures tile
-			self:RemoveStacked()
+			--self:RemoveStacked()
 
 			-- Error if the structure is already occupied
 			self.state.tile = structureTile
@@ -821,6 +839,24 @@ end
 function PlacementClient:Destroy()
 	self:StopPlacement()
 	self:Disconnect()
+
+	if self.state.ghostStructure then
+		self.state.ghostStructure:Destroy()
+	end
+
+	if self.state.radiusVisual then
+		self.state.radiusVisual:Destroy()
+	end
+
+	if self.hoverPart then
+		self.hoverPart:Destroy()
+	end
+
+	if self.selectionBox then
+		self.selectionBox:Destroy()
+	end
+
+
 end
 
 function PlacementClient:Disconnect()
@@ -843,7 +879,6 @@ function PlacementClient:CreateRadiusVisual(radius: number)
 	self.radiusVisual.CastShadow = false
 
 	-- radius is in tiles, and each tile is 8 studs
-	local size = Vector3.new(0.1, 0.1, 0.1)
 	local radius = radius * 8
 
 	self.radiusVisual.Size = Vector3.new(0.05, radius * 2 + 8, radius * 2 + 8)
@@ -867,6 +902,27 @@ function PlacementClient:CreateRadiusVisual(radius: number)
 	pulseTween:Play()
 
 	return self.radiusVisual
+end
+
+function PlacementClient:RaiseLevel()
+	self.state.level = self.state.level + 1
+end
+
+function PlacementClient:LowerLevel()
+	self.state.level = self.state.level - 1
+end
+
+function PlacementClient:GetStructureOnTile(tile: BasePart)
+	if tile == nil then
+		return
+	end
+	for _, structure in ipairs(self.plot.Structures:GetChildren()) do
+		if structure:IsA("Model") then
+			if structure:GetAttribute("Tile") == tile.Name then
+				return structure
+			end
+		end
+	end
 end
 
 return PlacementClient

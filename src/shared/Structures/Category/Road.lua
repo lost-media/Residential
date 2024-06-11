@@ -181,7 +181,7 @@ local Roads: StructureTypes.RoadCollection = {
 				),
 
 				["Road/Streetlight"] = StackingUtils.CreateStackingData(
-					false,
+					true,
 					{ "Top1", "Top2", "Top3", "Top4" },
 					{ ["Top1"] = "Top1", ["Top2"] = "Top2" }
 				),

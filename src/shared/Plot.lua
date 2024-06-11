@@ -313,7 +313,7 @@ function Plot:getStructureRoadAttachments(structure: Model): { Attachment }
 	end
 
 	if structure:GetAttribute("Category") ~= "Road" then
-		error("Structure is not a road")
+		return {}
 	end
 
 	local roadConnectionsReturn = {}

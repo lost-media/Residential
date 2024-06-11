@@ -22,6 +22,7 @@ local PlacementController: PlacementController = Knit.CreateController({
 	PlacementClient = nil,
 	StructuresIndex = 1,
 	StructuresList = {
+		"Industrial/Water Tower",
 		"Road/Streetlight",
 		"Road/Highway Road",
 		"Road/Dead-End Road",
