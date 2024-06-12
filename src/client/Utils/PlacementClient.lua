@@ -515,9 +515,9 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			self.state.tile = structureTile
 
 			if StructuresUtils.IsIncreasingLevel(structureId, self.state.structureId) then
-				self.state.level = structure:GetAttribute("Level") + 1 or 0
+				self:UpdateLevel(structure:GetAttribute("Level") + 1 or 0);
 			else
-				self.state.level = structure:GetAttribute("Level") or 0
+				self:UpdateLevel(structure:GetAttribute("Level") or 0);
 			end
 		end
 	else
@@ -922,7 +922,7 @@ function PlacementClient:CreateRadiusVisual(radius: number)
 	return self.radiusVisual
 end
 
-function PlacementClient:ChangeLevel(level: number)
+function PlacementClient:UpdateLevel(level: number)
 	if level < MIN_LEVEL then
 		level = MIN_LEVEL
 	end
@@ -932,11 +932,11 @@ function PlacementClient:ChangeLevel(level: number)
 end
 
 function PlacementClient:RaiseLevel()
-	self:ChangeLevel(self.state.level + 1)
+	self:UpdateLevel(self.state.level + 1)
 end
 
 function PlacementClient:LowerLevel()
-	self:ChangeLevel(math.max(self.state.level - 1, MIN_LEVEL))
+	self:UpdateLevel(math.max(self.state.level - 1, MIN_LEVEL))
 end
 
 function PlacementClient:GetStructuresOnTile(tile: BasePart)
