@@ -56,8 +56,8 @@ local Industrial: Folder = StructuresFolder.Industrial
 local Residence: Folder = StructuresFolder.Residence
 local Commercial: Folder = StructuresFolder.Commercial
 
-local RoadCategory = require(StructureCategoryFolder.Road)
 local IndustrialCategory = require(StructureCategoryFolder.Industrial)
+local RoadCategory = require(StructureCategoryFolder.Road)
 
 local Structures: StructureTypes.StructureCollection = {
 	Residence = {
@@ -95,7 +95,7 @@ local Structures: StructureTypes.StructureCollection = {
 		},
 	},
 	Road = RoadCategory,
-    Industrial = IndustrialCategory,
+	Industrial = IndustrialCategory,
 } :: StructureTypes.StructureCollection
 
 return Structures

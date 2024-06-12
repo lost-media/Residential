@@ -151,6 +151,7 @@ local Roads: StructureTypes.RoadCollection = {
 		},
 	}, SharedProperties),
 
+	--[[
 	["Elevated Normal Road"] = TableUtil.Reconcile({
 		Name = "Elevated Normal Road",
 		Id = "Road/Elevated Normal Road",
@@ -188,6 +189,7 @@ local Roads: StructureTypes.RoadCollection = {
 			},
 		},
 	}, SharedProperties),
+	--]]
 
 	["Streetlight"] = TableUtil.Reconcile({
 		Name = "Streetlight",

@@ -15,16 +15,16 @@ local SharedProperties = {
 		Allowed = false,
 	},
 	Price = 100,
-    IsBuilding = true,
+	IsBuilding = true,
 }
 
 local Industrials: StructureTypes.IndustrialCollection = {
-    ["Water Tower"] = TableUtil.Reconcile({
-        Name = "Water Tower",
+	["Water Tower"] = TableUtil.Reconcile({
+		Name = "Water Tower",
 		Id = "Industrial/Water Tower",
 		Description = "A normal road",
 		Model = IndustrialFolder["Water Tower"],
-    }, SharedProperties)
-};
+	}, SharedProperties),
+}
 
 return Industrials

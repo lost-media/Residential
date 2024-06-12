@@ -29,7 +29,6 @@ local PlacementController: PlacementController = Knit.CreateController({
 		"Road/Curved Road",
 		"Road/Normal Road",
 		"Road/Intersection Road",
-		"Road/Elevated Normal Road",
 	},
 })
 
