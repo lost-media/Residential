@@ -96,7 +96,7 @@ function unDimModel(model: Model)
 		end
 	end
 
-	model:SetAttribute("Dimmed", false)
+	model:SetAttribute("Dimmed", nil);
 end
 
 local function uncollideModel(model: Model)
@@ -269,6 +269,10 @@ function PlacementClient:StopPlacement()
 
 	if self.hoverPart then
 		self.hoverPart:Destroy()
+	end
+
+	for _, structures in ipairs(self.plot.Structures:GetChildren()) do
+		unDimModel(structures)
 	end
 
 	self.signals.OnPlacementEnded:Fire()
