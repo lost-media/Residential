@@ -340,7 +340,7 @@ function PlacementClient:Update(deltaTime: number)
 	local mouse: Mouse.Mouse = self.mouse
 
 	-- Get the closest base part to the hit position
-	local closestInstance = mouse:GetTarget() --mouse:GetClosestInstanceToMouseFromParent(self.plot)
+	local closestInstance = mouse:GetTarget() --mouse:GetClosestInstanceToMouseFromParent(self.plot)
 
 	-- The radius visual should follow the ghost structure
 	if self.state.radiusVisual then
