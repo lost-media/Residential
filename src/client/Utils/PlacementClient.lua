@@ -96,7 +96,7 @@ function unDimModel(model: Model)
 		end
 	end
 
-	model:SetAttribute("Dimmed", nil);
+	model:SetAttribute("Dimmed", nil)
 end
 
 local function uncollideModel(model: Model)
@@ -202,7 +202,12 @@ function PlacementClient:StartPlacement(structureId: string)
 	})
 
 	self.state.ghostStructure = self:GenerateGhostStructureFromId(structureId)
-	self.state.radiusVisual = self:CreateRadiusVisual(2)
+
+	-- check if the entry has properties and if it has a radius
+	if self.structureCollectionEntry.Properties ~= nil and self.structureCollectionEntry.Properties.Radius ~= nil then
+		self.state.radius = self.structureCollectionEntry.Properties.Radius
+		self.state.radiusVisual = self:CreateRadiusVisual(self.state.radius)
+	end
 
 	-- Set up render stepped
 	self.connections.onRenderStep = RunService.RenderStepped:Connect(function(dt: number)
@@ -269,6 +274,10 @@ function PlacementClient:StopPlacement()
 
 	if self.hoverPart then
 		self.hoverPart:Destroy()
+	end
+
+	if self.state.radiusVisual then
+		self.state.radiusVisual:Destroy()
 	end
 
 	for _, structures in ipairs(self.plot.Structures:GetChildren()) do
@@ -519,9 +528,9 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			self.state.tile = structureTile
 
 			if StructuresUtils.IsIncreasingLevel(structureId, self.state.structureId) then
-				self:UpdateLevel(structure:GetAttribute("Level") + 1 or 0);
+				self:UpdateLevel(structure:GetAttribute("Level") + 1 or 0)
 			else
-				self:UpdateLevel(structure:GetAttribute("Level") or 0);
+				self:UpdateLevel(structure:GetAttribute("Level") or 0)
 			end
 		end
 	else
