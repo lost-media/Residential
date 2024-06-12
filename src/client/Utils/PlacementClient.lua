@@ -365,7 +365,7 @@ function PlacementClient:Update(deltaTime: number)
 	self:UpdateLevelVisibility()
 
 	self:UpdatePosition()
-	self:UpdateSelectionBox()
+	--self:UpdateSelectionBox()
 end
 
 function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
@@ -373,14 +373,6 @@ function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
 	if currentTile == nil or currentTile ~= closestInstance then
 		self.state.tile = closestInstance
 		self.signals.OnTileChanged:Fire(closestInstance)
-	end
-
-	-- check to see if the current mouse.hit is a tile
-	local hit = self.mouse:GetTarget()
-
-	-- POSSIBLE SETTING: SMART LEVELING
-	if self:PartIsTile(hit) == true then
-		--self.state.level = 0;
 	end
 
 	self:RemoveStacked()
@@ -417,7 +409,7 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 
 		if structure:GetAttribute("Level") ~= self.state.level then
 			self:AttemptToSnapToTile(structureTile)
-			--return
+			return
 		end
 
 		-- Determine if the structure is stackable
@@ -434,8 +426,6 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			else
 				self.state.tile = structureTile
 				self:AttemptToSnapToTile(structureTile)
-
-				self.state.canConfirmPlacement = false
 
 				succesfullySnapped = false
 			end
@@ -573,31 +563,7 @@ function PlacementClient:UpdatePosition()
 	if self.state.isStacked then
 		self:SnapToAttachment(self.state.mountedAttachment, self.state.tile)
 	else
-		self:SnapToTile(self.state.tile)
-	end
-end
-
-function PlacementClient:UpdateHighlight()
-	if self.state.ghostStructure == nil then
-		return
-	end
-
-	if self.state.highlightInstance == nil then
-		self.state.highlightInstance = self:MakeHighlight(self.state.ghostStructure)
-	end
-
-	self.state.highlightInstance.Adornee = self.state.ghostStructure
-
-	if self.state.canConfirmPlacement == true then
-		self.selectionBox.Color3 = Color3.fromRGB(0, 255, 0)
-		self.selectionBox.SurfaceColor3 = Color3.fromRGB(0, 255, 0)
-		--self.state.highlightInstance.FillColor = Color3.fromRGB(0, 255, 0)
-		--self.state.highlightInstance.OutlineColor = Color3.fromRGB(0, 255, 0)
-	else
-		self.selectionBox.Color3 = Color3.fromRGB(255, 0, 0)
-		self.selectionBox.SurfaceColor3 = Color3.fromRGB(255, 0, 0)
-		--self.state.highlightInstance.FillColor = Color3.fromRGB(255, 0, 0)
-		--self.state.highlightInstance.OutlineColor = Color3.fromRGB(255, 0, 0)
+		self:SnapToTileWithLevel(self.state.tile)
 	end
 end
 
@@ -631,7 +597,37 @@ function PlacementClient:SnapToTile(tile: BasePart)
 	end
 
 	if tile:GetAttribute("Occupied") == true then
-		self.state.canConfirmPlacement = false
+		self:UpdateCanConfirmPlacement(false)
+	end
+
+	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, self.state)
+
+	self:MoveModelToCF(ghostStructure, newCFrame, false)
+end
+
+function PlacementClient:SnapToTileWithLevel(tile: BasePart)
+	local ghostStructure = self.state.ghostStructure
+
+	if ghostStructure == nil then
+		return
+	end
+
+	if tile == nil then
+		return
+	end
+
+	local level = self.state.level
+
+	if tile:GetAttribute("Occupied") == true then
+		-- find all the structures on the tile
+		local structures = self:GetStructuresOnTile(tile)
+		-- check if the level is occupied
+
+		for _, structure in ipairs(structures) do
+			if structure:GetAttribute("Level") == level then
+				self:UpdateCanConfirmPlacement(false)
+			end
+		end
 	end
 
 	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, self.state)
@@ -686,7 +682,7 @@ function PlacementClient:Rotate()
 	if self.state.isStacked and self.state.orientationStrict then
 		local validRotations = self:GetValidRotationsWithStrictOrientation()
 		if #validRotations == 0 or table.find(validRotations, self.state.rotation) == nil then
-			self.state.canConfirmPlacement = false
+			self:UpdateCanConfirmPlacement(false)
 			return
 		end
 	end
@@ -811,12 +807,12 @@ function PlacementClient:AttemptToSnapRotationOnStrictOrientation()
 	local rotations = self:GetValidRotationsWithStrictOrientation()
 
 	if rotations == nil then
-		self.state.canConfirmPlacement = false
+		self:UpdateCanConfirmPlacement(false)
 		return
 	end
 
 	if #rotations == 0 then
-		self.state.canConfirmPlacement = false
+		self:UpdateCanConfirmPlacement(false)
 		return
 	end
 
@@ -901,7 +897,7 @@ function PlacementClient:CreateRadiusVisual(radius: number)
 	self.radiusVisual.CastShadow = false
 
 	-- radius is in tiles, and each tile is 8 studs
-	local radius = radius * 8
+	radius = radius * 8
 
 	self.radiusVisual.Size = Vector3.new(0.05, radius * 2 + 8, radius * 2 + 8)
 	-- rotate the radius visual so that it is flat
@@ -943,23 +939,29 @@ function PlacementClient:LowerLevel()
 	self:ChangeLevel(math.max(self.state.level - 1, MIN_LEVEL))
 end
 
-function PlacementClient:GetStructureOnTile(tile: BasePart)
+function PlacementClient:GetStructuresOnTile(tile: BasePart)
 	if tile == nil then
 		return
 	end
+
+	local structures = {}
+
 	for _, structure in ipairs(self.plot.Structures:GetChildren()) do
 		if structure:IsA("Model") then
 			if structure:GetAttribute("Tile") == tile.Name then
-				return structure
+				table.insert(structures, structure)
 			end
 		end
 	end
+
+	return structures
 end
 
 function PlacementClient:UpdateCanConfirmPlacement(canConfirm: boolean)
 	if self.state.canConfirmPlacement ~= canConfirm then
 		self.state.canConfirmPlacement = canConfirm
 		self.signals.OnCanConfirmPlacementChanged:Fire(canConfirm)
+		self:UpdateSelectionBox()
 	end
 end
 
