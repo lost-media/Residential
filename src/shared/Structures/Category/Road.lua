@@ -93,7 +93,7 @@ local Roads: StructureTypes.RoadCollection = {
 		},
 	}, SharedProperties),
 
-    ["Highway Road"] = TableUtil.Reconcile({
+	["Highway Road"] = TableUtil.Reconcile({
 		Name = "Highway Road",
 		Id = "Road/Highway Road",
 		Description = "A curved road",
@@ -112,7 +112,7 @@ local Roads: StructureTypes.RoadCollection = {
 		},
 	}, SharedProperties),
 
-    ["Dead-End Road"] = TableUtil.Reconcile({
+	["Dead-End Road"] = TableUtil.Reconcile({
 		Name = "Elevated Normal Road",
 		Id = "Road/Dead-End Road",
 		Description = "A curved road",
@@ -128,7 +128,7 @@ local Roads: StructureTypes.RoadCollection = {
 					{ ["Top1"] = "Top1", ["Top2"] = "Top2", ["Top3"] = "Top3" }
 				),
 
-                ["Road/Elevated Normal Road"] = StackingUtils.CreateStackingData(
+				["Road/Elevated Normal Road"] = StackingUtils.CreateStackingData(
 					false,
 					{ "Top1", "Top2" },
 					{ ["Top1"] = "Center", ["Top2"] = "Center", ["Center"] = "Center" },
@@ -151,6 +151,7 @@ local Roads: StructureTypes.RoadCollection = {
 		},
 	}, SharedProperties),
 
+	--[[
 	["Elevated Normal Road"] = TableUtil.Reconcile({
 		Name = "Elevated Normal Road",
 		Id = "Road/Elevated Normal Road",
@@ -181,13 +182,14 @@ local Roads: StructureTypes.RoadCollection = {
 				),
 
 				["Road/Streetlight"] = StackingUtils.CreateStackingData(
-					false,
+					true,
 					{ "Top1", "Top2", "Top3", "Top4" },
 					{ ["Top1"] = "Top1", ["Top2"] = "Top2" }
 				),
 			},
 		},
 	}, SharedProperties),
+	--]]
 
 	["Streetlight"] = TableUtil.Reconcile({
 		Name = "Streetlight",

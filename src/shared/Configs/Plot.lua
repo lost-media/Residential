@@ -1,3 +1,3 @@
 return {
-	PLOT_LEVEL_HEIGHT = 8,
+	PLOT_LEVEL_HEIGHT = 9,
 }

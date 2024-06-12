@@ -15,6 +15,7 @@ local PlacementTypes = require(RS.Shared.Types.Placement)
 local Plot = require(RS.Shared.Types.Plot)
 
 -- Constants
+local MIN_LEVEL = 0
 local ROTATION_STEP = 90
 local TRANSPARENCY_DIM_FACTOR = 4
 local TWEEN_INFO = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0)
@@ -57,6 +58,8 @@ export type PlacementClient = typeof(setmetatable(
 			OnStacked: Signal.Signal,
 			OnStackedAttachmentChanged: Signal.Signal,
 			OnUnstacked: Signal.Signal,
+			OnLevelChanged: Signal.Signal,
+			OnCanConfirmPlacementChanged: Signal.Signal,
 		},
 		structureCollectionEntry: table,
 	},
@@ -116,7 +119,7 @@ function PlacementClient.new(plot: Plot.Plot)
 	local self = setmetatable({}, PlacementClient)
 
 	self.mouse = Mouse.new()
-	self.mouse:SetFilterType(Enum.RaycastFilterType.Exclude)
+	self.mouse:SetFilterType(Enum.RaycastFilterType.Include)
 	self.mouse:SetTargetFilter({})
 
 	self.plot = plot
@@ -148,6 +151,8 @@ function PlacementClient.new(plot: Plot.Plot)
 		OnStacked = Signal.new(),
 		OnStackedAttachmentChanged = Signal.new(),
 		OnUnstacked = Signal.new(),
+		OnLevelChanged = Signal.new(),
+		OnCanConfirmPlacementChanged = Signal.new(),
 	}
 
 	return self
@@ -168,11 +173,6 @@ function PlacementClient:GenerateGhostStructureFromId(structureId: string)
 	-- structure snap to the
 
 	self.mouse:SetFilterType(Enum.RaycastFilterType.Include)
-	self.mouse:SetTargetFilter({
-		--ghostStructure,
-		--game.Players.LocalPlayer.Character,
-		self.plot,
-	})
 
 	--self.highlightInstance = self:MakeHighlight(ghostStructure)
 	self.selectionBox = self:MakeSelectionBox(ghostStructure)
@@ -194,6 +194,13 @@ function PlacementClient:StartPlacement(structureId: string)
 		return
 	end
 
+	self.mouse:SetTargetFilter({
+		--ghostStructure,
+		--game.Players.LocalPlayer.Character,
+		self.plot.Structures,
+		self.plot.Tiles,
+	})
+
 	self.state.ghostStructure = self:GenerateGhostStructureFromId(structureId)
 	self.state.radiusVisual = self:CreateRadiusVisual(2)
 
@@ -207,6 +214,10 @@ function PlacementClient:StartPlacement(structureId: string)
 			self:Rotate()
 		elseif input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.C then
 			self:StopPlacement()
+		elseif input.KeyCode == Enum.KeyCode.Up then
+			self:RaiseLevel()
+		elseif input.KeyCode == Enum.KeyCode.Down then
+			self:LowerLevel()
 		end
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			self:ConfirmPlacement()
@@ -256,6 +267,10 @@ function PlacementClient:StopPlacement()
 		self.state.ghostStructure:Destroy()
 	end
 
+	if self.hoverPart then
+		self.hoverPart:Destroy()
+	end
+
 	self.signals.OnPlacementEnded:Fire()
 end
 
@@ -264,6 +279,9 @@ function PlacementClient:GetMouse()
 end
 
 function PlacementClient:PartIsTile(part: BasePart)
+	if part == nil then
+		return false
+	end
 	return part:IsA("Part") and part:IsDescendantOf(self.plot.Tiles)
 end
 
@@ -322,7 +340,7 @@ function PlacementClient:Update(deltaTime: number)
 	local mouse: Mouse.Mouse = self.mouse
 
 	-- Get the closest base part to the hit position
-	local closestInstance = mouse:GetClosestInstanceToMouseFromParent(self.plot)
+	local closestInstance = mouse:GetTarget() --mouse:GetClosestInstanceToMouseFromParent(self.plot)
 
 	-- The radius visual should follow the ghost structure
 	if self.state.radiusVisual then
@@ -331,7 +349,10 @@ function PlacementClient:Update(deltaTime: number)
 	end
 
 	if closestInstance == nil then
-		return
+		if self.state.tile == nil then
+			return
+		end
+		closestInstance = self.state.tile
 	end
 
 	-- Check if its a tile
@@ -344,7 +365,7 @@ function PlacementClient:Update(deltaTime: number)
 	self:UpdateLevelVisibility()
 
 	self:UpdatePosition()
-	self:UpdateSelectionBox()
+	--self:UpdateSelectionBox()
 end
 
 function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
@@ -354,16 +375,16 @@ function PlacementClient:AttemptToSnapToTile(closestInstance: BasePart)
 		self.signals.OnTileChanged:Fire(closestInstance)
 	end
 
-	self.state.level = 0
-
 	self:RemoveStacked()
 
 	-- Snap the ghost structure to the tile
-	self.state.canConfirmPlacement = true
+	self:UpdateCanConfirmPlacement(true)
 end
 
 function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 	local mouse: Mouse.Mouse = self.mouse
+
+	local succesfullySnapped = true
 
 	-- Check if the part is from a structure
 	if self:PartIsFromStructure(closestInstance) == true then
@@ -380,25 +401,44 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 
 		self.signals.OnStructureHover:Fire(structure)
 
+		-- check if the structure is on the same level
+		if structureTile == nil then
+			self:RemoveStacked()
+			return
+		end
+
+		if structure:GetAttribute("Level") ~= self.state.level then
+			self:AttemptToSnapToTile(structureTile)
+			return
+		end
+
 		-- Determine if the structure is stackable
 		local isStackable = StructuresUtils.CanStackStructureWith(structureId, self.state.structureId)
 
 		if isStackable == false then
 			-- If the structure is not stackable, then just snap to the structures tile
-			self:RemoveStacked()
+			--self:RemoveStacked()
+			-- get the structure the player is hovering over
+			if structureTile:GetAttribute("Occupied") == true then
+				self.state.tile = structureTile
+				self:AttemptToSnapToTile(structureTile)
+				--succesfullySnapped = false
+			else
+				self.state.tile = structureTile
+				self:AttemptToSnapToTile(structureTile)
 
-			-- Error if the structure is already occupied
-			self.state.tile = structureTile
-			self:AttemptToSnapToTile(structureTile)
-
-			self.state.canConfirmPlacement = false
+				succesfullySnapped = false
+			end
 		else
+			self.state.stackedStructure = structure
+
 			-- get the attachments of the structure
 			local whitelistedSnapPoints =
 				StructuresUtils.GetStackingWhitelistedSnapPointsWith(structureId, self.state.structureId)
 
 			if whitelistedSnapPoints ~= nil then
-				whitelistedSnapPoints = self:GetAttachmentsFromStringList(whitelistedSnapPoints)
+				local attachmentInstances = self:GetAttachmentsFromStringList(whitelistedSnapPoints)
+				whitelistedSnapPoints = attachmentInstances
 			else
 				whitelistedSnapPoints = {}
 			end
@@ -417,9 +457,10 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			-- check if the attachment is occupied
 
 			if closestAttachment:GetAttribute("Occupied") == true then
-				self:RemoveStacked()
-				self.state.canConfirmPlacement = false
-				return
+				--self:RemoveStacked()
+				--self.state.canConfirmPlacement = false
+				succesfullySnapped = false
+				--return
 			end
 
 			if self.state.isStacked == false then
@@ -435,17 +476,22 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			)
 
 			if attachmentPointToSnapTo == nil then
-				self:RemoveStacked()
-				return
+				--self:RemoveStacked()
+				succesfullySnapped = false
+				--return
 			end
 
 			if self.state.mountedAttachment == nil or self.state.mountedAttachment ~= attachmentPointToSnapTo then
 				self.signals.OnStackedAttachmentChanged:Fire(attachmentPointToSnapTo, self.state.mountedAttachment)
 			end
 
+			if attachmentPointToSnapTo:GetAttribute("Occupied") == true then
+				--self.state.canConfirmPlacement = false
+				succesfullySnapped = false
+			end
+
 			self.state.attachments = attachments
 			self.state.mountedAttachment = attachmentPointToSnapTo
-			self.state.stackedStructure = structure
 
 			local orientationStrict = StructuresUtils.IsOrientationStrict(structureId, self.state.structureId)
 
@@ -459,6 +505,7 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 
 			if structureTile == nil then
 				self:RemoveStacked()
+				succesfullySnapped = false
 			end
 
 			if self.state.tile == nil or self.state.tile ~= structureTile then
@@ -466,7 +513,6 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			end
 
 			self.state.tile = structureTile
-			self.state.canConfirmPlacement = true
 
 			if StructuresUtils.IsIncreasingLevel(structureId, self.state.structureId) then
 				self.state.level = structure:GetAttribute("Level") + 1 or 0
@@ -477,8 +523,11 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 	else
 		self.signals.OnStructureHover:Fire(nil)
 		self:RemoveStacked()
-		self.state.canConfirmPlacement = false
+		--self.state.canConfirmPlacement = false
+		succesfullySnapped = false
 	end
+
+	self:UpdateCanConfirmPlacement(succesfullySnapped)
 end
 
 function PlacementClient:GetAttachmentsFromStringList(attachments: { string }?): { Attachment }
@@ -514,31 +563,7 @@ function PlacementClient:UpdatePosition()
 	if self.state.isStacked then
 		self:SnapToAttachment(self.state.mountedAttachment, self.state.tile)
 	else
-		self:SnapToTile(self.state.tile)
-	end
-end
-
-function PlacementClient:UpdateHighlight()
-	if self.state.ghostStructure == nil then
-		return
-	end
-
-	if self.state.highlightInstance == nil then
-		self.state.highlightInstance = self:MakeHighlight(self.state.ghostStructure)
-	end
-
-	self.state.highlightInstance.Adornee = self.state.ghostStructure
-
-	if self.state.canConfirmPlacement == true then
-		self.selectionBox.Color3 = Color3.fromRGB(0, 255, 0)
-		self.selectionBox.SurfaceColor3 = Color3.fromRGB(0, 255, 0)
-		--self.state.highlightInstance.FillColor = Color3.fromRGB(0, 255, 0)
-		--self.state.highlightInstance.OutlineColor = Color3.fromRGB(0, 255, 0)
-	else
-		self.selectionBox.Color3 = Color3.fromRGB(255, 0, 0)
-		self.selectionBox.SurfaceColor3 = Color3.fromRGB(255, 0, 0)
-		--self.state.highlightInstance.FillColor = Color3.fromRGB(255, 0, 0)
-		--self.state.highlightInstance.OutlineColor = Color3.fromRGB(255, 0, 0)
+		self:SnapToTileWithLevel(self.state.tile)
 	end
 end
 
@@ -548,7 +573,7 @@ function PlacementClient:UpdateSelectionBox()
 	end
 
 	if self.selectionBox == nil then
-		return;
+		return
 	end
 
 	if self.state.canConfirmPlacement == true then
@@ -557,7 +582,6 @@ function PlacementClient:UpdateSelectionBox()
 	else
 		self.selectionBox.Color3 = Color3.fromRGB(255, 0, 0)
 		self.selectionBox.SurfaceColor3 = Color3.fromRGB(255, 0, 0)
-
 	end
 end
 
@@ -572,8 +596,38 @@ function PlacementClient:SnapToTile(tile: BasePart)
 		return
 	end
 
-	if (tile:GetAttribute("Occupied") == true) then
-		self.state.canConfirmPlacement = false
+	if tile:GetAttribute("Occupied") == true then
+		self:UpdateCanConfirmPlacement(false)
+	end
+
+	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, self.state)
+
+	self:MoveModelToCF(ghostStructure, newCFrame, false)
+end
+
+function PlacementClient:SnapToTileWithLevel(tile: BasePart)
+	local ghostStructure = self.state.ghostStructure
+
+	if ghostStructure == nil then
+		return
+	end
+
+	if tile == nil then
+		return
+	end
+
+	local level = self.state.level
+
+	if tile:GetAttribute("Occupied") == true then
+		-- find all the structures on the tile
+		local structures = self:GetStructuresOnTile(tile)
+		-- check if the level is occupied
+
+		for _, structure in ipairs(structures) do
+			if structure:GetAttribute("Level") == level then
+				self:UpdateCanConfirmPlacement(false)
+			end
+		end
 	end
 
 	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, self.state)
@@ -628,7 +682,7 @@ function PlacementClient:Rotate()
 	if self.state.isStacked and self.state.orientationStrict then
 		local validRotations = self:GetValidRotationsWithStrictOrientation()
 		if #validRotations == 0 or table.find(validRotations, self.state.rotation) == nil then
-			self.state.canConfirmPlacement = false
+			self:UpdateCanConfirmPlacement(false)
 			return
 		end
 	end
@@ -753,12 +807,12 @@ function PlacementClient:AttemptToSnapRotationOnStrictOrientation()
 	local rotations = self:GetValidRotationsWithStrictOrientation()
 
 	if rotations == nil then
-		self.state.canConfirmPlacement = false
+		self:UpdateCanConfirmPlacement(false)
 		return
 	end
 
 	if #rotations == 0 then
-		self.state.canConfirmPlacement = false
+		self:UpdateCanConfirmPlacement(false)
 		return
 	end
 
@@ -805,6 +859,22 @@ end
 function PlacementClient:Destroy()
 	self:StopPlacement()
 	self:Disconnect()
+
+	if self.state.ghostStructure then
+		self.state.ghostStructure:Destroy()
+	end
+
+	if self.state.radiusVisual then
+		self.state.radiusVisual:Destroy()
+	end
+
+	if self.hoverPart then
+		self.hoverPart:Destroy()
+	end
+
+	if self.selectionBox then
+		self.selectionBox:Destroy()
+	end
 end
 
 function PlacementClient:Disconnect()
@@ -827,8 +897,7 @@ function PlacementClient:CreateRadiusVisual(radius: number)
 	self.radiusVisual.CastShadow = false
 
 	-- radius is in tiles, and each tile is 8 studs
-	local size = Vector3.new(0.1, 0.1, 0.1)
-	local radius = radius * 8
+	radius = radius * 8
 
 	self.radiusVisual.Size = Vector3.new(0.05, radius * 2 + 8, radius * 2 + 8)
 	-- rotate the radius visual so that it is flat
@@ -851,6 +920,49 @@ function PlacementClient:CreateRadiusVisual(radius: number)
 	pulseTween:Play()
 
 	return self.radiusVisual
+end
+
+function PlacementClient:ChangeLevel(level: number)
+	if level < MIN_LEVEL then
+		level = MIN_LEVEL
+	end
+
+	self.state.level = level
+	self.signals.OnLevelChanged:Fire(level)
+end
+
+function PlacementClient:RaiseLevel()
+	self:ChangeLevel(self.state.level + 1)
+end
+
+function PlacementClient:LowerLevel()
+	self:ChangeLevel(math.max(self.state.level - 1, MIN_LEVEL))
+end
+
+function PlacementClient:GetStructuresOnTile(tile: BasePart)
+	if tile == nil then
+		return
+	end
+
+	local structures = {}
+
+	for _, structure in ipairs(self.plot.Structures:GetChildren()) do
+		if structure:IsA("Model") then
+			if structure:GetAttribute("Tile") == tile.Name then
+				table.insert(structures, structure)
+			end
+		end
+	end
+
+	return structures
+end
+
+function PlacementClient:UpdateCanConfirmPlacement(canConfirm: boolean)
+	if self.state.canConfirmPlacement ~= canConfirm then
+		self.state.canConfirmPlacement = canConfirm
+		self.signals.OnCanConfirmPlacementChanged:Fire(canConfirm)
+		self:UpdateSelectionBox()
+	end
 end
 
 return PlacementClient

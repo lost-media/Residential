@@ -4,6 +4,7 @@ export type Plot = Model & {
 	Tiles: Folder,
 	Structures: Folder,
 	Debris: Folder,
+	Center: BasePart,
 }
 
 export type Tile = BasePart
@@ -22,6 +23,12 @@ function PlotTypes.isPlotValid(plot: Plot): boolean
 	end
 
 	if plot:FindFirstChild("Debris") == nil then
+		return false
+	end
+
+	local center = plot:WaitForChild("Center")
+
+	if center == nil then
 		return false
 	end
 
