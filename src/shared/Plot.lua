@@ -1,6 +1,7 @@
 --!strict
 
 local RS = game:GetService("ReplicatedStorage")
+local VFX: Folder = RS.VFX
 
 local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit)
 local PlacementTypes = require(RS.Shared.Types.Placement)
@@ -178,7 +179,15 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 		error("State is nil")
 	end
 
-	if state.isStacked == false and state.tile:GetAttribute("Occupied") == true then
+	if state.tile == nil then
+		error("Tile is nil")
+	end
+
+	if state.level == nil then
+		error("Level is nil")
+	end
+
+	if state.isStacked == false and self:getPlaceablesOnTileWithLevel(state.tile, state.level) then
 		error("Tile is already occupied")
 	end
 
@@ -273,6 +282,32 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 
 	self.signals.PlacedStructure:Fire(structure)
 
+	-- add VFX for placing the structure
+	local PlacedDownVFX = VFX.PlacedDown:Clone()
+	PlacedDownVFX.Parent = structure.PrimaryPart
+
+	-- set the VFX to the correct position
+	PlacedDownVFX.CFrame = structure.PrimaryPart.CFrame * CFrame.new(0, 0.5, 0)
+
+	-- set the VFX to be visible
+	for _, v in ipairs(PlacedDownVFX:GetChildren()) do
+		if v:IsA("ParticleEmitter") then
+			v.Enabled = true
+		end
+	end
+
+	-- after x seconds, remove the VFX
+	coroutine.wrap(function()
+		task.wait(0.75)
+		for _, v in ipairs(PlacedDownVFX:GetChildren()) do
+			if v:IsA("ParticleEmitter") then
+				v.Enabled = false
+			end
+		end
+		task.wait(1)
+		PlacedDownVFX:Destroy()
+	end)()
+
 	local type = placeableInfo.Category
 
 	if type == "Road" then
@@ -297,6 +332,27 @@ function Plot:getPlaceable(structure: Model): Model?
 		for _, v in ipairs(placeableType) do
 			if v == structure then
 				return v
+			end
+		end
+	end
+	return nil
+end
+
+function Plot:getPlaceablesOnTile(tile: BasePart)
+	local structures = {}
+	for _, structure in ipairs(self.placeables) do
+		if structure:GetAttribute("Tile") == tile.Name then
+			table.insert(structures, structure)
+		end
+	end
+	return structures
+end
+
+function Plot:getPlaceablesOnTileWithLevel(tile: BasePart, level: number)
+	for _, structure in ipairs(self.placeables) do
+		if structure:GetAttribute("Tile") == tile.Name then
+			if structure:GetAttribute("Level") == level then
+				return structure
 			end
 		end
 	end

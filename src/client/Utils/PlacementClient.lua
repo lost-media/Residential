@@ -96,7 +96,7 @@ function unDimModel(model: Model)
 		end
 	end
 
-	model:SetAttribute("Dimmed", false)
+	model:SetAttribute("Dimmed", nil)
 end
 
 local function uncollideModel(model: Model)
@@ -202,7 +202,12 @@ function PlacementClient:StartPlacement(structureId: string)
 	})
 
 	self.state.ghostStructure = self:GenerateGhostStructureFromId(structureId)
-	self.state.radiusVisual = self:CreateRadiusVisual(2)
+
+	-- check if the entry has properties and if it has a radius
+	if self.structureCollectionEntry.Properties ~= nil and self.structureCollectionEntry.Properties.Radius ~= nil then
+		self.state.radius = self.structureCollectionEntry.Properties.Radius
+		self.state.radiusVisual = self:CreateRadiusVisual(self.state.radius)
+	end
 
 	-- Set up render stepped
 	self.connections.onRenderStep = RunService.RenderStepped:Connect(function(dt: number)
@@ -269,6 +274,14 @@ function PlacementClient:StopPlacement()
 
 	if self.hoverPart then
 		self.hoverPart:Destroy()
+	end
+
+	if self.state.radiusVisual then
+		self.state.radiusVisual:Destroy()
+	end
+
+	for _, structures in ipairs(self.plot.Structures:GetChildren()) do
+		unDimModel(structures)
 	end
 
 	self.signals.OnPlacementEnded:Fire()
@@ -515,9 +528,9 @@ function PlacementClient:AttemptToSnapToAttachment(closestInstance: BasePart)
 			self.state.tile = structureTile
 
 			if StructuresUtils.IsIncreasingLevel(structureId, self.state.structureId) then
-				self.state.level = structure:GetAttribute("Level") + 1 or 0
+				self:UpdateLevel(structure:GetAttribute("Level") + 1 or 0)
 			else
-				self.state.level = structure:GetAttribute("Level") or 0
+				self:UpdateLevel(structure:GetAttribute("Level") or 0)
 			end
 		end
 	else
@@ -922,7 +935,7 @@ function PlacementClient:CreateRadiusVisual(radius: number)
 	return self.radiusVisual
 end
 
-function PlacementClient:ChangeLevel(level: number)
+function PlacementClient:UpdateLevel(level: number)
 	if level < MIN_LEVEL then
 		level = MIN_LEVEL
 	end
@@ -932,11 +945,11 @@ function PlacementClient:ChangeLevel(level: number)
 end
 
 function PlacementClient:RaiseLevel()
-	self:ChangeLevel(self.state.level + 1)
+	self:UpdateLevel(self.state.level + 1)
 end
 
 function PlacementClient:LowerLevel()
-	self:ChangeLevel(math.max(self.state.level - 1, MIN_LEVEL))
+	self:UpdateLevel(math.max(self.state.level - 1, MIN_LEVEL))
 end
 
 function PlacementClient:GetStructuresOnTile(tile: BasePart)

@@ -16,6 +16,10 @@ local SharedProperties = {
 	},
 	Price = 100,
 	IsBuilding = true,
+
+	Properties = {
+		Radius = 1, -- Tiles
+	},
 }
 
 local Industrials: StructureTypes.IndustrialCollection = {
