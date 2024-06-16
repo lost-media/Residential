@@ -22,6 +22,7 @@ local PlacementController: PlacementController = Knit.CreateController({
 	PlacementClient = nil,
 	StructuresIndex = 1,
 	StructuresList = {
+		"Road/Ramp Road",
 		"Industrial/Water Tower",
 		"Road/Streetlight",
 		"Road/Highway Road",
@@ -52,6 +53,12 @@ function PlacementController:KnitStart()
 			client.signals.OnPlacementConfirmed:Connect(
 				function(structureId: string, state: PlacementClient.PlacementClient)
 					PlotService:PlaceStructure(structureId, state)
+				end
+			)
+
+			client.signals.OnDelete:Connect(
+				function(model: Model)
+					PlotService:DeleteStructure(model)
 				end
 			)
 

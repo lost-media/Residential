@@ -114,7 +114,6 @@ function PlotService:PlaceStructure(player: Player, structureId: string, state: 
 		return
 	end
 
-	print(state)
 	local success, err = plot:placeObject(structureId, state)
 
 	if err then
@@ -123,8 +122,32 @@ function PlotService:PlaceStructure(player: Player, structureId: string, state: 
 	end
 end
 
+function PlotService:DeleteStructure(player: Player, model: Model)
+	if model == nil then
+		warn("PlotService: No model provided")
+		return
+	end
+
+	local plot = self:GetPlotFromPlayer(player)
+
+	if plot == nil then
+		return
+	end
+
+	local success, err = plot:deleteStructure(model)
+
+	if err then
+		warn("PlotService: Failed to delete object: ")
+		return
+	end
+end
+
 function PlotService.Client:PlaceStructure(player: Player, structureId: string, state: table)
 	self.Server:PlaceStructure(player, structureId, state)
+end
+
+function PlotService.Client:DeleteStructure(player: Player, model: Model)
+	self.Server:DeleteStructure(player, model)
 end
 
 function PlotService:GetAdjacentStructuresFromTile(player: Player, tile: BasePart)

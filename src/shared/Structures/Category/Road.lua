@@ -112,6 +112,17 @@ local Roads: StructureTypes.RoadCollection = {
 		},
 	}, SharedProperties),
 
+	["Ramp Road"] = TableUtil.Reconcile({
+		Name = "Ramp Road",
+		Id = "Road/Ramp Road",
+		Description = "A ramp road",
+		Model = RoadFolder["Ramp Road"],
+
+		Stacking = {
+			Allowed = false
+		},
+	}, SharedProperties),
+
 	["Dead-End Road"] = TableUtil.Reconcile({
 		Name = "Elevated Normal Road",
 		Id = "Road/Dead-End Road",

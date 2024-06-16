@@ -1,6 +1,7 @@
 --!strict
 
 local RS = game:GetService("ReplicatedStorage")
+local TS = game:GetService("TweenService");
 local VFX: Folder = RS.VFX
 
 local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit)
@@ -164,6 +165,42 @@ function Plot:isOccupied(tile: BasePart): boolean
 	return false
 end
 
+function Plot:deleteStructure(model: Model)
+	-- make sure the structure is on the plot
+	if model.Parent ~= self.model.Structures then
+		error("Structure is not on the plot")
+	end
+
+	local tileName = model:GetAttribute("Tile")
+	local level = model:GetAttribute("Level")
+	local stacked = model:GetAttribute("Stacked")
+
+	if tileName == nil then
+		error("Tile name is nil")
+	end
+
+	local tileBasepart = self.model.Tiles:FindFirstChild(tileName)
+	local tile = self:getTile(tileBasepart)
+
+	if tile == nil then
+		error("Tile is nil")
+	end
+
+	if stacked then
+		local snappedPoint = model.PrimaryPart:FindFirstChild("SnappedPoint")
+
+		if snappedPoint == nil then
+			error("Snapped point is nil")
+		end
+
+		snappedPoint:SetAttribute("Occupied", false)
+	end
+
+	tile:SetAttribute("Occupied", false)
+
+	model:Destroy()
+end
+
 function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementState)
 	if structureId == nil then
 		error("Structure ID is nil")
@@ -244,8 +281,15 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 	structure.Parent = self.model.Structures
 
 	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, state)
-
-	structure:PivotTo(newCFrame)
+	structure:PivotTo(newCFrame); 
+	
+	--[[
+	if (state.isStacked == false) then
+		local raisedCFrame = newCFrame * CFrame.new(Vector3.new(0, 2, 0));
+		structure:PivotTo(raisedCFrame)
+		TS:Create(structure.PrimaryPart, TweenInfo.new(0.25), {CFrame = newCFrame}):Play()
+	end
+	]]
 
 	tile:SetAttribute("Occupied", true)
 
@@ -289,22 +333,22 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 	-- set the VFX to the correct position
 	PlacedDownVFX.CFrame = structure.PrimaryPart.CFrame * CFrame.new(0, 0.5, 0)
 
-	-- set the VFX to be visible
-	for _, v in ipairs(PlacedDownVFX:GetChildren()) do
-		if v:IsA("ParticleEmitter") then
-			v.Enabled = true
-		end
-	end
-
+	PlacedDownVFX.Smoke:Clear()
+	PlacedDownVFX.Smoke:Emit(100)
+	
 	-- after x seconds, remove the VFX
 	coroutine.wrap(function()
+
+
 		task.wait(0.75)
 		for _, v in ipairs(PlacedDownVFX:GetChildren()) do
 			if v:IsA("ParticleEmitter") then
 				v.Enabled = false
 			end
 		end
+
 		task.wait(1)
+		
 		PlacedDownVFX:Destroy()
 	end)()
 
