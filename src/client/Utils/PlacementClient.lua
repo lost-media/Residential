@@ -233,6 +233,7 @@ function PlacementClient:StartPlacement(structureId: string)
 				return
 			end
 
+			print(closestInstance)
 			if self:PartIsFromStructure(closestInstance) then
 				self:Delete(self:GetStructureFromPart(closestInstance))
 			end

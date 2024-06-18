@@ -1,4 +1,12 @@
 --!strict
+--!version: 1.0.0
+
+--[[
+{Lost Media}
+
+-[PlotService] Controller
+    A service that manages the plots in the game. It assigns plots to players and handles the placement of structures on the plots.
+--]]
 
 local RS = game:GetService("ReplicatedStorage")
 
