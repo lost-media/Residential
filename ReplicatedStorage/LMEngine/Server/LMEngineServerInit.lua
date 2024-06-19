@@ -405,7 +405,7 @@ function KnitServer.Start(options: KnitOptions?)
 	end
 
 	-- Load the controllers in the Controllers folder
-	KnitServer.AddServices(dir_Services);
+	KnitServer.AddServices(dir_Services)
 
 	started = true
 
@@ -482,7 +482,7 @@ function KnitServer.Start(options: KnitOptions?)
 		end)
 
 		-- Expose service remotes to everyone:
-		knitRepServiceFolder.Parent = script.Parent.Parent;
+		knitRepServiceFolder.Parent = script.Parent.Parent
 	end)
 end
 
@@ -519,6 +519,6 @@ function KnitServer.LoadModulesFromParent(parent: Instance)
 end
 ----- Initialization -----
 
-LoadModules();
+LoadModules()
 
 return KnitServer

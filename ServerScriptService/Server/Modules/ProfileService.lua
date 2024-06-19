@@ -2333,8 +2333,8 @@ if IsStudio == true then
 		if
 			status == false
 			and (
-				string.find(message, "403", 1, true) ~= nil -- Cannot write to DataStore from studio if API access is not enabled
-				or string.find(message, "must publish", 1, true) ~= nil -- Game must be published to access live keys
+				string.find(message, "403", 1, true) ~= nil -- Cannot write to DataStore from studio if API access is not enabled
+				or string.find(message, "must publish", 1, true) ~= nil -- Game must be published to access live keys
 				or no_internet_access == true
 			)
 		then -- No internet access

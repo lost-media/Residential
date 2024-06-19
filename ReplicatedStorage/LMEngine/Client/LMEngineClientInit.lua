@@ -143,7 +143,7 @@ end
 
 local function GetServicesFolder()
 	if not servicesFolder then
-		servicesFolder = (script.Parent.Parent :: Instance):WaitForChild("Services");
+		servicesFolder = (script.Parent.Parent :: Instance):WaitForChild("Services")
 	end
 
 	return servicesFolder
@@ -162,7 +162,6 @@ local function BuildService(serviceName: string)
 
 	local clientComm = ClientComm.new(folder, selectedOptions.ServicePromises, serviceName)
 
-
 	local service = clientComm:BuildObject(middleware.Inbound, middleware.Outbound)
 
 	services[serviceName] = service
@@ -171,10 +170,10 @@ local function BuildService(serviceName: string)
 end
 
 local function LoadModules()
-	SharedLoader:LoadModulesFromParent(dir_Shared);
-	ModulesLoader:LoadModulesFromParent(dir_Modules);
+	SharedLoader:LoadModulesFromParent(dir_Shared)
+	ModulesLoader:LoadModulesFromParent(dir_Modules)
 
-	modulesLoaded = true;
+	modulesLoaded = true
 end
 
 ----- Public API -----
@@ -362,7 +361,7 @@ function KnitClient.Start(options: KnitOptions?)
 	if started then
 		return Promise.reject("Knit already started")
 	end
-	
+
 	-- Load the shared and module scripts
 	LoadModules()
 
@@ -462,7 +461,7 @@ function KnitClient.NewScriptSignal()
 	return Signal.new()
 end
 
-if (modulesLoaded == false) then
+if modulesLoaded == false then
 	LoadModules()
 end
 
