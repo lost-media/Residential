@@ -14,7 +14,7 @@
 		PlotService._plots   [table] -- Player -> Plot
 			Stores the mapping of players to plots
 
-	Methods [RateLimiter]:
+	Methods [PlotService]:
 
 		PlotService:AssignPlot(player: Player, plot: Instance) -- Assigns a plot to a player
 			player [Player]
@@ -107,6 +107,10 @@ local function AssignPlot(player: Player, plot: Instance)
 	plot:SetAttribute("Occupied", true)
 end
 
+local function UnassignPlot(player: Player, plot: Instance)
+	plot:SetAttribute("Occupied", false)
+end
+
 ----- Public functions -----
 
 function PlotService:Init()
@@ -131,7 +135,20 @@ function PlotService:Start()
 		end
 
 		print("[PlotService] Assigned plot to player: " .. player.Name)
-	end)
+	end);
+
+	PlayerService:RegisterPlayerRemoved(function(player)
+		local success, data = RetryAsync(function()
+			self:UnassignPlot(player)
+		end, SETTINGS.MAX_RETRIES)
+
+		if not success then
+			warn("[PlotService] Failed to unassign plot from player: " .. data)
+			return
+		end
+
+		print("[PlotService] Unassigned plot from player: " .. player.Name);
+	end);
 end
 
 function PlotService:AssignPlot(player: Player, plot: Instance)
@@ -141,8 +158,19 @@ function PlotService:AssignPlot(player: Player, plot: Instance)
 
 	AssignPlot(player, plot)
 
-	PlotService._plots[player] = plot
+	self._plots[player] = plot
 	PlotService.Client.PlotAssigned:Fire(player, plot)
+end
+
+function PlotService:UnassignPlot(player: Player)
+	assert(player ~= nil, "[PlotService] UnassignPlot: Player is nil")
+	assert(self._plots[player] ~= nil, "[PlotService] UnassignPlot: Player does not have a plot assigned")
+	
+	local plot = self._plots[player]
+
+	UnassignPlot(player, plot)
+
+	self._plots[player] = nil
 end
 
 return PlotService
