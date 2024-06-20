@@ -34,6 +34,7 @@ local SETTINGS = {
 		"GetModule",
 		"LoadModulesFromParent",
 	},
+	DEFAULT_DEEP = false,
 }
 
 ----- Private variables -----
@@ -62,6 +63,54 @@ local function ModuleIsReservedOrSelf(module: ModuleScript): boolean
 	return ModuleIsSelf(module) or ModuleIsReserved(module.Name)
 end
 
+-- Turns an Instance's children into a key-value table such as
+--[[
+GetKeyChildStructure(Instance) ->
+{
+	["Instance.Module1"] = Instance,
+	["Instance.Module2"] = Instance,
+}
+
+There is a dot between the parent's name and the child's name.
+--]]
+
+local function GetKeyChildStructure(script: Instance, key: string?): { [string]: Instance }
+	key = key or ""
+
+	local children = script:GetChildren()
+	local key_child_structure = {}
+
+	for _, child in ipairs(children) do
+		local child_key = #key > 0 and key .. "." .. child.Name or child.Name
+
+		if child:IsA("ModuleScript") then
+			-- don't load .spec files
+			if string.match(child.Name, ".spec") then
+				continue
+			end
+
+			key_child_structure[child_key] = child
+
+			-- there could still be a child of the module
+			if #child:GetChildren() > 0 then
+				local child_structure = GetKeyChildStructure(child, child_key)
+				for keyDef, value in pairs(child_structure) do
+					key_child_structure[keyDef] = value
+				end
+			end
+		end
+
+		if #child:GetChildren() > 0 then
+			local child_structure = GetKeyChildStructure(child, child_key)
+			for key, value in pairs(child_structure) do
+				key_child_structure[key] = value
+			end
+		end
+	end
+
+	return key_child_structure
+end
+
 -- Public functions --
 
 function LazyLoader.new(): LazyLoader
@@ -72,16 +121,17 @@ function LazyLoader.new(): LazyLoader
 	return setmetatable(self, LazyLoader)
 end
 
-function LazyLoader:AddModule(module: ModuleScript): nil
+function LazyLoader:AddModule(key: string, module: ModuleScript): nil
 	assert(module ~= nil, "Module is nil")
 	assert(typeof(module) == "Instance", "Module is not an instance")
 	assert(module:IsA("ModuleScript"), "Module is not a ModuleScript")
+	assert(key ~= nil, "Key is nil")
 
-	if ModuleIsReservedOrSelf(module) == true then
+	if ModuleIsReservedOrSelf(key) == true then
 		return
 	end
 
-	self._modules[module.Name] = module
+	self._modules[key] = module
 end
 
 function LazyLoader:GetModule(module_name: string): ModuleType
@@ -104,17 +154,22 @@ function LazyLoader:LoadModulesFromParent(parent: Instance, deep: boolean?): nil
 	assert(parent ~= nil, "Parent is nil")
 	assert(typeof(parent) == "Instance", "Parent is not an instance")
 
-	deep = deep or false
+	deep = deep or SETTINGS.DEFAULT_DEEP
 
-	local children = parent:GetChildren()
-
-	if deep == true then
-		children = parent:GetDescendants()
+	local map = {}
+	for _, module in ipairs(parent:GetChildren()) do
+		if module:IsA("ModuleScript") then
+			map[module.Name] = module
+		end
 	end
 
-	for _, module in ipairs(children) do
+	if deep == true then
+		map = GetKeyChildStructure(parent)
+	end
+
+	for key, module in map do
 		if module:IsA("ModuleScript") then
-			self:AddModule(module)
+			self:AddModule(key, module)
 		end
 	end
 end

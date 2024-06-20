@@ -164,8 +164,8 @@ local function DoesServiceExist(serviceName: string): boolean
 end
 
 local function LoadModules()
-	SharedLoader:LoadModulesFromParent(dir_Shared)
-	ModulesLoader:LoadModulesFromParent(dir_Modules)
+	SharedLoader:LoadModulesFromParent(dir_Shared, true)
+	ModulesLoader:LoadModulesFromParent(dir_Modules, true)
 end
 
 ----- Public functions -----
@@ -514,8 +514,8 @@ function KnitServer.GetModule(module_name: string)
 	return ModulesLoader:GetModule(module_name)
 end
 
-function KnitServer.LoadModulesFromParent(parent: Instance)
-	ModulesLoader:LoadModulesFromParent(parent)
+function KnitServer.LoadModulesFromParent(parent: Instance, deep: boolean?)
+	ModulesLoader:LoadModulesFromParent(parent, deep)
 end
 ----- Initialization -----
 

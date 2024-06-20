@@ -170,8 +170,8 @@ local function BuildService(serviceName: string)
 end
 
 local function LoadModules()
-	SharedLoader:LoadModulesFromParent(dir_Shared)
-	ModulesLoader:LoadModulesFromParent(dir_Modules)
+	SharedLoader:LoadModulesFromParent(dir_Shared, true)
+	ModulesLoader:LoadModulesFromParent(dir_Modules, true)
 
 	modulesLoaded = true
 end
@@ -453,8 +453,8 @@ function KnitClient.GetModule(module_name: string)
 	return ModulesLoader:GetModule(module_name)
 end
 
-function KnitClient.LoadModulesFromParent(parent: Instance)
-	ModulesLoader:LoadModulesFromParent(parent)
+function KnitClient.LoadModulesFromParent(parent: Instance, deep: boolean?)
+	ModulesLoader:LoadModulesFromParent(parent, deep)
 end
 
 function KnitClient.NewScriptSignal()

@@ -33,14 +33,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine)
 
----@type RateLimiter
-local RateLimiter = LMEngine.GetModule("RateLimiter")
-
 ---@type RetryAsync
 local RetryAsync = LMEngine.GetShared("RetryAsync")
 
--- Create any rate limiters here --
-local PlotServiceRateLimiter = RateLimiter.NewRateLimiter(5)
+local Plot = require(script.Parent.Parent.Modules.Plot)
+
+type Plot = Plot.Plot
 
 ---@class PlotService
 local PlotService = LMEngine.CreateService({
@@ -51,7 +49,11 @@ local PlotService = LMEngine.CreateService({
 		--PlaceStructure = Knit.CreateSignal();
 	},
 
+	---@type Plot[]
 	_plots = {},
+
+	---@type table<Player, Plot>
+	_players = {},
 })
 
 ----- Private functions -----
@@ -60,61 +62,39 @@ local function GetPlots()
 	return SETTINGS.PLOTS_LOCATION:GetChildren()
 end
 
-local function GetFreePlots(): { Instance }
-	local plots = GetPlots()
-	local free_plots = {}
+local function GetRandomFreePlot(plots: { Plot }): Plot?
+	assert(plots, "[PlotService] GetRandomFreePlot: Free plots is nil")
+	assert(#plots > 0, "[PlotService] GetRandomFreePlot: No free plots available")
 
-	for _, plot in ipairs(plots) do
-		local occupied: boolean? = plot:GetAttribute("Occupied")
-
-		if not occupied then
-			table.insert(free_plots, plot)
-		end
-	end
-
-	return free_plots
-end
-
-local function GetRandomFreePlot(): Instance?
-	local free_plots = GetFreePlots()
-
-	assert(free_plots, "[PlotService] GetRandomFreePlot: Free plots is nil")
-	assert(#free_plots > 0, "[PlotService] GetRandomFreePlot: No free plots available")
-
-	if #free_plots == 0 then
-		return nil
-	end
-
-	local random = free_plots[math.random(1, #free_plots)]
+	local random = plots[math.random(1, #plots)]
 
 	return random
 end
 
-local function GetRandomPlot()
-	local plots = SETTINGS.PLOTS_LOCATION:GetChildren()
-	local random = plots[math.random(1, #plots)]
+local function CreatePlotObjects()
+	local plots = GetPlots()
+	local plot_objects: { Plot } = {}
 
-	local occupied: boolean? = random:GetAttribute("Occupied")
+	for _, plot in ipairs(plots) do
+		local success, err = pcall(function()
+			local plot_object = Plot.new(plot)
+			table.insert(plot_objects, plot_object)
+		end)
 
-	if occupied then
-		return GetRandomPlot()
+		if not success then
+			warn("[PlotService] Failed to create plot: " .. err)
+		end
 	end
 
-	return nil
-end
-
-local function AssignPlot(player: Player, plot: Instance)
-	plot:SetAttribute("Occupied", true)
-end
-
-local function UnassignPlot(player: Player, plot: Instance)
-	plot:SetAttribute("Occupied", false)
+	return plot_objects
 end
 
 ----- Public functions -----
 
 function PlotService:Init()
 	print("[PlotService] initialized")
+
+	self._plots = CreatePlotObjects()
 end
 
 function PlotService:Start()
@@ -125,7 +105,7 @@ function PlotService:Start()
 
 	PlayerService:RegisterPlayerAdded(function(player)
 		local success, data = RetryAsync(function()
-			local plot = GetRandomFreePlot()
+			local plot = GetRandomFreePlot(self._plots)
 			self:AssignPlot(player, plot)
 		end, SETTINGS.MAX_RETRIES)
 
@@ -135,7 +115,7 @@ function PlotService:Start()
 		end
 
 		print("[PlotService] Assigned plot to player: " .. player.Name)
-	end);
+	end)
 
 	PlayerService:RegisterPlayerRemoved(function(player)
 		local success, data = RetryAsync(function()
@@ -147,30 +127,31 @@ function PlotService:Start()
 			return
 		end
 
-		print("[PlotService] Unassigned plot from player: " .. player.Name);
-	end);
+		print("[PlotService] Unassigned plot from player: " .. player.Name)
+	end)
 end
 
-function PlotService:AssignPlot(player: Player, plot: Instance)
+function PlotService:AssignPlot(player: Player, plot: Plot)
 	assert(player, "[PlotService] AssignPlot: Player is nil")
 	assert(plot, "[PlotService] AssignPlot: Plot is nil")
 	assert(plot:GetAttribute("Occupied") ~= true, "[PlotService] AssignPlot: Plot is already occupied")
 
-	AssignPlot(player, plot)
+	plot:AssignPlayer(player)
 
-	self._plots[player] = plot
-	PlotService.Client.PlotAssigned:Fire(player, plot)
+	self._players[player] = plot
+	PlotService.Client.PlotAssigned:Fire(player, plot:GetModel())
 end
 
 function PlotService:UnassignPlot(player: Player)
 	assert(player ~= nil, "[PlotService] UnassignPlot: Player is nil")
-	assert(self._plots[player] ~= nil, "[PlotService] UnassignPlot: Player does not have a plot assigned")
-	
-	local plot = self._plots[player]
+	assert(self._players[player] ~= nil, "[PlotService] UnassignPlot: Player does not have a plot assigned")
 
-	UnassignPlot(player, plot)
+	---@type Plot
+	local plot: Plot = self._players[player]
 
-	self._plots[player] = nil
+	plot:UnassignPlayer()
+
+	self._players[player] = nil
 end
 
 return PlotService

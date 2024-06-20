@@ -5,8 +5,8 @@ local LMEngine = require(game:GetService("ReplicatedStorage").LMEngine)
 local dir_Modules = script.Modules
 local dir_Services = script.Services
 
-LMEngine.AddServices(dir_Services)
 LMEngine.LoadModulesFromParent(dir_Modules)
+LMEngine.AddServices(dir_Services)
 
 LMEngine.Start({
 	PerServiceMiddleware = {

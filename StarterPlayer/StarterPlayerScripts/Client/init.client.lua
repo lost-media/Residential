@@ -5,8 +5,8 @@ local LMEngine = require(game:GetService("ReplicatedStorage").LMEngine)
 local dir_Controllers = script.Controllers
 local dir_Modules = script.Modules
 
-LMEngine.AddControllers(dir_Controllers)
 LMEngine.LoadModulesFromParent(dir_Modules)
+LMEngine.AddControllers(dir_Controllers)
 
 LMEngine.Start()
 	:andThen(function()
