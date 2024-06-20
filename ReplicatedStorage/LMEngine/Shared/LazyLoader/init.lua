@@ -91,19 +91,10 @@ local function GetKeyChildStructure(script: Instance, key: string?): { [string]:
 
 			key_child_structure[child_key] = child
 
-			-- there could still be a child of the module
-			if #child:GetChildren() > 0 then
-				local child_structure = GetKeyChildStructure(child, child_key)
-				for keyDef, value in pairs(child_structure) do
-					key_child_structure[keyDef] = value
-				end
-			end
-		end
-
-		if #child:GetChildren() > 0 then
+		elseif #child:GetChildren() > 0 then
 			local child_structure = GetKeyChildStructure(child, child_key)
-			for key, value in pairs(child_structure) do
-				key_child_structure[key] = value
+			for _, value in pairs(child_structure) do
+				key_child_structure[_] = value
 			end
 		end
 	end

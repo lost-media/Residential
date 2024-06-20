@@ -59,10 +59,10 @@ local SETTINGS = {}
 
 type INode<K, V> = {
 	__index: INode<K, V>,
-	new: (id: string) -> INode<K, V>,
+	new: (id: K, val: V) -> Node<K, V>,
 
-	GetId: (self: INode<K, V>) -> string,
-	GetValue: (self: INode<K, V>) -> V,
+	GetId: (self: Node<K, V>) -> K,
+	GetValue: (self: Node<K, V>) -> V,
 }
 
 type NodeMembers<K, V> = {
@@ -74,25 +74,30 @@ export type Node<K, V> = typeof(setmetatable({} :: NodeMembers<K, V>, {} :: INod
 
 type IGraph<K, V> = {
 	__index: IGraph<K, V>,
-	new: () -> IGraph<K, V>,
+	new: () -> Graph<K, V>,
+    Node: (id: K, val: V) -> Node<K, V>,
 
-	AddNode: (self: IGraph<K, V>, node: Node<K, V>) -> (),
-	RemoveNode: (self: IGraph<K, V>, node: Node<K, V>) -> (),
-	AddEdge: (self: IGraph<K, V>, node1: Node<K, V>, node2: Node<K, V>) -> (),
-	RemoveEdge: (self: IGraph<K, V>, node1: Node<K, V>, node2: Node<K, V>) -> (),
-	GetNeighbors: (self: IGraph<K, V>, node: Node<K, V>) -> { Node<K, V> }?,
-	GetNodes: (self: IGraph<K, V>) -> { Node<K, V> },
-	HasNode: (self: IGraph<K, V>, node: Node<K, V>) -> boolean,
-	HasEdge: (self: IGraph<K, V>, node1: Node<K, V>, node2: Node<K, V>) -> boolean,
-	Clear: (self: IGraph<K, V>) -> (),
-	Size: (self: IGraph<K, V>) -> number,
+	AddNode: (self: Graph<K, V>, node: Node<K, V>) -> (),
+	RemoveNode: (self: Graph<K, V>, node: Node<K, V>) -> (),
+	AddEdge: (self: Graph<K, V>, node1: Node<K, V>, node2: Node<K, V>) -> (),
+	RemoveEdge: (self: Graph<K, V>, node1: Node<K, V>, node2: Node<K, V>) -> (),
+	GetNeighbors: (self: Graph<K, V>, node: Node<K, V>) -> { Node<K, V> }?,
+	GetNodes: (self: Graph<K, V>) -> { Node<K, V> },
+	HasNode: (self: Graph<K, V>, node: Node<K, V>) -> boolean,
+	HasEdge: (self: Graph<K, V>, node1: Node<K, V>, node2: Node<K, V>) -> boolean,
+	Clear: (self: Graph<K, V>) -> (),
+	Size: (self: Graph<K, V>) -> number,
+    GetRandomNode: (self: Graph<K, V>) -> Node<K, V>?,
 }
 
 type GraphMembers<K, V> = {
-	_nodes: { [string]: Node<K, V> },
+	_nodes: { [K]: Node<K, V> },
 }
 
-export type Graph<K, V> = typeof(setmetatable({} :: GraphMembers<K, V>, {}))
+export type Graph<K, V> = typeof(
+    setmetatable({} :: GraphMembers<K, V>,
+    {} :: IGraph<K, V>)
+)
 
 ----- Private variables -----
 
@@ -103,7 +108,7 @@ Node.__index = Node
 
 ---@generic K, V
 ---@class Graph
-local Graph = {}
+local Graph = {};
 Graph.__index = Graph
 
 ----- Private functions -----
@@ -113,24 +118,28 @@ Graph.__index = Graph
 function Node.new<K, V>(id: K, val: V): Node<K, V>
 	local self = setmetatable({
 		_id = id,
-		_value = nil,
-	}, Node)
-	return self
+		_value = val,
+	}, Node);
+	return self;
 end
 
-function Node:GetId<K, V>(): K
-	return self._id
+function Node:GetId()
+	return self._id;
 end
 
-function Node:GetValue<K, V>(): V
-	return self._value
+function Node:GetValue()
+	return self._value;
 end
 
 function Graph.new<K, V>(): Graph<K, V>
 	local self = setmetatable({
 		_nodes = {},
 	}, Graph)
-	return self
+	return self;
+end
+
+function Graph.Node<K, V>(id: K, val: V): Node<K, V>
+    return Node.new(id, val)
 end
 
 function Graph:AddNode<K, V>(node: Node<K, V>)
@@ -202,7 +211,23 @@ function Graph:Clear<K, V>()
 end
 
 function Graph:Size<K, V>(): number
-	return #self._nodes
+	local count = 0;
+
+    for _, _ in self._nodes do
+        count += 1;
+    end
+
+    return count;
+end
+
+function Graph:GetRandomNode<K, V>(): Node<K, V>?
+    local nodes = self:GetNodes()
+
+    if #nodes == 0 then
+        return nil
+    end
+
+    return nodes[math.random(1, #nodes)]
 end
 
 return Graph

@@ -1,5 +1,4 @@
 --!strict
---!version: 1.0.0
 
 --[[
 {Lost Media}
@@ -10,6 +9,10 @@
     a reference to the player
     that owns it.
 
+    Tiles are parts in a folder called "Tiles" in the plot model.
+    They can be represented as a graph data structure in order to
+    find paths between them and neighbors/adjacent tiles.
+
 	Members:
 
 		Plot._plot_model   [Instance] -- The model of the plot
@@ -19,6 +22,9 @@
 
         Plot.new(plotModel: Instance) -- Constructor
             Creates a new instance of the Plot class
+
+        Plot.ModelIsPlot(model: Instance) boolean
+            Checks if a model instance has the structure of a plot
 
 	Methods:
 
@@ -41,12 +47,24 @@
             Gets an attribute of the plot instance model
 --]]
 
-local SETTINGS = {}
+local SETTINGS = {
+    -- The size of a tile in studs in X and Z dimensions
+    TILE_SIZE = 8,
+}
 
 ----- Types -----
 
+---@class PlotModel
+export type PlotModel = Model & {
+    Tiles: Folder,
+    Structures: Folder,
+};
+
 type IPlot = {
 	__index: IPlot,
+    __tostring: (self: Plot) -> string,
+
+    ModelIsPlot: (model: Instance) -> boolean,
 	new: (plotModel: Instance) -> IPlot,
 
 	GetPlayer: (self: Plot) -> Player?,
@@ -56,11 +74,6 @@ type IPlot = {
 
 	SetAttribute: (self: Plot, attribute: string, value: any) -> (),
 	GetAttribute: (self: Plot, attribute: string) -> any,
-}
-
-type PlotMembers = {
-	_plot_model: Instance,
-	_player: Player?,
 }
 
 export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))
@@ -74,10 +87,54 @@ local LMEngine = require(ReplicatedStorage.LMEngine)
 
 ---@type Graph
 local Graph = LMEngine.GetShared("DS.Graph")
+type Graph<K, V> = Graph.Graph<K, V>
+
+type PlotMembers = {
+	_plot_model: Instance,
+	_player: Player?,
+    _tiles: Graph<string, Instance>,
+}
 
 ---@class Plot
-local Plot: IPlot = {} :: IPlot
-Plot.__index = Plot
+local Plot: IPlot = {} :: IPlot;
+Plot.__index = Plot;
+
+----- Private functions -----
+
+local function InitializePlotTiles(tiles: { BasePart }) : Graph<string, Instance>
+    local graph = Graph.new() :: Graph<string, Instance>;
+
+    local positions = {} :: { [Vector3]: Graph.Node<string, Instance> };
+
+    for _, tile in tiles do
+        tile.Name = _;
+        
+        local node = Graph.Node(_, tile);
+        graph:AddNode(node);
+
+        positions[tile.Position] = node;
+    end
+
+    -- Add edges between adjacent tiles
+    for _, tile in tiles do
+        local neighbors = {
+            Vector3.new(0, 0, SETTINGS.TILE_SIZE),
+            Vector3.new(0, 0, -SETTINGS.TILE_SIZE),
+            Vector3.new(SETTINGS.TILE_SIZE, 0, 0),
+            Vector3.new(-SETTINGS.TILE_SIZE, 0, 0),
+        };
+
+        for _, offset in ipairs(neighbors) do
+            local neighbor_position = tile.Position + offset;
+            local neighbor = positions[neighbor_position];
+            if neighbor then
+                graph:AddEdge(positions[tile.Position], neighbor);
+            end
+        end
+    end
+
+    return graph;
+end
 
 ----- Public functions -----
 
@@ -106,12 +163,27 @@ function Plot.ModelIsPlot(model: Instance): boolean
 	return true
 end
 
-function Plot.new(plot_model: Instance): Plot
-	assert(Plot.ModelIsPlot(plot_model) == true, "Model is not a plot")
+function Plot.new(plot_model: Instance)
+	assert(Plot.ModelIsPlot(plot_model) == true, "Model is not a plot");
 
 	local self = setmetatable({}, Plot)
-	self._plot_model = plot_model
-	self._player = nil
+	self._plot_model = plot_model;
+	self._player = nil :: Player?;
+
+    self._tiles = InitializePlotTiles(plot_model.Tiles:GetChildren());
+
+    -- get a random tile and light up its neighbors
+    local random_tile = self._tiles:GetRandomNode();
+
+    if random_tile then
+        local neighbors = self._tiles:GetNeighbors(random_tile);
+
+        for _, neighbor in ipairs(neighbors) do
+            
+            neighbor._value.BrickColor = BrickColor.new("Bright red");
+        end
+    end
+    
 	return self
 end
 
@@ -143,7 +215,7 @@ function Plot:GetAttribute(attribute: string): any
 end
 
 function Plot.__tostring(self: Plot): string
-	return "Plot " .. self._plot_id
+	return "Plot " .. self._plot_model.Name;
 end
 
 return Plot
