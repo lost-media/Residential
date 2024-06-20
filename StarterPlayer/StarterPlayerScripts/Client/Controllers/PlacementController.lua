@@ -45,10 +45,36 @@ function PlacementController:Start()
 
 	self._placement_client = PlacementClient.new(plot)
 
-	local ghost_structure = workspace:WaitForChild("Old Watertower"):Clone()
-	ghost_structure.Parent = workspace
+	---@type InputController
+	local InputController = LMEngine.GetController("InputController")
 
-	self._placement_client:InitiatePlacement(ghost_structure)
+	InputController:RegisterInputBegan("PlacementController", function(input)
+		if input.KeyCode == Enum.KeyCode.E then
+			if self._placement_client:IsPlacing() == true then
+				self._placement_client:CancelPlacement()
+				return
+			end
+
+			self:StartPlacement("Old Watertower")
+		end
+	end)
+end
+
+function PlacementController:StartPlacement(structureId: string)
+	-- fetch the structure from the structures list
+	if self._placement_client == nil then
+		self._placement_client = PlacementClient.new()
+	end
+
+	if self._placement_client:IsActive() == false then
+		self._placement_client = PlacementClient.new()
+	end
+
+	-- for now, clone the structure from the workspace
+	local structure = workspace:WaitForChild(structureId):Clone()
+	structure.Parent = workspace
+
+	self._placement_client:InitiatePlacement(structure)
 end
 
 return PlacementController

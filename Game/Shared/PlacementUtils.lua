@@ -1,7 +1,17 @@
-local RS = game:GetService("ReplicatedStorage")
-local PlotConfigs = require(RS.Game.Shared.Configs.Plot)
+local SETTINGS = {
+	TWEEN_INFO = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0),
+}
+
+----- Private variables -----
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+local PlotConfigs = require(ReplicatedStorage.Game.Shared.Configs.Plot)
 
 local PlacementUtils = {}
+
+----- Public functions -----
 
 function PlacementUtils.GetSnappedTileCFrame(tile: BasePart, state: { _level: number, _rotation: number })
 	local tileHeight = tile.Size.Y
@@ -9,7 +19,7 @@ function PlacementUtils.GetSnappedTileCFrame(tile: BasePart, state: { _level: nu
 	local pos = tile.Position + Vector3.new(0, tileHeight / 2 + 0.5, 0)
 	local newCFrame = CFrame.new(pos)
 	newCFrame = newCFrame * CFrame.Angles(0, math.rad(state._rotation), 0)
-	newCFrame = newCFrame * CFrame.new(0, state._level * PlotConfigs.PLOT_LEVEL_HEIGHT, 0)
+	newCFrame = newCFrame * CFrame.new(0, (state._level - 1) * PlotConfigs.PLOT_LEVEL_HEIGHT, 0)
 
 	return newCFrame
 end
@@ -60,6 +70,19 @@ function PlacementUtils.GetSnappedAttachmentCFrame(
 	end
 
 	return newCFrame
+end
+
+function PlacementUtils.MoveModelToCFrame(model: Model, cframe: CFrame, instant: boolean)
+	assert(model, "[PlacementUtils] MoveModelToCFrame : Model is nil")
+	assert(cframe, "[PlacementUtils] MoveModelToCFrame : CFrame is nil")
+	assert(model.PrimaryPart ~= nil, "[PlacementUtils] MoveModelToCFrame : Model.PrimaryPart is nil")
+
+	if instant then
+		model:PivotTo(cframe)
+	else
+		local tween = TweenService:Create(model.PrimaryPart, SETTINGS.TWEEN_INFO, { CFrame = cframe })
+		tween:Play()
+	end
 end
 
 return PlacementUtils

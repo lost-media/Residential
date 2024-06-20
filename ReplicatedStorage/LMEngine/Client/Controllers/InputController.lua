@@ -52,28 +52,32 @@ function InputController:Start()
 	print("[InputController] started")
 end
 
-function InputController:RegisterInputBegan(callback: (input: InputObject, game_processed: boolean?) -> ()): number
-	table.insert(self.InputBeganCallbacks, callback)
+function InputController:RegisterInputBegan(key: string, callback: (input: InputObject, game_processed: boolean?) -> ())
+	assert(self.InputBeganCallbacks[key] == nil, "[InputController] RegisterInputBegan: Key already exists")
+	assert(callback ~= nil, "[InputController] RegisterInputBegan: Callback is nil")
+	self.InputBeganCallbacks[key] = callback
 
 	-- Return the index of the callback
-	return #self.InputBeganCallbacks
 end
 
-function InputController:RegisterInputEnded(callback: (input: InputObject, game_processed: boolean?) -> ()): number
-	table.insert(self.InputEndedCallbacks, callback)
+function InputController:RegisterInputEnded(key: string, callback: (input: InputObject, game_processed: boolean?) -> ())
+	assert(self.InputEndedCallbacks[key] == nil, "[InputController] RegisterInputEnded: Key already exists")
+	assert(callback ~= nil, "[InputController] RegisterInputEnded: Callback is nil")
+
+	self.InputEndedCallbacks[key] = callback
 
 	-- Return the index of the callback
 	return #self.InputEndedCallbacks
 end
 
-function InputController:UnregisterInputBegan(index: number)
-	assert(index <= #self.InputBeganCallbacks, "[InputController] UnregisterInputBegan: Index out of range")
-	table.remove(self.InputBeganCallbacks, index)
+function InputController:UnregisterInputBegan(key: string)
+	assert(self.InputBeganCallbacks[key] ~= nil, "[InputController] UnregisterInputBegan: Key does not exist")
+	self.InputBeganCallbacks[key] = nil
 end
 
-function InputController:UnregisterInputEnded(index: number)
-	assert(index <= #self.InputEndedCallbacks, "[InputController] UnregisterInputBegan: Index out of range")
-	table.remove(self.InputEndedCallbacks, index)
+function InputController:UnregisterInputEnded(key: string)
+	assert(self.InputEndedCallbacks[key] ~= nil, "[InputController] UnregisterInputEnded: Key does not exist")
+	self.InputEndedCallbacks[key] = nil
 end
 
 function InputController:GetMouse(): Mouse

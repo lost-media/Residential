@@ -54,6 +54,7 @@ local SETTINGS = {
 	} :: State,
 
 	ROTATION_INCREMENT = 90,
+	TRANSPARENCY_DIM_FACTOR = 1.5,
 }
 
 ----- Types -----
@@ -62,8 +63,11 @@ type IPlacementClient = {
 	__index: IPlacementClient,
 	new: () -> PlacementClient,
 
-	Destroy: (self: PlacementClient) -> (),
 	InitiatePlacement: (self: PlacementClient, model: Model) -> (),
+	IsPlacing: (self: PlacementClient) -> boolean,
+	CancelPlacement: (self: PlacementClient) -> (),
+	IsActive: (self: PlacementClient) -> boolean,
+	Destroy: (self: PlacementClient) -> (),
 }
 
 type PlacementClientMembers = {
@@ -71,6 +75,7 @@ type PlacementClientMembers = {
 	_mouse: Mouse.Mouse,
 	_trove: Trove.Trove,
 	_plot: Model,
+	_active: boolean,
 }
 
 type PlacementType = "Place" | "Move" | "Remove" | "None"
@@ -157,6 +162,47 @@ local reducer = Rodux.combineReducers({
 })
 
 ----- Private functions -----
+
+local function DimModel(model: Model)
+	-- If the model is already dimmed, no need to dim it again
+	if model:GetAttribute("Dimmed") == true then
+		return
+	end
+
+	for _, instance in ipairs(model:GetDescendants()) do
+		if instance:IsA("BasePart") then
+			instance:SetAttribute("OriginalTransparency", instance.Transparency)
+			instance.Transparency = 1 - (1 - instance.Transparency) / SETTINGS.TRANSPARENCY_DIM_FACTOR
+		end
+	end
+
+	model:SetAttribute("Dimmed", true)
+end
+
+function UndimModel(model: Model)
+	if model:GetAttribute("Dimmed") == false then
+		return
+	end
+
+	for _, instance in ipairs(model:GetDescendants()) do
+		if instance:IsA("BasePart") then
+			local originalTransparency = instance:GetAttribute("OriginalTransparency")
+			if originalTransparency ~= nil then
+				instance.Transparency = originalTransparency
+			end
+		end
+	end
+
+	model:SetAttribute("Dimmed", nil)
+end
+
+local function UncollideModel(model: Model)
+	for _, instance in ipairs(model:GetDescendants()) do
+		if instance:IsA("BasePart") then
+			instance.CanCollide = false
+		end
+	end
+end
 
 local function ModelIsPlot(model: Model)
 	if model == nil then
@@ -251,8 +297,6 @@ local function AttemptToSnapToTile(client: PlacementClient, tile: BasePart)
 	if currentTile == nil or currentTile ~= tile then
 		client._state:dispatch(TileChanged(tile))
 	end
-
-	--self:UpdateCanConfirmPlacement(true)
 end
 
 local function SnapToTileWithLevel(client: PlacementClient, tile: BasePart)
@@ -269,8 +313,7 @@ local function SnapToTileWithLevel(client: PlacementClient, tile: BasePart)
 	end
 
 	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, state)
-	print(newCFrame)
-	--self:MoveModelToCF(ghost_structure, newCFrame, false);
+	PlacementUtils.MoveModelToCFrame(ghost_structure, newCFrame, false)
 end
 
 local function UpdatePosition(client: PlacementClient)
@@ -354,9 +397,16 @@ function PlacementClient.new(plot: Model)
 
 	self._state = Store.new(reducer, SETTINGS.INITIAL_STATE, {})
 
+	self._active = true
 	self._mouse = Mouse.new()
 	self._trove = Trove.new()
 	self._plot = plot
+
+	self._mouse:SetFilterType(Enum.RaycastFilterType.Include)
+	self._mouse:SetTargetFilter({
+		plot:FindFirstChild("Tiles"),
+		plot:FindFirstChild("Structures"),
+	})
 
 	return self
 end
@@ -369,6 +419,10 @@ function PlacementClient:InitiatePlacement(model: Model)
 	if PlacementTypeIsNone(state) == false then
 		return
 	end
+
+	-- Set up the ghost structure
+	DimModel(model)
+	UncollideModel(model)
 
 	self._trove:Add(model)
 
@@ -391,9 +445,34 @@ function PlacementClient:InitiatePlacement(model: Model)
 	end))
 end
 
+function PlacementClient:IsPlacing()
+	local state: State = self._state:getState()
+
+	return PlacementTypeIsNone(state) == false
+end
+
+function PlacementClient:IsActive()
+	return self._active
+end
+
+function PlacementClient:CancelPlacement()
+	local state: State = self._state:getState()
+
+	if PlacementTypeIsNone(state) == true then
+		return
+	end
+
+	self._state:dispatch(PlacementTypeChanged("None"))
+	self._state:dispatch(UpdateGhostStructure(nil))
+
+	self._trove:Destroy()
+end
+
 function PlacementClient:Destroy()
 	self._state:destruct()
 	self._trove:Destroy()
+
+	self._active = false
 end
 
 return PlacementClient
