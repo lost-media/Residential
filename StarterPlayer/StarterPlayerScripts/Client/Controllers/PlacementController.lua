@@ -3,13 +3,13 @@
 --[[
 {Lost Media}
 
--[PlotController] Controller
-    A controller that listens for the PlotAssigned event from the PlotService and assigns the plot to the PlotController.
+-[PlacementController] Controller
+    A controller that listens for the PlotAssigned event from the PlotService and assigns the plot to the PlacementController.
 	The PlotController is then used to get the plot assigned to the player.
 --]]
 
 local SETTINGS = {
-
+	
 }
 
 ----- Private variables -----
@@ -22,8 +22,8 @@ local LMEngine = require(ReplicatedStorage.LMEngine)
 ---@type Signal
 local Signal = LMEngine.GetShared("Signal")
 
-local PlotController = LMEngine.CreateController({
-	Name = "PlotController",
+local PlacementController = LMEngine.CreateController({
+	Name = "PlacementController",
 	Plot = nil,
 
 	OnPlotAssigned = Signal.new(),
@@ -31,19 +31,19 @@ local PlotController = LMEngine.CreateController({
 
 ----- Public functions -----
 
-function PlotController:Init()
-	print("[PlotController] initialized")
+function PlacementController:Init()
+	print("[PlacementController] initialized")
 end
 
-function PlotController:Start()
-	print("[PlotController] started")
+function PlacementController:Start()
+	print("[PlacementController] started")
 
 	local PlotService = LMEngine.GetService("PlotService")
 
 	local PlotAssigned: RBXScriptConnection
 
 	PlotAssigned = PlotService.PlotAssigned:Connect(function(plot)
-		print("[PlotController] Plot assigned")
+		print("[PlacementController] Plot assigned")
 		self.Plot = plot
 
 		self.OnPlotAssigned:Fire(plot)
@@ -53,8 +53,8 @@ function PlotController:Start()
 	end)
 end
 
-function PlotController:GetPlot()
+function PlacementController:GetPlot()
 	return self.Plot
 end
 
-return PlotController
+return PlacementController

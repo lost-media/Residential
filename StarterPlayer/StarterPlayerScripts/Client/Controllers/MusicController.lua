@@ -1,5 +1,4 @@
 --!strict
---!version: 1.0.0
 
 --[[
 {Lost Media}
@@ -22,20 +21,60 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine)
 
+---@type Deque
+local Deque = LMEngine.GetShared("DS.Deque");
+
 ---@type Trove
 local Trove = LMEngine.GetShared("Trove")
 
 ---@class MusicController
 local MusicController = LMEngine.CreateController({
 	Name = "MusicController",
+
+	_queue = Deque.new()
 })
 
 local TroveObject = Trove.new()
 
+----- Private functions -----
+
+local function InitializeMusicQueue(queue: Deque.Deque?)
+	local music = SETTINGS.MusicFolder:GetChildren()
+
+	for _, sound in music do
+		if (sound:IsA("Sound") == false) then
+			continue
+		end
+		queue:PushRight(sound);
+	end
+end
+
+local function PlayMusicFromQueue(queue: Deque.Deque)
+	local sound = queue:PopLeft()
+
+	if (sound == nil) then
+		queue = InitializeMusicQueue()
+		sound = queue:PopLeft()
+	end
+
+	local cloned_sound = TroveObject:Clone(sound)
+	cloned_sound.Parent = SETTINGS.SoundParent
+	cloned_sound.Volume = SETTINGS.Volume
+
+	cloned_sound:Play()
+
+	cloned_sound.Ended:Connect(function()
+		TroveObject:Clean()
+		PlayMusicFromQueue(queue)
+	end)
+end
+
 ----- Public functions -----
 
 function MusicController:Init()
-	print("[MusicController] initialized")
+	print("[MusicController] initialized");
+
+	InitializeMusicQueue(self._queue);
 end
 
 function MusicController:Start()
@@ -47,23 +86,7 @@ function MusicController:Start()
 end
 
 function MusicController:PlayMusic()
-	assert(SETTINGS.MusicFolder ~= nil, "Music folder not found in ReplicatedStorage")
-
-	local music = SETTINGS.MusicFolder:GetChildren()
-
-	assert(#music > 0, "No music found in Music folder")
-
-	local random_music: Sound = music[math.random(1, #music)]
-	local cloned_music: Sound = TroveObject:Clone(random_music)
-	cloned_music.Parent = SETTINGS.SoundParent
-	cloned_music.Volume = SETTINGS.Volume
-
-	cloned_music:Play()
-
-	cloned_music.Ended:Connect(function()
-		TroveObject:Clean()
-		self:PlayMusic()
-	end)
+	PlayMusicFromQueue(self._queue);
 end
 
 return MusicController

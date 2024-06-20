@@ -80,6 +80,13 @@ export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))
 
 ----- Private variables -----
 
+local NEIGHBORS = {
+    Vector3.new(0, 0, SETTINGS.TILE_SIZE),
+    Vector3.new(0, 0, -SETTINGS.TILE_SIZE),
+    Vector3.new(SETTINGS.TILE_SIZE, 0, 0),
+    Vector3.new(-SETTINGS.TILE_SIZE, 0, 0),
+};
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 ---@type LMEngineServer
@@ -116,15 +123,9 @@ local function InitializePlotTiles(tiles: { BasePart }) : Graph<string, Instance
     end
 
     -- Add edges between adjacent tiles
-    for _, tile in tiles do
-        local neighbors = {
-            Vector3.new(0, 0, SETTINGS.TILE_SIZE),
-            Vector3.new(0, 0, -SETTINGS.TILE_SIZE),
-            Vector3.new(SETTINGS.TILE_SIZE, 0, 0),
-            Vector3.new(-SETTINGS.TILE_SIZE, 0, 0),
-        };
 
-        for _, offset in ipairs(neighbors) do
+    for _, tile in tiles do
+        for _, offset in NEIGHBORS do
             local neighbor_position = tile.Position + offset;
             local neighbor = positions[neighbor_position];
             if neighbor then
@@ -172,18 +173,6 @@ function Plot.new(plot_model: Instance)
 
     self._tiles = InitializePlotTiles(plot_model.Tiles:GetChildren());
 
-    -- get a random tile and light up its neighbors
-    local random_tile = self._tiles:GetRandomNode();
-
-    if random_tile then
-        local neighbors = self._tiles:GetNeighbors(random_tile);
-
-        for _, neighbor in ipairs(neighbors) do
-            
-            neighbor._value.BrickColor = BrickColor.new("Bright red");
-        end
-    end
-    
 	return self
 end
 
