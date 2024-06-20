@@ -60,6 +60,7 @@ export type PlacementClient = typeof(setmetatable(
 			OnUnstacked: Signal.Signal,
 			OnLevelChanged: Signal.Signal,
 			OnCanConfirmPlacementChanged: Signal.Signal,
+			OnDelete: Signal.Signal,
 		},
 		structureCollectionEntry: table,
 	},
@@ -153,6 +154,7 @@ function PlacementClient.new(plot: Plot.Plot)
 		OnUnstacked = Signal.new(),
 		OnLevelChanged = Signal.new(),
 		OnCanConfirmPlacementChanged = Signal.new(),
+		OnDelete = Signal.new(),
 	}
 
 	return self
@@ -223,6 +225,18 @@ function PlacementClient:StartPlacement(structureId: string)
 			self:RaiseLevel()
 		elseif input.KeyCode == Enum.KeyCode.Down then
 			self:LowerLevel()
+		elseif input.KeyCode == Enum.KeyCode.X then
+			local mouse = self:GetMouse()
+			local closestInstance = mouse:GetTarget()
+
+			if closestInstance == nil then
+				return
+			end
+
+			print(closestInstance)
+			if self:PartIsFromStructure(closestInstance) then
+				self:Delete(self:GetStructureFromPart(closestInstance))
+			end
 		end
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			self:ConfirmPlacement()
@@ -238,6 +252,15 @@ function PlacementClient:ConfirmPlacement()
 	end
 
 	self.signals.OnPlacementConfirmed:Fire(self.state.structureId, self.state)
+end
+
+function PlacementClient:Delete(model: Model)
+	-- delete the model that the player is hovering over
+	if model == nil then
+		return
+	end
+
+	self.signals.OnDelete:Fire(model)
 end
 
 function PlacementClient:MakeHighlight(instance: Instance)
