@@ -54,11 +54,11 @@ function PlotController:Start()
 	end)
 end
 
-function PlotController:GetPlot()
+function PlotController:GetPlot(): Model
 	return self._plot
 end
 
-function PlotController:WaitForPlot()
+function PlotController:WaitForPlot(): Model
 	if self.Plot ~= nil then
 		return self._plot
 	end

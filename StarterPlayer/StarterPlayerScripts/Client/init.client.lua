@@ -6,6 +6,7 @@ local dir_Controllers = script.Controllers
 local dir_Modules = script.Modules
 
 LMEngine.LoadModulesFromParent(dir_Modules)
+
 LMEngine.AddControllers(dir_Controllers)
 
 LMEngine.Start()

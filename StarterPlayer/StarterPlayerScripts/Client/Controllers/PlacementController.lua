@@ -17,14 +17,16 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
+---@type PlacementClient
+local PlacementClient = LMEngine.GetModule("PlacementClient")
+
 ---@type Signal
 local Signal = LMEngine.GetShared("Signal")
 
 local PlacementController = LMEngine.CreateController({
 	Name = "PlacementController",
-	Plot = nil,
 
-	OnPlotAssigned = Signal.new(),
+	_placement_client = nil,
 })
 
 ----- Public functions -----
@@ -40,7 +42,39 @@ function PlacementController:Start()
 	local PlotController = LMEngine.GetController("PlotController")
 
 	local plot = PlotController:WaitForPlot()
-	print(plot)
+
+	self._placement_client = PlacementClient.new(plot)
+
+	---@type InputController
+	local InputController = LMEngine.GetController("InputController")
+
+	InputController:RegisterInputBegan("PlacementController", function(input)
+		if input.KeyCode == Enum.KeyCode.E then
+			if self._placement_client:IsPlacing() == true then
+				self._placement_client:CancelPlacement()
+				return
+			end
+
+			self:StartPlacement("Old Watertower")
+		end
+	end)
+end
+
+function PlacementController:StartPlacement(structureId: string)
+	-- fetch the structure from the structures list
+	if self._placement_client == nil then
+		self._placement_client = PlacementClient.new()
+	end
+
+	if self._placement_client:IsActive() == false then
+		self._placement_client = PlacementClient.new()
+	end
+
+	-- for now, clone the structure from the workspace
+	local structure = workspace:WaitForChild(structureId):Clone()
+	structure.Parent = workspace
+
+	self._placement_client:InitiatePlacement(structure)
 end
 
 return PlacementController

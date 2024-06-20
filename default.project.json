@@ -6,7 +6,11 @@
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
       "$ignoreUnknownInstances": true,
-      "$path": "ReplicatedStorage"
+      "$path": "ReplicatedStorage",
+      "Game": {
+        "$className": "Folder",
+        "$path": "Game"
+      }
     },
 
     "ServerScriptService": {
