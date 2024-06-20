@@ -10,8 +10,17 @@
 
 	Members:
 
-        Graph._nodes   [table] -- Node -> Node
-            Stores the mapping of nodes to nodes
+        PlacementClient._state [Rodux.Store] -- The state of the placement client
+            The state of the placement client
+
+        PlacementClient._mouse [Mouse] -- The mouse object
+            The mouse object
+
+        PlacementClient._trove [Trove] -- The trove object
+            The trove object
+
+        PlacementClient._plot [Model] -- The plot model
+            The plot model
 
     Functions:
 
@@ -20,35 +29,11 @@
 
 	Methods:
 
-        Graph:AddNode(node: Node) [void]
-            Adds a node to the graph
+        PlacementClient:Destroy() -- Destructor
+            Destroys the placement client
 
-        Graph:RemoveNode(node: Node) [void]
-            Removes a node from the graph
-
-        Graph:AddEdge(node1: Node, node2: Node) [void]
-            Adds an edge between two nodes
-
-        Graph:RemoveEdge(node1: Node, node2: Node) [void]
-            Removes an edge between two nodes
-
-        Graph:GetNeighbors(node: Node) {Node[]}?
-            Returns the neighbors of a node
-
-        Graph:GetNodes() {Node[]}
-            Returns the nodes in the graph
-
-        Graph:HasNode(node: Node) boolean
-            Returns true if the graph contains the node
-
-        Graph:HasEdge(node1: Node, node2: Node) boolean
-            Returns true if the graph contains an edge between the two nodes
-
-        Graph:Clear() [void]
-            Clears the graph
-
-        Graph:Size() number
-            Returns the number of nodes in the graph
+        PlacementClient:InitiatePlacement(model: Model) -- Method
+            Initiates the placement of a model
 
 --]]
 
@@ -62,7 +47,13 @@ local SETTINGS = {
 		_placement_type = "None",
 		_tile = nil,
 		_ghost_structure = nil,
+		_can_confirm_placement = false,
+		_rotation = 0,
+		_is_stacked = false,
+		_level = 1,
 	} :: State,
+
+	ROTATION_INCREMENT = 90,
 }
 
 ----- Types -----
@@ -87,11 +78,20 @@ type PlacementType = "Place" | "Move" | "Remove" | "None"
 type State = {
 	_tile: BasePart?,
 	_placement_type: PlacementType,
+	_ghost_structure: Model?,
+	_can_confirm_placement: boolean,
+	_rotation: number,
+	_is_stacked: boolean,
+	_level: number,
 }
 
 export type PlacementClient = typeof(setmetatable({} :: PlacementClientMembers, {} :: IPlacementClient))
 
 ----- Private variables -----
+
+local UserInputService = game:GetService("UserInputService")
+
+local PlacementUtils = require(ReplicatedStorage.Game.Shared.PlacementUtils)
 
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
@@ -122,10 +122,38 @@ local ghost_structure_reducers = Rodux.createReducer(nil, {
 	end,
 })
 
+local can_confirm_placement_reducers = Rodux.createReducer(false, {
+	["CAN_CONFIRM_PLACEMENT_CHANGED"] = function(state: State, action)
+		return action._can_confirm_placement
+	end,
+})
+
+local rotation_reducers = Rodux.createReducer(0, {
+	["ROTATION_CHANGED"] = function(state: State, action)
+		return action._rotation
+	end,
+})
+
+local is_stacked_reducers = Rodux.createReducer(false, {
+	["IS_STACKED_CHANGED"] = function(state: State, action)
+		return action._is_stacked
+	end,
+})
+
+local level_reducers = Rodux.createReducer(1, {
+	["LEVEL_CHANGED"] = function(state: State, action)
+		return action._level
+	end,
+})
+
 local reducer = Rodux.combineReducers({
 	_tile = tile_reducers,
 	_placement_type = placement_type_reducers,
 	_ghost_structure = ghost_structure_reducers,
+	_can_confirm_placement = can_confirm_placement_reducers,
+	_rotation = rotation_reducers,
+	_is_stacked = is_stacked_reducers,
+	_level = level_reducers,
 })
 
 ----- Private functions -----
@@ -202,6 +230,20 @@ local function UpdateGhostStructure(structure: Model)
 	}
 end
 
+local function RotationChanged(rotation: number)
+	return {
+		type = "ROTATION_CHANGED",
+		_rotation = rotation,
+	}
+end
+
+local function CanConfirmPlacementChanged(can_confirm_placement: boolean)
+	return {
+		type = "CAN_CONFIRM_PLACEMENT_CHANGED",
+		_can_confirm_placement = can_confirm_placement,
+	}
+end
+
 local function AttemptToSnapToTile(client: PlacementClient, tile: BasePart)
 	local state: State = client._state:getState()
 
@@ -211,6 +253,35 @@ local function AttemptToSnapToTile(client: PlacementClient, tile: BasePart)
 	end
 
 	--self:UpdateCanConfirmPlacement(true)
+end
+
+local function SnapToTileWithLevel(client: PlacementClient, tile: BasePart)
+	local state: State = client._state:getState()
+
+	local ghost_structure = state._ghost_structure
+
+	if ghost_structure == nil then
+		return
+	end
+
+	if tile == nil then
+		return
+	end
+
+	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, state)
+	print(newCFrame)
+	--self:MoveModelToCF(ghost_structure, newCFrame, false);
+end
+
+local function UpdatePosition(client: PlacementClient)
+	-- Completely state dependent
+	local state: State = client._state:getState()
+
+	if state._is_stacked == true then
+		--self:SnapToAttachment(self.state.mountedAttachment, self.state.tile)
+	else
+		SnapToTileWithLevel(client, state._tile)
+	end
 end
 
 local function RenderSteppedUpdate(client: PlacementClient, dt: number)
@@ -270,6 +341,8 @@ local function RenderSteppedUpdate(client: PlacementClient, dt: number)
 	else
 		-- Attempt to snap to the attachment
 	end
+
+	UpdatePosition(client)
 end
 
 ----- Public functions -----
@@ -291,11 +364,13 @@ end
 function PlacementClient:InitiatePlacement(model: Model)
 	assert(model:IsA("Model"), "[PlacementClient] InitiatePlacement: Model must be a Model")
 
-	local state = self._state:getState()
+	local state: State = self._state:getState()
 
 	if PlacementTypeIsNone(state) == false then
 		return
 	end
+
+	self._trove:Add(model)
 
 	self._state:dispatch(PlacementTypeChanged("Place"))
 	self._state:dispatch(UpdateGhostStructure(model))
@@ -303,6 +378,17 @@ function PlacementClient:InitiatePlacement(model: Model)
 	self._trove:BindToRenderStep("PlacementClient", 2, function(dt: number)
 		RenderSteppedUpdate(self, dt)
 	end)
+
+	self._trove:Add(UserInputService.InputBegan:Connect(function(input: InputObject)
+		if input.KeyCode == Enum.KeyCode.R then
+			state = self._state:getState()
+			local rotation = state._rotation + SETTINGS.ROTATION_INCREMENT
+			if rotation >= 360 then
+				rotation = 0
+			end
+			self._state:dispatch(RotationChanged(rotation))
+		end
+	end))
 end
 
 function PlacementClient:Destroy()
