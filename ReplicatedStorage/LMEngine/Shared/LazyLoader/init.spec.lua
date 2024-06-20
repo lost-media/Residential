@@ -15,7 +15,7 @@ return function()
 			local module = Instance.new("ModuleScript")
 			module.Name = "TestModule"
 
-			lazy_loader:AddModule(module)
+			lazy_loader:AddModule(module.Name, module)
 
 			expect(lazy_loader._modules["TestModule"]).to.equal(module)
 		end)
@@ -24,7 +24,7 @@ return function()
 			local lazy_loader = LazyLoader.new()
 			local module = script
 
-			lazy_loader:AddModule(module)
+			lazy_loader:AddModule(module.Name, module)
 
 			expect(lazy_loader._modules["LazyLoader"]).never.to.be.ok()
 		end)
@@ -32,7 +32,7 @@ return function()
 		it("should get a module from the LazyLoader", function()
 			local lazy_loader = LazyLoader.new()
 
-			lazy_loader:AddModule(TestModule)
+			lazy_loader:AddModule("Test", TestModule)
 
 			expect(lazy_loader:GetModule("Test")).to.be.a("table")
 		end)
@@ -43,7 +43,7 @@ return function()
 			module.Name = "TestModule"
 			module.Source = "return {}"
 
-			lazy_loader:AddModule(module)
+			lazy_loader:AddModule(module.Name, module)
 
 			expect(lazy_loader:GetModule("TestModule")).to.be.a("table")
 		end)

@@ -1,5 +1,8 @@
 {
     "robloxLsp.diagnostics.globals": [
         "part"
+    ],
+    "robloxLsp.diagnostics.disable": [
+        "redefined-type"
     ]
 }

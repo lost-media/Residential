@@ -17,14 +17,16 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
+---@type PlacementClient
+local PlacementClient = LMEngine.GetModule("PlacementClient")
+
 ---@type Signal
 local Signal = LMEngine.GetShared("Signal")
 
 local PlacementController = LMEngine.CreateController({
 	Name = "PlacementController",
-	Plot = nil,
 
-	OnPlotAssigned = Signal.new(),
+	_placement_client = nil,
 })
 
 ----- Public functions -----
@@ -40,7 +42,13 @@ function PlacementController:Start()
 	local PlotController = LMEngine.GetController("PlotController")
 
 	local plot = PlotController:WaitForPlot()
-	print(plot)
+
+	self._placement_client = PlacementClient.new(plot)
+
+	local ghost_structure = workspace:WaitForChild("Old Watertower"):Clone()
+	ghost_structure.Parent = workspace
+
+	self._placement_client:InitiatePlacement(ghost_structure)
 end
 
 return PlacementController
