@@ -8,16 +8,14 @@
 	The PlotController is then used to get the plot assigned to the player.
 --]]
 
-local SETTINGS = {
-	
-}
+local SETTINGS = {}
 
 ----- Private variables -----
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 ---@type LMEngineClient
-local LMEngine = require(ReplicatedStorage.LMEngine)
+local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
 ---@type Signal
 local Signal = LMEngine.GetShared("Signal")
@@ -38,23 +36,11 @@ end
 function PlacementController:Start()
 	print("[PlacementController] started")
 
-	local PlotService = LMEngine.GetService("PlotService")
+	---@type PlotController
+	local PlotController = LMEngine.GetController("PlotController")
 
-	local PlotAssigned: RBXScriptConnection
-
-	PlotAssigned = PlotService.PlotAssigned:Connect(function(plot)
-		print("[PlacementController] Plot assigned")
-		self.Plot = plot
-
-		self.OnPlotAssigned:Fire(plot)
-
-		-- Disconnect the event
-		PlotAssigned:Disconnect()
-	end)
-end
-
-function PlacementController:GetPlot()
-	return self.Plot
+	local plot = PlotController:WaitForPlot()
+	print(plot)
 end
 
 return PlacementController

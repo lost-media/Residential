@@ -56,11 +56,9 @@ function PlacementController:KnitStart()
 				end
 			)
 
-			client.signals.OnDelete:Connect(
-				function(model: Model)
-					PlotService:DeleteStructure(model)
-				end
-			)
+			client.signals.OnDelete:Connect(function(model: Model)
+				PlotService:DeleteStructure(model)
+			end)
 
 			self:StartPlacement("Road/Streetlight")
 		end)

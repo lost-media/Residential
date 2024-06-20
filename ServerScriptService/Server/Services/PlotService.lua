@@ -1,5 +1,4 @@
 --!strict
---!version: 1.0.0
 
 --[[
 {Lost Media}

@@ -104,7 +104,7 @@ local KnitClient = {}
 ]=]
 KnitClient.Player = game:GetService("Players").LocalPlayer
 
-local dir_Shared = script.Parent.Parent.Shared
+local dir_Shared = script.Parent.Shared
 
 local Comm = require(dir_Shared.Comm)
 local LazyLoader = require(dir_Shared.LazyLoader)
@@ -115,8 +115,8 @@ local ClientComm = Comm.ClientComm
 export type Signal = Signal.Signal
 export type Connection = Signal.Connection
 
-local dir_Controllers = script.Parent.Controllers
-local dir_Modules = script.Parent.Modules
+local dir_Controllers = script.Controllers
+local dir_Modules = script.Modules
 
 local controllers: { [string]: Controller } = {}
 local services: { [string]: Service } = {}

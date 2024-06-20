@@ -1,5 +1,4 @@
 --!strict
---!version: 1.0.0
 
 --[[
 {Lost Media}
@@ -62,10 +61,11 @@ function WeldLib.WeldModelToPrimaryPart(model: Model)
 	-- Weld all parts to the primary part
 	for _, part in model:GetDescendants() do
 		if part:IsA("BasePart") == true and part ~= primary_part then
-			local weld = WeldLib.NewWeld(primary_part, part)
+			local base_part = part :: BasePart
+			local weld = WeldLib.NewWeld(primary_part, base_part, primary_part.CFrame, base_part.CFrame)
 			weld.Parent = primary_part
 
-			part.Anchored = false
+			base_part.Anchored = false
 		end
 	end
 end

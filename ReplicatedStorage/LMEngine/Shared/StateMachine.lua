@@ -1,5 +1,4 @@
 --!strict
---!version: 1.0.0
 
 --[[
 {Lost Media}
@@ -24,14 +23,15 @@ type States = {
 
 type IStateMachine = {
 	__index: IStateMachine,
-	new: (States) -> IStateMachine,
+	new: (States) -> StateMachine,
 	SetState: (self: StateMachine, string) -> (),
 	Update: (self: StateMachine, any) -> (),
+	Handle: (self: StateMachine, string) -> (),
 }
 
 type StateMachineMembers = {
 	states: States,
-	current_state: State,
+	current_state: State?,
 }
 
 export type StateMachine = typeof(setmetatable({} :: StateMachineMembers, {} :: IStateMachine))

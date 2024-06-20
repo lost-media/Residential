@@ -19,10 +19,10 @@ local SETTINGS = {
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 ---@type LMEngineClient
-local LMEngine = require(ReplicatedStorage.LMEngine)
+local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
 ---@type Deque
-local Deque = LMEngine.GetShared("DS.Deque");
+local Deque = require(ReplicatedStorage.LMEngine.Shared.DS.Deque)
 
 ---@type Trove
 local Trove = LMEngine.GetShared("Trove")
@@ -31,29 +31,31 @@ local Trove = LMEngine.GetShared("Trove")
 local MusicController = LMEngine.CreateController({
 	Name = "MusicController",
 
-	_queue = Deque.new()
+	_queue = Deque.new(),
 })
 
 local TroveObject = Trove.new()
 
 ----- Private functions -----
 
-local function InitializeMusicQueue(queue: Deque.Deque?)
+local function InitializeMusicQueue(queue: Deque.Deque)
 	local music = SETTINGS.MusicFolder:GetChildren()
 
 	for _, sound in music do
-		if (sound:IsA("Sound") == false) then
+		if sound:IsA("Sound") == false then
 			continue
 		end
-		queue:PushRight(sound);
+		queue:PushRight(sound)
 	end
 end
 
 local function PlayMusicFromQueue(queue: Deque.Deque)
 	local sound = queue:PopLeft()
 
-	if (sound == nil) then
-		queue = InitializeMusicQueue()
+	if sound == nil then
+		print("[MusicController] No music in queue, reinitializing")
+
+		InitializeMusicQueue(queue)
 		sound = queue:PopLeft()
 	end
 
@@ -72,9 +74,9 @@ end
 ----- Public functions -----
 
 function MusicController:Init()
-	print("[MusicController] initialized");
+	print("[MusicController] initialized")
 
-	InitializeMusicQueue(self._queue);
+	--InitializeMusicQueue(self._queue);
 end
 
 function MusicController:Start()
@@ -86,7 +88,7 @@ function MusicController:Start()
 end
 
 function MusicController:PlayMusic()
-	PlayMusicFromQueue(self._queue);
+	PlayMusicFromQueue(self._queue)
 end
 
 return MusicController

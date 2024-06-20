@@ -56,47 +56,44 @@ local SETTINGS = {}
 
 ----- Types -----
 
-type INode<K, V> = {
-	__index: INode<K, V>,
-	new: (id: K, val: V) -> Node<K, V>,
+type INode = {
+	__index: INode,
+	new: (id: any, val: any) -> Node,
 
-	GetId: (self: Node<K, V>) -> K,
-	GetValue: (self: Node<K, V>) -> V,
+	GetId: (self: Node) -> any,
+	GetValue: (self: Node) -> any,
 }
 
-type NodeMembers<K, V> = {
-	_id: K,
-	_value: V,
+type NodeMembers = {
+	_id: any,
+	_value: any,
 }
 
-export type Node<K, V> = typeof(setmetatable({} :: NodeMembers<K, V>, {} :: INode<K, V>))
+export type Node = typeof(setmetatable({} :: NodeMembers, {} :: INode))
 
-type IGraph<K, V> = {
-	__index: IGraph<K, V>,
-	new: () -> Graph<K, V>,
-    Node: (id: K, val: V) -> Node<K, V>,
+type IGraph = {
+	__index: IGraph,
+	new: () -> Graph,
+	Node: (id: any, val: any) -> Node,
 
-	AddNode: (self: Graph<K, V>, node: Node<K, V>) -> (),
-	RemoveNode: (self: Graph<K, V>, node: Node<K, V>) -> (),
-	AddEdge: (self: Graph<K, V>, node1: Node<K, V>, node2: Node<K, V>) -> (),
-	RemoveEdge: (self: Graph<K, V>, node1: Node<K, V>, node2: Node<K, V>) -> (),
-	GetNeighbors: (self: Graph<K, V>, node: Node<K, V>) -> { Node<K, V> }?,
-	GetNodes: (self: Graph<K, V>) -> { Node<K, V> },
-	HasNode: (self: Graph<K, V>, node: Node<K, V>) -> boolean,
-	HasEdge: (self: Graph<K, V>, node1: Node<K, V>, node2: Node<K, V>) -> boolean,
-	Clear: (self: Graph<K, V>) -> (),
-	Size: (self: Graph<K, V>) -> number,
-    GetRandomNode: (self: Graph<K, V>) -> Node<K, V>?,
+	AddNode: (self: Graph, node: Node) -> (),
+	RemoveNode: (self: Graph, node: Node) -> (),
+	AddEdge: (self: Graph, node1: Node, node2: Node) -> (),
+	RemoveEdge: (self: Graph, node1: Node, node2: Node) -> (),
+	GetNeighbors: (self: Graph, node: Node) -> { Node }?,
+	GetNodes: (self: Graph) -> { Node },
+	HasNode: (self: Graph, node: Node) -> boolean,
+	HasEdge: (self: Graph, node1: Node, node2: Node) -> boolean,
+	Clear: (self: Graph) -> (),
+	Size: (self: Graph) -> number,
+	GetRandomNode: (self: Graph) -> Node?,
 }
 
-type GraphMembers<K, V> = {
-	_nodes: { [K]: Node<K, V> },
+type GraphMembers = {
+	_nodes: { [any]: Node },
 }
 
-export type Graph<K, V> = typeof(
-    setmetatable({} :: GraphMembers<K, V>,
-    {} :: IGraph<K, V>)
-)
+export type Graph = typeof(setmetatable({} :: GraphMembers, {} :: IGraph))
 
 ----- Private variables -----
 
@@ -107,53 +104,53 @@ Node.__index = Node
 
 ---@generic K, V
 ---@class Graph
-local Graph = {};
+local Graph = {}
 Graph.__index = Graph
 
 ----- Private functions -----
 
 ----- Public functions -----
 
-function Node.new<K, V>(id: K, val: V): Node<K, V>
+function Node.new(id: any, val: any): Node
 	local self = setmetatable({
 		_id = id,
 		_value = val,
-	}, Node);
-	return self;
+	}, Node)
+	return self
 end
 
 function Node:GetId()
-	return self._id;
+	return self._id
 end
 
 function Node:GetValue()
-	return self._value;
+	return self._value
 end
 
-function Graph.new<K, V>(): Graph<K, V>
+function Graph.new(): Graph
 	local self = setmetatable({
 		_nodes = {},
 	}, Graph)
-	return self;
+	return self
 end
 
-function Graph.Node<K, V>(id: K, val: V): Node<K, V>
-    return Node.new(id, val)
+function Graph.Node(id: any, val: any): Node
+	return Node.new(id, val)
 end
 
-function Graph:AddNode<K, V>(node: Node<K, V>)
+function Graph:AddNode(node: Node)
 	self._nodes[node:GetId()] = node
 end
 
-function Graph:RemoveNode<K, V>(node: Node<K, V>)
+function Graph:RemoveNode(node: Node)
 	self._nodes[node:GetId()] = nil
 end
 
-function Graph:AddEdge<K, V>(node1: Node<K, V>, node2: Node<K, V>)
+function Graph:AddEdge(node1: Node, node2: Node)
 	local id1 = node1:GetId()
 	local id2 = node2:GetId()
 
-	if self._nodes[id1] == nil or self._nodes[id2] == nil then
+	if self._nodes[id1] :: any == nil or self._nodes[id2] :: any == nil then
 		return
 	end
 
@@ -161,11 +158,11 @@ function Graph:AddEdge<K, V>(node1: Node<K, V>, node2: Node<K, V>)
 	self._nodes[id2][id1] = true
 end
 
-function Graph:RemoveEdge<K, V>(node1: Node<K, V>, node2: Node<K, V>)
+function Graph:RemoveEdge(node1: Node, node2: Node)
 	local id1 = node1:GetId()
 	local id2 = node2:GetId()
 
-	if self._nodes[id1] == nil or self._nodes[id2] == nil then
+	if self._nodes[id1] :: any == nil or self._nodes[id2] :: any == nil then
 		return
 	end
 
@@ -173,7 +170,7 @@ function Graph:RemoveEdge<K, V>(node1: Node<K, V>, node2: Node<K, V>)
 	self._nodes[id2][id1] = nil
 end
 
-function Graph:GetNeighbors<K, V>(node: Node<K, V>): { Node<K, V> }?
+function Graph:GetNeighbors(node: Node): { Node }?
 	local id = node:GetId()
 	local neighbors = {}
 
@@ -184,7 +181,7 @@ function Graph:GetNeighbors<K, V>(node: Node<K, V>): { Node<K, V> }?
 	return neighbors
 end
 
-function Graph:GetNodes<K, V>(): { Node<K, V> }
+function Graph:GetNodes(): { Node }
 	local nodes = {}
 
 	for _, node in pairs(self._nodes) do
@@ -194,39 +191,41 @@ function Graph:GetNodes<K, V>(): { Node<K, V> }
 	return nodes
 end
 
-function Graph:HasNode<K, V>(node: Node<K, V>): boolean
-	return self._nodes[node:GetId()] ~= nil
+function Graph:HasNode(node: Node): boolean
+	local id = node:GetId()
+
+	return self._nodes[id] :: any ~= nil
 end
 
-function Graph:HasEdge<K, V>(node1: Node<K, V>, node2: Node<K, V>): boolean
+function Graph:HasEdge(node1: Node, node2: Node): boolean
 	local id1 = node1:GetId()
 	local id2 = node2:GetId()
 
 	return self._nodes[id1][id2] ~= nil
 end
 
-function Graph:Clear<K, V>()
+function Graph:Clear()
 	self._nodes = {}
 end
 
-function Graph:Size<K, V>(): number
-	local count = 0;
+function Graph:Size(): number
+	local count = 0
 
-    for _, _ in self._nodes do
-        count += 1;
-    end
+	for _, _ in self._nodes do
+		count += 1
+	end
 
-    return count;
+	return count
 end
 
-function Graph:GetRandomNode<K, V>(): Node<K, V>?
-    local nodes = self:GetNodes()
+function Graph:GetRandomNode(): Node?
+	local nodes = self:GetNodes()
 
-    if #nodes == 0 then
-        return nil
-    end
+	if #nodes == 0 then
+		return nil
+	end
 
-    return nodes[math.random(1, #nodes)]
+	return nodes[math.random(1, #nodes)]
 end
 
 return Graph

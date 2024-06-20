@@ -1,5 +1,4 @@
 --!strict
---!version: 1.0.0
 
 --[[
 {Lost Media}
@@ -10,14 +9,14 @@
    
 --]]
 
-type ModuleType = table | () -> any
+type ModuleType = typeof(table) | () -> any
 
 export type ILazyLoader = {
 	__index: ILazyLoader,
 	new: () -> LazyLoader,
-	AddModule: (self: LazyLoader, module: ModuleScript) -> nil,
+	AddModule: (self: LazyLoader, key: string, module: ModuleScript) -> (),
 	GetModule: (self: LazyLoader, module_name: string) -> ModuleType,
-	LoadModulesFromParent: (self: LazyLoader, parent: Instance, deep: boolean?) -> table,
+	LoadModulesFromParent: (self: LazyLoader, parent: Instance, deep: boolean?) -> (),
 }
 
 export type LazyLoaderMembers = {
@@ -40,7 +39,7 @@ local SETTINGS = {
 ----- Private variables -----
 
 ---@class LazyLoader
-local LazyLoader: ILazyLoader = {}
+local LazyLoader: ILazyLoader = {} :: ILazyLoader
 LazyLoader.__index = LazyLoader
 
 ----- Private functions -----
@@ -75,13 +74,13 @@ There is a dot between the parent's name and the child's name.
 --]]
 
 local function GetKeyChildStructure(script: Instance, key: string?): { [string]: Instance }
-	key = key or ""
+	local new_key: string = key or ""
 
 	local children = script:GetChildren()
 	local key_child_structure = {}
 
 	for _, child in ipairs(children) do
-		local child_key = #key > 0 and key .. "." .. child.Name or child.Name
+		local child_key = #new_key > 0 and new_key .. "." .. child.Name or child.Name
 
 		if child:IsA("ModuleScript") then
 			-- don't load .spec files
@@ -90,16 +89,15 @@ local function GetKeyChildStructure(script: Instance, key: string?): { [string]:
 			end
 
 			key_child_structure[child_key] = child
-
 		elseif #child:GetChildren() > 0 then
 			local child_structure = GetKeyChildStructure(child, child_key)
-			for _, value in pairs(child_structure) do
-				key_child_structure[_] = value
+			for nested_key, value in pairs(child_structure) do
+				key_child_structure[nested_key] = value :: ModuleScript
 			end
 		end
 	end
 
-	return key_child_structure
+	return key_child_structure :: { [string]: any }
 end
 
 -- Public functions --
@@ -112,17 +110,17 @@ function LazyLoader.new(): LazyLoader
 	return setmetatable(self, LazyLoader)
 end
 
-function LazyLoader:AddModule(key: string, module: ModuleScript): nil
+function LazyLoader:AddModule(key: string, module: ModuleScript)
 	assert(module ~= nil, "Module is nil")
 	assert(typeof(module) == "Instance", "Module is not an instance")
 	assert(module:IsA("ModuleScript"), "Module is not a ModuleScript")
 	assert(key ~= nil, "Key is nil")
 
-	if ModuleIsReservedOrSelf(key) == true then
+	if ModuleIsReservedOrSelf(module) == true then
 		return
 	end
 
-	self._modules[key] = module
+	self._modules[key] = module :: any
 end
 
 function LazyLoader:GetModule(module_name: string): ModuleType
@@ -135,13 +133,13 @@ function LazyLoader:GetModule(module_name: string): ModuleType
 	-- Check if it is an Instance or a table or a function
 	if typeof(module) == "Instance" then
 		-- require the module
-		self._modules[module_name] = require(module)
+		self._modules[module_name] = require(module) :: ModuleType
 	end
 
 	return self._modules[module_name]
 end
 
-function LazyLoader:LoadModulesFromParent(parent: Instance, deep: boolean?): nil
+function LazyLoader:LoadModulesFromParent(parent: Instance, deep: boolean?)
 	assert(parent ~= nil, "Parent is nil")
 	assert(typeof(parent) == "Instance", "Parent is not an instance")
 
@@ -155,7 +153,7 @@ function LazyLoader:LoadModulesFromParent(parent: Instance, deep: boolean?): nil
 	end
 
 	if deep == true then
-		map = GetKeyChildStructure(parent)
+		map = GetKeyChildStructure(parent) :: { [string]: any }
 	end
 
 	for key, module in map do

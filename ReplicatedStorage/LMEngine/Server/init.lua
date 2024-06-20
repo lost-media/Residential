@@ -119,7 +119,7 @@ local KnitServer = {}
 	folder only contains what is necessary for Knit to run in Wally mode.
 ]=]
 
-local dir_Shared = script.Parent.Parent.Shared
+local dir_Shared = script.Parent.Shared
 
 local SIGNAL_MARKER = newproxy(true)
 getmetatable(SIGNAL_MARKER).__tostring = function()
@@ -144,8 +144,8 @@ local LazyLoader = require(dir_Shared.LazyLoader)
 local Promise = require(dir_Shared.Promise)
 local ServerComm = Comm.ServerComm
 
-local dir_Services = script.Parent.Services
-local dir_Modules = script.Parent.Modules
+local dir_Services = script.Services
+local dir_Modules = script.Modules
 
 local SharedLoader = LazyLoader.new(dir_Shared)
 local ModulesLoader = LazyLoader.new(dir_Modules)

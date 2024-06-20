@@ -1,5 +1,4 @@
 --!strict
---!version: 1.0.0
 
 --[[
 {Lost Media}
@@ -27,7 +26,7 @@
 ----- Types -----
 type IUniqueIdGenerator = {
 	__index: IUniqueIdGenerator,
-	new: () -> IUniqueIdGenerator,
+	new: () -> UniqueIdGenerator,
 
 	GenerateId: (self: UniqueIdGenerator) -> number,
 }

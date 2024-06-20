@@ -1,7 +1,7 @@
 --!strict
 
 local RS = game:GetService("ReplicatedStorage")
-local TS = game:GetService("TweenService");
+local TS = game:GetService("TweenService")
 local VFX: Folder = RS.VFX
 
 local Knit = require(game:GetService("ReplicatedStorage").Packages.Knit)
@@ -281,8 +281,8 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 	structure.Parent = self.model.Structures
 
 	local newCFrame = PlacementUtils.GetSnappedTileCFrame(tile, state)
-	structure:PivotTo(newCFrame); 
-	
+	structure:PivotTo(newCFrame)
+
 	--[[
 	if (state.isStacked == false) then
 		local raisedCFrame = newCFrame * CFrame.new(Vector3.new(0, 2, 0));
@@ -335,11 +335,9 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 
 	PlacedDownVFX.Smoke:Clear()
 	PlacedDownVFX.Smoke:Emit(100)
-	
+
 	-- after x seconds, remove the VFX
 	coroutine.wrap(function()
-
-
 		task.wait(0.75)
 		for _, v in ipairs(PlacedDownVFX:GetChildren()) do
 			if v:IsA("ParticleEmitter") then
@@ -348,7 +346,7 @@ function Plot:placeObject(structureId: string, state: PlacementTypes.PlacementSt
 		end
 
 		task.wait(1)
-		
+
 		PlacedDownVFX:Destroy()
 	end)()
 

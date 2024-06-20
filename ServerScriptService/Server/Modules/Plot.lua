@@ -48,24 +48,24 @@
 --]]
 
 local SETTINGS = {
-    -- The size of a tile in studs in X and Z dimensions
-    TILE_SIZE = 8,
+	-- The size of a tile in studs in X and Z dimensions
+	TILE_SIZE = 8,
 }
 
 ----- Types -----
 
 ---@class PlotModel
 export type PlotModel = Model & {
-    Tiles: Folder,
-    Structures: Folder,
-};
+	Tiles: Folder,
+	Structures: Folder,
+}
 
 type IPlot = {
 	__index: IPlot,
-    __tostring: (self: Plot) -> string,
+	__tostring: (self: Plot) -> string,
 
-    ModelIsPlot: (model: Instance) -> boolean,
-	new: (plotModel: Instance) -> IPlot,
+	ModelIsPlot: (model: Instance) -> boolean,
+	new: (plotModel: Instance) -> Plot,
 
 	GetPlayer: (self: Plot) -> Player?,
 	GetModel: (self: Plot) -> Instance,
@@ -81,11 +81,11 @@ export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))
 ----- Private variables -----
 
 local NEIGHBORS = {
-    Vector3.new(0, 0, SETTINGS.TILE_SIZE),
-    Vector3.new(0, 0, -SETTINGS.TILE_SIZE),
-    Vector3.new(SETTINGS.TILE_SIZE, 0, 0),
-    Vector3.new(-SETTINGS.TILE_SIZE, 0, 0),
-};
+	Vector3.new(0, 0, SETTINGS.TILE_SIZE),
+	Vector3.new(0, 0, -SETTINGS.TILE_SIZE),
+	Vector3.new(SETTINGS.TILE_SIZE, 0, 0),
+	Vector3.new(-SETTINGS.TILE_SIZE, 0, 0),
+}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -93,48 +93,58 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LMEngine = require(ReplicatedStorage.LMEngine)
 
 ---@type Graph
-local Graph = LMEngine.GetShared("DS.Graph")
-type Graph<K, V> = Graph.Graph<K, V>
+local Graph = require(ReplicatedStorage.LMEngine.Shared.DS.Graph)
+type Graph = Graph.Graph
 
 type PlotMembers = {
 	_plot_model: Instance,
 	_player: Player?,
-    _tiles: Graph<string, Instance>,
+	_tiles: Graph,
 }
 
 ---@class Plot
-local Plot: IPlot = {} :: IPlot;
-Plot.__index = Plot;
+local Plot: IPlot = {} :: IPlot
+Plot.__index = Plot
 
 ----- Private functions -----
 
-local function InitializePlotTiles(tiles: { BasePart }) : Graph<string, Instance>
-    local graph = Graph.new() :: Graph<string, Instance>;
+local function InitializePlotTiles(tiles: { Instance }): Graph
+	local graph = Graph.new() :: Graph
 
-    local positions = {} :: { [Vector3]: Graph.Node<string, Instance> };
+	local positions = {} :: { [Vector3]: Graph.Node }
 
-    for _, tile in tiles do
-        tile.Name = _;
-        
-        local node = Graph.Node(_, tile);
-        graph:AddNode(node);
+	for i, tile in tiles do
+		if not tile:IsA("Part") then
+			warn("Tile is not a part:", tile)
+			continue
+		end
 
-        positions[tile.Position] = node;
-    end
+		tile.Name = tostring(i)
 
-    -- Add edges between adjacent tiles
+		local node = Graph.Node(i, tile)
+		graph:AddNode(node)
 
-    for _, tile in tiles do
-        for _, offset in NEIGHBORS do
-            local neighbor_position = tile.Position + offset;
-            local neighbor = positions[neighbor_position];
-            if neighbor then
-                graph:AddEdge(positions[tile.Position], neighbor);
-            end
-        end
-    end
+		positions[tile.Position] = node
+	end
 
-    return graph;
+	-- Add edges between adjacent tiles
+
+	for _, tile in tiles do
+		if not tile:IsA("Part") then
+			continue
+		end
+
+		tile = tile :: Part
+		for _, offset in NEIGHBORS do
+			local neighbor_position = tile.Position + offset
+			local neighbor = positions[neighbor_position]
+			if neighbor then
+				graph:AddEdge(positions[tile.Position], neighbor)
+			end
+		end
+	end
+
+	return graph
 end
 
 ----- Public functions -----
@@ -165,13 +175,13 @@ function Plot.ModelIsPlot(model: Instance): boolean
 end
 
 function Plot.new(plot_model: Instance)
-	assert(Plot.ModelIsPlot(plot_model) == true, "Model is not a plot");
+	assert(Plot.ModelIsPlot(plot_model) == true, "Model is not a plot")
 
 	local self = setmetatable({}, Plot)
-	self._plot_model = plot_model;
-	self._player = nil :: Player?;
+	self._plot_model = plot_model
+	self._player = nil :: Player?
 
-    self._tiles = InitializePlotTiles(plot_model.Tiles:GetChildren());
+	self._tiles = InitializePlotTiles(plot_model:FindFirstChild("Tiles"):GetChildren())
 
 	return self
 end
@@ -204,7 +214,7 @@ function Plot:GetAttribute(attribute: string): any
 end
 
 function Plot.__tostring(self: Plot): string
-	return "Plot " .. self._plot_model.Name;
+	return "Plot " .. self._plot_model.Name
 end
 
 return Plot

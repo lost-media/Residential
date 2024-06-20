@@ -37,7 +37,7 @@ if IsTesting == true then
 end
 
 if IsServer == true then
-	return require(script.Server.LMEngineServerInit)
+	return require(script.Server)
 else
 	local loaded_server = script:FindFirstChild("Server")
 	if loaded_server ~= nil and IsRunning == true then
@@ -48,7 +48,7 @@ else
 		return Client
 	end
 
-	Client = require(script.Client.LMEngineClientInit)
+	Client = require(script.Client)
 	return Client
 end
 

@@ -119,7 +119,7 @@ local Roads: StructureTypes.RoadCollection = {
 		Model = RoadFolder["Ramp Road"],
 
 		Stacking = {
-			Allowed = false
+			Allowed = false,
 		},
 	}, SharedProperties),
 

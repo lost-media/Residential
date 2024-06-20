@@ -8,24 +8,25 @@
 	The PlotController is then used to get the plot assigned to the player.
 --]]
 
-local SETTINGS = {
-
-}
+local SETTINGS = {}
 
 ----- Private variables -----
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 ---@type LMEngineClient
-local LMEngine = require(ReplicatedStorage.LMEngine)
+local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
 ---@type Signal
 local Signal = LMEngine.GetShared("Signal")
 
+---@class PlotController
 local PlotController = LMEngine.CreateController({
 	Name = "PlotController",
-	Plot = nil,
 
+	_plot = nil,
+
+	---@type Signal
 	OnPlotAssigned = Signal.new(),
 })
 
@@ -44,7 +45,7 @@ function PlotController:Start()
 
 	PlotAssigned = PlotService.PlotAssigned:Connect(function(plot)
 		print("[PlotController] Plot assigned")
-		self.Plot = plot
+		self._plot = plot
 
 		self.OnPlotAssigned:Fire(plot)
 
@@ -54,7 +55,15 @@ function PlotController:Start()
 end
 
 function PlotController:GetPlot()
-	return self.Plot
+	return self._plot
+end
+
+function PlotController:WaitForPlot()
+	if self.Plot ~= nil then
+		return self._plot
+	end
+
+	return self.OnPlotAssigned:Wait()
 end
 
 return PlotController
