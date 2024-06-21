@@ -94,6 +94,11 @@ function PlacementUtils.StripClientState(state: PlacementType.ClientState): Plac
 		_rotation = state._rotation,
 		_is_stacked = state._is_stacked,
 		_level = state._level,
+
+		-- Stacked structure
+		_attachments = state._attachments,
+		_stacked_structure = state._stacked_structure,
+		_mounted_attachment = state._mounted_attachment,
 	}
 end
 

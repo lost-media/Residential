@@ -103,7 +103,8 @@ local LMEngine = require(ReplicatedStorage.LMEngine)
 ---@type Trove
 local Trove = require(ReplicatedStorage.LMEngine.Shared.Trove)
 
-local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils)
+local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils);
+local StructureUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils);
 
 ---@type UniqueIdGenerator
 local UniqueIdGenerator = LMEngine.GetShared("UniqueIdGenerator")
@@ -281,6 +282,45 @@ function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState)
 		-- Set the structure's position to the tile's position
 		PlacementUtils.MoveModelToCFrame(structure_instance, new_cframe, true)
 	else
+		local stackedOn: Model? = state._stacked_structure;
+
+		print(stackedOn);
+
+		if stackedOn == nil then
+			error("Stacked object is nil")
+		end
+
+		local stackedOnPlaceable = self:GetPlaceable(stackedOn);
+
+		if stackedOnPlaceable == nil then
+			error("Stacked object is not on the plot")
+		end
+
+		-- Get snapped point
+		local snappedPoint: Attachment? = state._mounted_attachment;
+		
+		if snappedPoint == nil then
+			error("Snapped point is nil");
+		end
+
+		if snappedPoint:GetAttribute("Occupied") == true then
+			-- Cannot place structure on an occupied snapped point
+			return
+		end
+
+		local placeableInfo = StructureUtils.GetStructureFromId(state._structure_id);
+
+		local snappedPointsTaken: { Attachment } = { snappedPoint }; -- state._attachments or { snappedPoint }
+
+		-- Set all snapped points as occupied
+		for _, taken in ipairs(snappedPointsTaken) do
+			taken:SetAttribute("Occupied", true);
+		end
+
+		local cframe = PlacementUtils.GetSnappedAttachmentCFrame(tile, snappedPoint, placeableInfo, state)
+
+		-- Don't rotate or level the structure
+		PlacementUtils.MoveModelToCFrame(structure_instance, cframe, true);
 	end
 
 	tile:SetAttribute("Occupied", true)
@@ -289,11 +329,29 @@ function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState)
 	structure_instance.Parent = self._plot_model.Structures
 
 	-- Set the structure's attributes
-	structure_instance:SetAttribute("PlotId", self._uid_generator:GenerateId())
-	structure_instance:SetAttribute("Tile", tile.Name)
-	structure_instance:SetAttribute("Level", state._level)
-	structure_instance:SetAttribute("Rotation", state._rotation)
-	structure_instance:SetAttribute("IsStacked", state._is_stacked)
+	structure_instance:SetAttribute("PlotId", self._uid_generator:GenerateId());
+	structure_instance:SetAttribute("Tile", tile.Name);
+	structure_instance:SetAttribute("Level", state._level);
+	structure_instance:SetAttribute("Rotation", state._rotation);
+	structure_instance:SetAttribute("IsStacked", state._is_stacked);
+
+	if (state._is_stacked) then
+		structure_instance:SetAttribute("StackedOn", state._stacked_structure:GetAttribute("PlotId"));
+	end
+end
+
+function Plot:GetPlaceable(model: Model)
+	local parent = model.Parent
+
+	while parent do
+		if parent == self._plot_model then
+			return model;
+		end
+
+		parent = parent.Parent
+	end
+
+	return nil
 end
 
 function Plot.__tostring(self: Plot): string
