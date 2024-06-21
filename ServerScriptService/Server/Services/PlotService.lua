@@ -171,7 +171,7 @@ function PlotService:UnassignPlot(player: Player)
 	self._players[player] = nil
 end
 
-function PlotService:PlaceStructure(player: Player, state: PlacementType.ServerState)
+function PlotService:PlaceStructure(player: Player, state: PlacementType.ServerState): boolean
 	assert(player ~= nil, "[PlotService] PlaceStructure: Player is nil")
 	assert(state ~= nil, "[PlotService] PlaceStructure: State is nil")
 
@@ -184,17 +184,19 @@ function PlotService:PlaceStructure(player: Player, state: PlacementType.ServerS
 	local structure = StructureUtils.GetStructureModelFromId(state._structure_id)
 	assert(structure ~= nil, "[PlotService] PlaceStructure: Structure not found")
 
-	plot:PlaceStructure(structure, state)
+	local place_successful = plot:PlaceStructure(structure, state)
+
+	return place_successful
 end
 
-function PlotService.Client:PlaceStructure(player: Player, state: PlacementType.ServerState)
+function PlotService.Client:PlaceStructure(player: Player, state: PlacementType.ServerState): boolean
 	-- Rate limit the function
 	assert(PlotServiceRateLimiter:CheckRate(player) == true, "[PlotService] PlaceStructure: Rate limited")
 	assert(state ~= nil, "[PlotService] PlaceStructure: State is nil")
 
 	ThrowIfStateInvalid(state)
 
-	self.Server:PlaceStructure(player, state)
+	return self.Server:PlaceStructure(player, state) :: boolean
 end
 
 return PlotService

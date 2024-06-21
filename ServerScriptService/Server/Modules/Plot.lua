@@ -81,7 +81,7 @@ type IPlot = {
 	SetAttribute: (self: Plot, attribute: string, value: any) -> (),
 	GetAttribute: (self: Plot, attribute: string) -> any,
 
-	PlaceStructure: (self: Plot, structure: Model, state: PlacementType.ServerState) -> (),
+	PlaceStructure: (self: Plot, structure: Model, state: PlacementType.ServerState) -> boolean,
 }
 
 export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))
@@ -103,8 +103,8 @@ local LMEngine = require(ReplicatedStorage.LMEngine)
 ---@type Trove
 local Trove = require(ReplicatedStorage.LMEngine.Shared.Trove)
 
-local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils);
-local StructureUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils);
+local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils)
+local StructureUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
 
 ---@type UniqueIdGenerator
 local UniqueIdGenerator = LMEngine.GetShared("UniqueIdGenerator")
@@ -250,7 +250,7 @@ function Plot:GetAttribute(attribute: string): any
 	return self._plot_model:GetAttribute(attribute)
 end
 
-function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState)
+function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState): boolean
 	assert(structure ~= nil, "Structure cannot be nil")
 	assert(state ~= nil, "State cannot be nil")
 
@@ -261,7 +261,7 @@ function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState)
 
 	if tile == nil then
 		warn("Tile not found in plot")
-		return
+		return false
 	end
 
 	-- Create the structure
@@ -273,8 +273,17 @@ function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState)
 
 	if state._is_stacked == false then
 		if tile:GetAttribute("Occupied") == true then
-			-- Cannot place structure on an occupied tile
-			return
+			-- See if there is already a structure on the same level and tile
+			local structures = self:GetStructuresOnTile(tile)
+
+			for _, structure in structures do
+				if structure:GetAttribute("Level") == state._level then
+					-- Cannot place structure on an occupied tile
+					return false
+				end
+			end
+
+			-- Otherwise, it is good!
 		end
 
 		local new_cframe = PlacementUtils.GetSnappedTileCFrame(tile, state)
@@ -282,45 +291,43 @@ function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState)
 		-- Set the structure's position to the tile's position
 		PlacementUtils.MoveModelToCFrame(structure_instance, new_cframe, true)
 	else
-		local stackedOn: Model? = state._stacked_structure;
-
-		print(stackedOn);
+		local stackedOn: Model? = state._stacked_structure
 
 		if stackedOn == nil then
 			error("Stacked object is nil")
 		end
 
-		local stackedOnPlaceable = self:GetPlaceable(stackedOn);
+		local stackedOnPlaceable = self:GetPlaceable(stackedOn)
 
 		if stackedOnPlaceable == nil then
 			error("Stacked object is not on the plot")
 		end
 
 		-- Get snapped point
-		local snappedPoint: Attachment? = state._mounted_attachment;
-		
+		local snappedPoint: Attachment? = state._mounted_attachment
+
 		if snappedPoint == nil then
-			error("Snapped point is nil");
+			error("Snapped point is nil")
 		end
 
 		if snappedPoint:GetAttribute("Occupied") == true then
 			-- Cannot place structure on an occupied snapped point
-			return
+			return false
 		end
 
-		local placeableInfo = StructureUtils.GetStructureFromId(state._structure_id);
+		local placeableInfo = StructureUtils.GetStructureFromId(state._structure_id)
 
-		local snappedPointsTaken: { Attachment } = { snappedPoint }; -- state._attachments or { snappedPoint }
+		local snappedPointsTaken: { Attachment } = { snappedPoint } -- state._attachments or { snappedPoint }
 
 		-- Set all snapped points as occupied
 		for _, taken in ipairs(snappedPointsTaken) do
-			taken:SetAttribute("Occupied", true);
+			taken:SetAttribute("Occupied", true)
 		end
 
 		local cframe = PlacementUtils.GetSnappedAttachmentCFrame(tile, snappedPoint, placeableInfo, state)
 
 		-- Don't rotate or level the structure
-		PlacementUtils.MoveModelToCFrame(structure_instance, cframe, true);
+		PlacementUtils.MoveModelToCFrame(structure_instance, cframe, true)
 	end
 
 	tile:SetAttribute("Occupied", true)
@@ -329,29 +336,46 @@ function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState)
 	structure_instance.Parent = self._plot_model.Structures
 
 	-- Set the structure's attributes
-	structure_instance:SetAttribute("PlotId", self._uid_generator:GenerateId());
-	structure_instance:SetAttribute("Tile", tile.Name);
-	structure_instance:SetAttribute("Level", state._level);
-	structure_instance:SetAttribute("Rotation", state._rotation);
-	structure_instance:SetAttribute("IsStacked", state._is_stacked);
 
-	if (state._is_stacked) then
-		structure_instance:SetAttribute("StackedOn", state._stacked_structure:GetAttribute("PlotId"));
+	print(state._level)
+
+	structure_instance:SetAttribute("PlotId", self._uid_generator:GenerateId())
+	structure_instance:SetAttribute("Tile", tile.Name)
+	structure_instance:SetAttribute("Level", state._level)
+	structure_instance:SetAttribute("Rotation", state._rotation)
+	structure_instance:SetAttribute("IsStacked", state._is_stacked)
+
+	if state._is_stacked == true then
+		structure_instance:SetAttribute("StackedOn", state._stacked_structure:GetAttribute("PlotId"))
 	end
+
+	return true
 end
 
 function Plot:GetPlaceable(model: Model)
 	local parent = model.Parent
 
-	while parent do
+	while parent ~= nil do
 		if parent == self._plot_model then
-			return model;
+			return model
 		end
 
 		parent = parent.Parent
 	end
 
 	return nil
+end
+
+function Plot:GetStructuresOnTile(tile: Graph.Node): { Model }
+	local structures = {} :: { Model }
+
+	for _, structure in pairs(self._plot_model.Structures:GetChildren()) do
+		if structure:GetAttribute("Tile") == tile.Name then
+			table.insert(structures, structure)
+		end
+	end
+
+	return structures
 end
 
 function Plot.__tostring(self: Plot): string

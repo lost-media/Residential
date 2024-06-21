@@ -92,8 +92,10 @@ function PlacementController:Start()
 		---@type Promise
 		local placement_promise = PlotService:PlaceStructure(state)
 		placement_promise
-			:andThen(function()
-				print("[PlacementController] Structure placed successfully")
+			:andThen(function(successful: boolean)
+				if successful == true then
+					print("[PlacementController] Structure placed successfully")
+				end
 			end)
 			:catch(function(err)
 				--warn("[PlacementController] Failed to place structure: " .. err);
