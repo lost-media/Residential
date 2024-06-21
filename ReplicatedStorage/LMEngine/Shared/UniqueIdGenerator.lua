@@ -21,14 +21,29 @@
 
 		UniqueIdGenerator:GenerateId() -- Generates a unique identifier
 			Returns a unique identifier for an object
+
+		UniqueIdGenerator:AddExistingId(id: number) -- Adds an existing identifier
+			Adds an existing identifier to the list of identifiers
+
+		UniqueIdGenerator:LoadExistingIds(ids: { number }) -- Loads existing identifiers
+			Loads a list of existing identifiers into the list of identifiers
 --]]
 
+local SETTINGS = {
+	-- The minimum value for the generated identifier
+	MIN_ID = 0,
+
+	-- The maximum value for the generated identifier
+	MAX_ID = 9999,
+}
 ----- Types -----
 type IUniqueIdGenerator = {
 	__index: IUniqueIdGenerator,
 	new: () -> UniqueIdGenerator,
 
 	GenerateId: (self: UniqueIdGenerator) -> number,
+	AddExistingId: (self: UniqueIdGenerator, id: number) -> (),
+	LoadExistingIds: (self: UniqueIdGenerator, ids: { number }) -> (),
 }
 
 type UniqueIdGeneratorMembers = {
@@ -46,7 +61,7 @@ UniqueIdGenerator.__index = UniqueIdGenerator
 ----- Private functions -----
 
 local function GenerateId(): number
-	return math.random(1000, 9999)
+	return math.random(SETTINGS.MIN_ID, SETTINGS.MAX_ID)
 end
 
 ----- Public functions -----
@@ -55,6 +70,16 @@ function UniqueIdGenerator.new(): UniqueIdGenerator
 	local self = setmetatable({}, UniqueIdGenerator)
 	self._ids = {}
 	return self
+end
+
+function UniqueIdGenerator:AddExistingId(id: number)
+	self._ids[id] = true
+end
+
+function UniqueIdGenerator:LoadExistingIds(ids: { number })
+	for _, id in ipairs(ids) do
+		self._ids[id] = true
+	end
 end
 
 function UniqueIdGenerator:GenerateId(): number

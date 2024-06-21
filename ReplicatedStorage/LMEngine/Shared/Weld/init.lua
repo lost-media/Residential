@@ -14,40 +14,37 @@ local SETTINGS = {}
 
 ----- Private variables -----
 
+---@class WeldLib
 local WeldLib = {}
 
 ----- Public functions -----
 
 -- Create a new Weld
-function WeldLib.NewWeld(part0: BasePart, part1: BasePart, c0: CFrame, c1: CFrame): Weld
+function WeldLib.NewWeld(part0: BasePart, part1: BasePart): WeldConstraint
 	assert(part0, "[WeldLib] Part0 is nil")
 	assert(part1, "[WeldLib] Part1 is nil")
 	assert(part0:IsA("BasePart") == true, "[WeldLib] Part0 is not a BasePart")
 	assert(part1:IsA("BasePart") == true, "[WeldLib] Part1 is not a BasePart")
 
-	local weld = Instance.new("Weld")
+	local weld = Instance.new("WeldConstraint")
 	weld.Part0 = part0
 	weld.Part1 = part1
-	weld.C0 = c0 or CFrame.new()
-	weld.C1 = c1 or CFrame.new()
 	weld.Parent = part0
 	return weld
 end
 
 -- Break a Weld
-function WeldLib.BreakWeld(weld: Weld)
+function WeldLib.BreakWeld(weld: WeldConstraint)
 	assert(weld, "[WeldLib] Weld is nil")
-	assert(weld:IsA("Weld") == true, "[WeldLib] Weld is not a Weld")
+	assert(weld:IsA("WeldConstraint") == true, "[WeldLib] Weld is not a WeldConstraint")
 
 	weld:Destroy()
 end
 
 -- Update a Weld
-function WeldLib.UpdateWeld(weld: Weld, part0: BasePart, part1: BasePart, c0: CFrame, c1: CFrame)
+function WeldLib.UpdateWeld(weld: WeldConstraint, part0: BasePart, part1: BasePart)
 	weld.Part0 = part0 or weld.Part0
 	weld.Part1 = part1 or weld.Part1
-	weld.C0 = c0 or weld.C0
-	weld.C1 = c1 or weld.C1
 end
 
 function WeldLib.WeldModelToPrimaryPart(model: Model)
@@ -62,7 +59,7 @@ function WeldLib.WeldModelToPrimaryPart(model: Model)
 	for _, part in model:GetDescendants() do
 		if part:IsA("BasePart") == true and part ~= primary_part then
 			local base_part = part :: BasePart
-			local weld = WeldLib.NewWeld(primary_part, base_part, primary_part.CFrame, base_part.CFrame)
+			local weld = WeldLib.NewWeld(primary_part, base_part)
 			weld.Parent = primary_part
 
 			base_part.Anchored = false
