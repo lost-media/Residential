@@ -9,6 +9,8 @@ local TweenService = game:GetService("TweenService")
 
 local PlotConfigs = require(ReplicatedStorage.Game.Shared.Configs.Plot)
 
+local PlacementType = require(script.Parent.Types)
+
 local PlacementUtils = {}
 
 ----- Public functions -----
@@ -83,6 +85,16 @@ function PlacementUtils.MoveModelToCFrame(model: Model, cframe: CFrame, instant:
 		local tween = TweenService:Create(model.PrimaryPart, SETTINGS.TWEEN_INFO, { CFrame = cframe })
 		tween:Play()
 	end
+end
+
+function PlacementUtils.StripClientState(state: PlacementType.ClientState): PlacementType.ServerState
+	return {
+		_tile = state._tile,
+		_structure_id = state._ghost_structure:GetAttribute("Id"),
+		_rotation = state._rotation,
+		_is_stacked = state._is_stacked,
+		_level = state._level,
+	}
 end
 
 return PlacementUtils

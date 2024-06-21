@@ -48,7 +48,7 @@ local RS = game:GetService("ReplicatedStorage")
 
 local StructureTypes = require(script.Types)
 
-local StructureCategoryFolder = RS.Shared.Structures.Category
+local StructureCategoryFolder = script.Category
 
 local StructuresFolder = RS.Structures
 local Road: Folder = StructuresFolder.Road

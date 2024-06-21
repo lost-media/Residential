@@ -52,6 +52,8 @@ local SETTINGS = {
 	TILE_SIZE = 8,
 }
 
+local PlacementType = require(game:GetService("ReplicatedStorage").Game.Shared.Placement.Types)
+
 ----- Types -----
 
 ---@class PlotModel
@@ -74,6 +76,8 @@ type IPlot = {
 
 	SetAttribute: (self: Plot, attribute: string, value: any) -> (),
 	GetAttribute: (self: Plot, attribute: string) -> any,
+
+	PlaceStructure: (self: Plot, state: PlacementType.ServerState) -> (),
 }
 
 export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))

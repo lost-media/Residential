@@ -1,10 +1,16 @@
-local RS = game:GetService("ReplicatedStorage")
+----- Private variables -----
 
-local StackingUtils = require(RS.Shared.Structures.Utils.Stacking)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local dir_Structures = ReplicatedStorage.Game.Shared.Structures
+local dir_Utils = dir_Structures.Utils
+
+local StackingUtils = require(dir_Utils.Stacking)
+local TableUtil = require(dir_Utils.TableUtil)
+
 local StructureTypes = require(script.Parent.Parent.Types)
-local TableUtil = require(RS.Packages.TableUtil)
 
-local StructureFolder = RS.Structures
+local StructureFolder: Folder = ReplicatedStorage.Structures
 local RoadFolder: Folder = StructureFolder.Road
 
 local SharedProperties = {
@@ -161,46 +167,6 @@ local Roads: StructureTypes.RoadCollection = {
 			},
 		},
 	}, SharedProperties),
-
-	--[[
-	["Elevated Normal Road"] = TableUtil.Reconcile({
-		Name = "Elevated Normal Road",
-		Id = "Road/Elevated Normal Road",
-		Description = "A curved road",
-		Model = RoadFolder["Elevated Normal Road"],
-
-		Stacking = {
-			Allowed = true,
-
-			AllowedModels = {
-				["Road/Elevated Normal Road"] = StackingUtils.CreateStackingData(
-					true,
-					{ "Top1", "Top2" },
-					{ ["Top1"] = "Center", ["Top2"] = "Center" },
-					{
-						Strict = true,
-						SnapPointsToMatch = {
-							{
-								["Top1"] = "Bottom1",
-								["Top2"] = "Bottom2",
-							},
-							{
-								["Top1"] = "Bottom2",
-								["Top2"] = "Bottom1",
-							},
-						},
-					}
-				),
-
-				["Road/Streetlight"] = StackingUtils.CreateStackingData(
-					true,
-					{ "Top1", "Top2", "Top3", "Top4" },
-					{ ["Top1"] = "Top1", ["Top2"] = "Top2" }
-				),
-			},
-		},
-	}, SharedProperties),
-	--]]
 
 	["Streetlight"] = TableUtil.Reconcile({
 		Name = "Streetlight",

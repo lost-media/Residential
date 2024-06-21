@@ -35,19 +35,37 @@
         PlacementClient:InitiatePlacement(model: Model) -- Method
             Initiates the placement of a model
 
+		PlacementClient:IsPlacing() -- Method
+			Determines if the client is placing an object
+
+		PlacementClient:IsActive() -- Method
+			Determines if the client is active
+
+		PlacementClient:CancelPlacement() -- Method
+			Cancels the placement of an object
+
+		PlacementClient:RaiseLevel() -- Method
+			Raises the level of the object
+
+		PlacementClient:LowerLevel() -- Method
+			Lowers the level of the object
+
 --]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Mouse = require(ReplicatedStorage.LMEngine.Client.Modules.Mouse)
 local Rodux = require(ReplicatedStorage.LMEngine.Shared.Rodux)
+local Signal = require(ReplicatedStorage.LMEngine.Shared.Signal)
 local Trove = require(ReplicatedStorage.LMEngine.Shared.Trove)
+
+local PlacementType = require(ReplicatedStorage.Game.Shared.Placement.Types)
 
 local SETTINGS = {
 	INITIAL_STATE = {
 		_placement_type = "None",
 		_tile = nil,
 		_ghost_structure = nil,
-		_can_confirm_placement = false,
+		_can_confirm_placement = true,
 		_rotation = 0,
 		_is_stacked = false,
 		_level = 1,
@@ -55,6 +73,7 @@ local SETTINGS = {
 
 	ROTATION_INCREMENT = 90,
 	TRANSPARENCY_DIM_FACTOR = 1.5,
+	MAX_LEVEL = 9,
 }
 
 ----- Types -----
@@ -68,6 +87,9 @@ type IPlacementClient = {
 	CancelPlacement: (self: PlacementClient) -> (),
 	IsActive: (self: PlacementClient) -> boolean,
 	Destroy: (self: PlacementClient) -> (),
+
+	RaiseLevel: (self: PlacementClient) -> (),
+	LowerLevel: (self: PlacementClient) -> (),
 }
 
 type PlacementClientMembers = {
@@ -76,6 +98,8 @@ type PlacementClientMembers = {
 	_trove: Trove.Trove,
 	_plot: Model,
 	_active: boolean,
+
+	PlacementConfirmed: Signal.Signal<PlacementType.ServerState>,
 }
 
 type PlacementType = "Place" | "Move" | "Remove" | "None"
@@ -96,7 +120,7 @@ export type PlacementClient = typeof(setmetatable({} :: PlacementClientMembers, 
 
 local UserInputService = game:GetService("UserInputService")
 
-local PlacementUtils = require(ReplicatedStorage.Game.Shared.PlacementUtils)
+local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils)
 
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
@@ -127,7 +151,7 @@ local ghost_structure_reducers = Rodux.createReducer(nil, {
 	end,
 })
 
-local can_confirm_placement_reducers = Rodux.createReducer(false, {
+local can_confirm_placement_reducers = Rodux.createReducer(true, {
 	["CAN_CONFIRM_PLACEMENT_CHANGED"] = function(state: State, action)
 		return action._can_confirm_placement
 	end,
@@ -290,7 +314,7 @@ local function CanConfirmPlacementChanged(can_confirm_placement: boolean)
 	}
 end
 
-local function AttemptToSnapToTile(client: PlacementClient, tile: BasePart)
+local function UpdateTileState(client: PlacementClient, tile: BasePart)
 	local state: State = client._state:getState()
 
 	local currentTile = state._tile
@@ -379,13 +403,25 @@ local function RenderSteppedUpdate(client: PlacementClient, dt: number)
 	end
 
 	if PartIsTile(target, plot) == true then
-		-- Attempt to snap to the tile
-		AttemptToSnapToTile(client, target)
+		-- Update the tile state and determine if the tile has changed
+		UpdateTileState(client, target)
 	else
 		-- Attempt to snap to the attachment
+		--AttemptToSnapToAttachment(closestInstance)
 	end
 
 	UpdatePosition(client)
+end
+
+local function MakeSelectionBox()
+	local selectionBox = Instance.new("SelectionBox")
+	selectionBox.Color3 = Color3.fromRGB(0, 255, 0)
+	selectionBox.LineThickness = 0.05
+
+	selectionBox.SurfaceTransparency = 0.5
+	selectionBox.SurfaceColor3 = Color3.fromRGB(0, 255, 0)
+
+	return selectionBox
 end
 
 ----- Public functions -----
@@ -408,10 +444,14 @@ function PlacementClient.new(plot: Model)
 		plot:FindFirstChild("Structures"),
 	})
 
+	self.PlacementConfirmed = Signal.new()
+
 	return self
 end
 
 function PlacementClient:InitiatePlacement(model: Model)
+	assert(model ~= nil, "[PlacementClient] InitiatePlacement: Model must not be nil")
+	assert(model.ClassName == "Model", "[PlacementClient] InitiatePlacement: Model must be a Model")
 	assert(model:IsA("Model"), "[PlacementClient] InitiatePlacement: Model must be a Model")
 
 	local state: State = self._state:getState()
@@ -426,6 +466,13 @@ function PlacementClient:InitiatePlacement(model: Model)
 
 	self._trove:Add(model)
 
+	-- Create the selection box
+	local selection_box = MakeSelectionBox()
+	selection_box.Parent = model
+	selection_box.Adornee = model
+
+	self._trove:Add(selection_box)
+
 	self._state:dispatch(PlacementTypeChanged("Place"))
 	self._state:dispatch(UpdateGhostStructure(model))
 
@@ -436,11 +483,27 @@ function PlacementClient:InitiatePlacement(model: Model)
 	self._trove:Add(UserInputService.InputBegan:Connect(function(input: InputObject)
 		if input.KeyCode == Enum.KeyCode.R then
 			state = self._state:getState()
+
 			local rotation = state._rotation + SETTINGS.ROTATION_INCREMENT
 			if rotation >= 360 then
 				rotation = 0
 			end
 			self._state:dispatch(RotationChanged(rotation))
+		elseif input.KeyCode == Enum.KeyCode.Up then
+			self:RaiseLevel()
+		elseif input.KeyCode == Enum.KeyCode.Down then
+			self:LowerLevel()
+		elseif input.KeyCode == Enum.KeyCode.C or input.KeyCode == Enum.KeyCode.Escape then
+			self:CancelPlacement()
+		end
+
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			state = self._state:getState()
+			if PlacementTypeIsNone(state) == true then
+				return
+			end
+
+			self:ConfirmPlacement()
 		end
 	end))
 end
@@ -466,6 +529,55 @@ function PlacementClient:CancelPlacement()
 	self._state:dispatch(UpdateGhostStructure(nil))
 
 	self._trove:Destroy()
+end
+
+function PlacementClient:RaiseLevel()
+	local state: State = self._state:getState()
+
+	if state._level >= SETTINGS.MAX_LEVEL then
+		return
+	end
+
+	self._state:dispatch({
+		type = "LEVEL_CHANGED",
+		_level = state._level + 1,
+	})
+end
+
+function PlacementClient:LowerLevel()
+	local state: State = self._state:getState()
+
+	if state._level <= 1 then
+		return
+	end
+
+	self._state:dispatch({
+		type = "LEVEL_CHANGED",
+		_level = state._level - 1,
+	})
+end
+
+function PlacementClient:ConfirmPlacement()
+	local state: State = self._state:getState()
+
+	if PlacementTypeIsNone(state) == true then
+		return
+	end
+
+	if state._can_confirm_placement == false then
+		return
+	end
+
+	-- Strip the state to only the necessary information
+	state = PlacementUtils.StripClientState(state)
+
+	-- Confirm the placement
+	self.PlacementConfirmed:Fire(state)
+
+	--self._state:dispatch(PlacementTypeChanged("None"))
+	--self._state:dispatch(UpdateGhostStructure(nil))
+
+	--self._trove:Destroy()
 end
 
 function PlacementClient:Destroy()

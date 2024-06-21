@@ -1,10 +1,15 @@
-local RS = game:GetService("ReplicatedStorage")
+----- Private variables -----
 
-local StackingUtils = require(RS.Shared.Structures.Utils.Stacking)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local dir_Structures = ReplicatedStorage.Game.Shared.Structures
+local dir_Utils = dir_Structures.Utils
+
+local TableUtil = require(dir_Utils.TableUtil)
+
 local StructureTypes = require(script.Parent.Parent.Types)
-local TableUtil = require(RS.Packages.TableUtil)
 
-local StructureFolder = RS.Structures
+local StructureFolder: Folder = ReplicatedStorage.Structures
 local IndustrialFolder: Folder = StructureFolder.Industrial
 
 local SharedProperties = {
