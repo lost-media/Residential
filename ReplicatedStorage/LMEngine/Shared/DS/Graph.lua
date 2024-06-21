@@ -35,6 +35,17 @@
         Graph:GetNeighbors(node: Node) {Node[]}?
             Returns the neighbors of a node
 
+		Graph:GetNode(key: any) Node?
+			Returns the node with the given key
+
+		Graph:GetNodeWithVal(val: any) Node?
+			Returns the node with the given value
+			This should ONLY be used for unique values, otherwise
+			it will return the first node with the value
+
+		Graph:GetRandomNode() Node?
+			Returns a random node from the graph
+
         Graph:GetNodes() {Node[]}
             Returns the nodes in the graph
 
@@ -80,6 +91,8 @@ type IGraph = {
 	RemoveNode: (self: Graph, node: Node) -> (),
 	AddEdge: (self: Graph, node1: Node, node2: Node) -> (),
 	RemoveEdge: (self: Graph, node1: Node, node2: Node) -> (),
+	GetNode: (self: Graph, key: any) -> Node?,
+	GetNodeWithVal: (self: Graph, val: any) -> Node?,
 	GetNeighbors: (self: Graph, node: Node) -> { Node }?,
 	GetNodes: (self: Graph) -> { Node },
 	HasNode: (self: Graph, node: Node) -> boolean,
@@ -168,6 +181,20 @@ function Graph:RemoveEdge(node1: Node, node2: Node)
 
 	self._nodes[id1][id2] = nil
 	self._nodes[id2][id1] = nil
+end
+
+function Graph:GetNode(key: any): Node?
+	return self._nodes[key]
+end
+
+function Graph:GetNodeWithVal(val: any): Node?
+	for _, node in pairs(self._nodes) do
+		if node:GetValue() == val then
+			return node
+		end
+	end
+
+	return nil
 end
 
 function Graph:GetNeighbors(node: Node): { Node }?

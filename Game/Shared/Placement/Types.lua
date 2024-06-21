@@ -8,6 +8,12 @@ export type ClientState = {
 	_rotation: number,
 	_is_stacked: boolean,
 	_level: number,
+	_attachments: { Attachment },
+	_structure_id: string,
+
+	_is_orientation_strict: boolean,
+	_mounted_attachment: Attachment?,
+	_stacked_structure: Model?,
 }
 
 export type ServerState = {
@@ -15,7 +21,12 @@ export type ServerState = {
 	_structure_id: string,
 	_level: number,
 	_rotation: number,
+
+	_is_orientation_strict: boolean,
 	_is_stacked: boolean,
+	_attachments: { Attachment },
+	_mounted_attachment: Attachment?,
+	_stacked_structure: Model?,
 }
 
 return {}

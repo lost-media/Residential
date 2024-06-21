@@ -67,8 +67,14 @@ local SETTINGS = {
 		_ghost_structure = nil,
 		_can_confirm_placement = true,
 		_rotation = 0,
-		_is_stacked = false,
 		_level = 1,
+		_attachments = {},
+		_structure_id = nil,
+
+		-- stacking states
+		_is_stacked = false,
+		_mounted_attachment = nil,
+		_stacked_structure = nil,
 	} :: State,
 
 	ROTATION_INCREMENT = 90,
@@ -104,15 +110,7 @@ type PlacementClientMembers = {
 
 type PlacementType = "Place" | "Move" | "Remove" | "None"
 
-type State = {
-	_tile: BasePart?,
-	_placement_type: PlacementType,
-	_ghost_structure: Model?,
-	_can_confirm_placement: boolean,
-	_rotation: number,
-	_is_stacked: boolean,
-	_level: number,
-}
+type State = PlacementType.ClientState
 
 export type PlacementClient = typeof(setmetatable({} :: PlacementClientMembers, {} :: IPlacementClient))
 
@@ -121,6 +119,8 @@ export type PlacementClient = typeof(setmetatable({} :: PlacementClientMembers, 
 local UserInputService = game:GetService("UserInputService")
 
 local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils)
+
+local StructuresUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
 
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
@@ -175,6 +175,36 @@ local level_reducers = Rodux.createReducer(1, {
 	end,
 })
 
+local _mounted_attachment_reducers = Rodux.createReducer(nil, {
+	["MOUNTED_ATTACHMENT_CHANGED"] = function(state: State, action)
+		return action._mounted_attachment
+	end,
+})
+
+local _stacked_structure_reducers = Rodux.createReducer(nil, {
+	["STACKED_STRUCTURE_CHANGED"] = function(state: State, action)
+		return action._stacked_structure
+	end,
+})
+
+local _attachments_reducers = Rodux.createReducer({}, {
+	["ATTACHMENTS_CHANGED"] = function(state: State, action)
+		return action._attachments
+	end,
+})
+
+local _is_orientation_strict_reducers = Rodux.createReducer(false, {
+	["ORIENTATION_STRICT_CHANGED"] = function(state: State, action)
+		return action._is_orientation_strict
+	end,
+})
+
+local structure_id_reducers = Rodux.createReducer(nil, {
+	["STRUCTURE_ID_CHANGED"] = function(state: State, action)
+		return action._structure_id
+	end,
+})
+
 local reducer = Rodux.combineReducers({
 	_tile = tile_reducers,
 	_placement_type = placement_type_reducers,
@@ -183,9 +213,26 @@ local reducer = Rodux.combineReducers({
 	_rotation = rotation_reducers,
 	_is_stacked = is_stacked_reducers,
 	_level = level_reducers,
+
+	_attachments = _attachments_reducers,
+	_structure_id = structure_id_reducers,
+	_is_orientation_strict = _is_orientation_strict_reducers,
+	_mounted_attachment = _mounted_attachment_reducers,
+	_stacked_structure = _stacked_structure_reducers,
 })
 
 ----- Private functions -----
+
+local function MakeSelectionBox()
+	local selectionBox = Instance.new("SelectionBox")
+	selectionBox.Color3 = Color3.fromRGB(0, 255, 0)
+	selectionBox.LineThickness = 0.05
+
+	selectionBox.SurfaceTransparency = 0.5
+	selectionBox.SurfaceColor3 = Color3.fromRGB(0, 255, 0)
+
+	return selectionBox
+end
 
 local function DimModel(model: Model)
 	-- If the model is already dimmed, no need to dim it again
@@ -274,6 +321,43 @@ local function PartIsTile(part: BasePart, plot: Model?)
 	return part:FindFirstAncestorWhichIsA("Folder") == tiles
 end
 
+local function GetTileFromName(client: PlacementClient, name: string)
+	return client._plot.Tiles:FindFirstChild(name)
+end
+
+local function PartIsFromStructure(part: BasePart, client: PlacementClient)
+	if part == nil then
+		return false
+	end
+
+	if part:IsA("BasePart") == false then
+		return false
+	end
+
+	if part:IsDescendantOf(client._plot.Structures) == false then
+		return false
+	end
+
+	local structure: Model? = part:FindFirstAncestorWhichIsA("Model")
+	if structure == nil then
+		return false
+	end
+
+	if structure:GetAttribute("Id") == nil then
+		return false
+	end
+
+	if structure:GetAttribute("Tile") == nil then
+		return false
+	end
+
+	if GetTileFromName(client, structure:GetAttribute("Tile")) == nil then
+		return false
+	end
+
+	return true
+end
+
 -- Determines if the client is moving/placing/removing an object
 local function PlacementTypeIsNone(state: State)
 	return state._placement_type == "None"
@@ -307,11 +391,39 @@ local function RotationChanged(rotation: number)
 	}
 end
 
+local function StackedChanged(is_stacked: boolean)
+	return {
+		type = "IS_STACKED_CHANGED",
+		_is_stacked = is_stacked,
+	}
+end
+
 local function CanConfirmPlacementChanged(can_confirm_placement: boolean)
 	return {
 		type = "CAN_CONFIRM_PLACEMENT_CHANGED",
 		_can_confirm_placement = can_confirm_placement,
 	}
+end
+
+local function GetStructureFromPart(part: BasePart, client: PlacementClient)
+	local structure: Model? = part:FindFirstAncestorWhichIsA("Model")
+	if structure == nil then
+		return nil
+	end
+
+	if structure:GetAttribute("Id") == nil then
+		return nil
+	end
+
+	if structure:GetAttribute("Tile") == nil then
+		return nil
+	end
+
+	if GetTileFromName(client, structure:GetAttribute("Tile")) == nil then
+		return nil
+	end
+
+	return structure
 end
 
 local function UpdateTileState(client: PlacementClient, tile: BasePart)
@@ -321,6 +433,8 @@ local function UpdateTileState(client: PlacementClient, tile: BasePart)
 	if currentTile == nil or currentTile ~= tile then
 		client._state:dispatch(TileChanged(tile))
 	end
+
+	client._state:dispatch(StackedChanged(false))
 end
 
 local function SnapToTileWithLevel(client: PlacementClient, tile: BasePart)
@@ -340,15 +454,350 @@ local function SnapToTileWithLevel(client: PlacementClient, tile: BasePart)
 	PlacementUtils.MoveModelToCFrame(ghost_structure, newCFrame, false)
 end
 
+local function SnapToAttachment(attachment: Attachment, tile: BasePart, client: PlacementClient)
+	local state: State = client._state:getState()
+
+	local ghostStructure = state._ghost_structure
+	local simulatedCFrame = GetSimulatedStackCFrame(client, tile, attachment)
+
+	if simulatedCFrame == nil then
+		return
+	end
+
+	PlacementUtils.MoveModelToCFrame(ghostStructure, simulatedCFrame, false)
+end
 local function UpdatePosition(client: PlacementClient)
 	-- Completely state dependent
 	local state: State = client._state:getState()
 
 	if state._is_stacked == true then
-		--self:SnapToAttachment(self.state.mountedAttachment, self.state.tile)
+		SnapToAttachment(state._mounted_attachment, state._tile, client)
 	else
 		SnapToTileWithLevel(client, state._tile)
 	end
+end
+
+function GetAttachmentsFromStringList(client: PlacementClient, attachments: { string }?): { Attachment }
+	if attachments == nil then
+		return {}
+	end
+
+	local state: PlacementType.ClientState = client._state:getState()
+
+	if state._stacked_structure == nil then
+		return {}
+	end
+
+	local attachmentInstances = {}
+
+	for _, attachmentName in ipairs(attachments) do
+		local attachment = state._stacked_structure.PrimaryPart:FindFirstChild(attachmentName)
+		if attachment ~= nil then
+			table.insert(attachmentInstances, attachment)
+		end
+	end
+
+	return attachmentInstances
+end
+
+function GetAttachmentsFromStructure(model: Model)
+	local attachments = {}
+
+	for _, instance in ipairs(model:GetDescendants()) do
+		if instance:IsA("Attachment") then
+			table.insert(attachments, instance)
+		end
+	end
+
+	return attachments
+end
+
+function GetSimulatedStackCFrame(client: PlacementClient, tile: BasePart, attachment: Attachment)
+	local state: State = client._state:getState()
+
+	local ghostStructure = state._ghost_structure
+
+	if ghostStructure == nil then
+		return
+	end
+
+	local structureEntry = StructuresUtils.GetStructureFromId(ghostStructure:GetAttribute("Id"))
+
+	if structureEntry == nil then
+		return
+	end
+
+	if tile == nil or attachment == nil then
+		return
+	end
+
+	return PlacementUtils.GetSnappedAttachmentCFrame(tile, attachment, structureEntry, state)
+end
+
+function GetValidRotationsWithStrictOrientation(client: PlacementClient)
+	-- Clone the ghost structure and test the rotation
+	local state: State = client._state:getState()
+
+	local clone = state._ghost_structure:Clone()
+
+	local client_structure_id: string = state._ghost_structure:GetAttribute("Id")
+
+	local rotations = {}
+
+	for i = 0, 360, SETTINGS.ROTATION_INCREMENT do
+		local newCFrame = GetSimulatedStackCFrame(state._tile, state._mounted_attachment)
+
+		if newCFrame == nil then
+			return rotations
+		end
+
+		newCFrame = CFrame.new(newCFrame.Position) * CFrame.Angles(0, math.rad(i), 0)
+		--newCFrame = newCFrame * CFrame.new(0, self.state.level * LEVEL_HEIGHT, 0)
+
+		clone:PivotTo(newCFrame)
+
+		-- Check if the attachment points match
+		local stackedStructureId = state._stacked_structure:GetAttribute("Id")
+		if stackedStructureId == nil then
+			return
+		end
+
+		local attachmentPointsThatMatch = StructuresUtils.GetAttachmentsThatMatchSnapPoints(
+			stackedStructureId,
+			client_structure_id,
+			state._stacked_structure,
+			clone
+		)
+
+		if attachmentPointsThatMatch == nil then
+			clone:Destroy()
+			return
+		end
+
+		local allMatch = false
+
+		for _, dict in ipairs(attachmentPointsThatMatch) do
+			local match = true
+			for key, value in pairs(dict) do
+				local distance = (key.WorldCFrame.Position - value.WorldCFrame.Position).Magnitude
+
+				if distance > 0.1 then
+					match = false
+					break
+				end
+			end
+			if match then
+				allMatch = true
+				break
+			end
+		end
+
+		if allMatch then
+			table.insert(rotations, i)
+		end
+	end
+
+	clone:Destroy()
+	return rotations
+end
+
+local function AttemptToSnapRotationOnStrictOrientation(client: PlacementClient)
+	local state: State = client._state:getState()
+	if state._stacked_structure == nil then
+		return
+	end
+
+	local client_structure_id: string = state._ghost_structure:GetAttribute("Id")
+
+	-- get the entry from the structure collection
+	local structureId = state._stacked_structure:GetAttribute("Id")
+	local structureEntry = StructuresUtils.GetStructureFromId(structureId)
+
+	if structureEntry == nil then
+		return
+	end
+
+	if StructuresUtils.IsOrientationStrict(structureId, client_structure_id) == false then
+		return
+	end
+
+	local ghostStructure = state._ghost_structure
+
+	if ghostStructure == nil then
+		return
+	end
+
+	local rotations = GetValidRotationsWithStrictOrientation(client)
+
+	if rotations == nil then
+		--self:UpdateCanConfirmPlacement(false)
+		return
+	end
+
+	if #rotations == 0 then
+		--self:UpdateCanConfirmPlacement(false)
+		return
+	end
+
+	if table.find(rotations, state._rotation) == nil then
+		client._state:dispatch(RotationChanged(rotations[1]))
+	end
+end
+
+function AttemptToSnapToAttachment(client: PlacementClient, closestInstance: BasePart)
+	local mouse = client._mouse
+	local state: State = client._state:getState()
+
+	local client_structure_id: string = state._ghost_structure:GetAttribute("Id")
+
+	local succesfullySnapped = true
+
+	-- Check if the part is from a structure
+	if PartIsFromStructure(closestInstance, client) == true then
+		local structure: Model = GetStructureFromPart(closestInstance, client)
+		if structure == nil then
+			return
+		end
+
+		local structureId = structure:GetAttribute("Id")
+		local structureTile = GetTileFromName(client, structure:GetAttribute("Tile"))
+
+		-- check if the structure is on the same level
+		if structureTile == nil then
+			return
+		end
+
+		if structure:GetAttribute("Level") ~= state._level then
+			UpdateTileState(client, structureTile)
+			return
+		end
+
+		-- Determine if the structure is stackable
+		local isStackable = StructuresUtils.CanStackStructureWith(structureId, client_structure_id)
+
+		if isStackable == false then
+			-- If the structure is not stackable, then just snap to the structures tile
+			--self:RemoveStacked()
+			-- get the structure the player is hovering over
+			if structureTile:GetAttribute("Occupied") == false then
+				succesfullySnapped = false
+			end
+
+			UpdateTileState(client, structureTile)
+			client._state:dispatch(TileChanged(structureTile))
+		else
+			client._state:dispatch({
+				type = "STACKED_STRUCTURE_CHANGED",
+				_stacked_structure = structure,
+			})
+
+			-- get the attachments of the structure
+			local whitelistedSnapPoints =
+				StructuresUtils.GetStackingWhitelistedSnapPointsWith(structureId, client_structure_id)
+
+			if whitelistedSnapPoints ~= nil then
+				local attachmentInstances = GetAttachmentsFromStringList(client, whitelistedSnapPoints)
+				whitelistedSnapPoints = attachmentInstances
+			else
+				whitelistedSnapPoints = {}
+			end
+
+			local attachments = (#whitelistedSnapPoints > 0) and whitelistedSnapPoints
+				or GetAttachmentsFromStructure(structure)
+
+			-- Get the closest attachment to the mouse
+			local closestAttachment = mouse:GetClosestAttachmentToMouse(attachments)
+
+			if closestAttachment == nil then
+				return
+			end
+
+			-- check if the attachment is occupied
+
+			if closestAttachment:GetAttribute("Occupied") == true then
+				--self:RemoveStacked()
+				--self.state.canConfirmPlacement = false
+				succesfullySnapped = false
+				--return
+			end
+
+			client._state:dispatch({
+				type = "ATTACHMENTS_CHANGED",
+				_attachments = attachments,
+			})
+
+			client._state:dispatch(StackedChanged(true))
+
+			local attachmentPointToSnapTo = StructuresUtils.GetMountedAttachmentPointFromStructures(
+				structure,
+				client_structure_id,
+				closestAttachment
+			)
+
+			if attachmentPointToSnapTo == nil then
+				succesfullySnapped = false
+				return
+			end
+
+			if state._mounted_attachment == nil or state._mounted_attachment ~= attachmentPointToSnapTo then
+				--self.signals.OnStackedAttachmentChanged:Fire(attachmentPointToSnapTo, self.state.mountedAttachment)
+			end
+
+			if attachmentPointToSnapTo:GetAttribute("Occupied") == true then
+				--self.state.canConfirmPlacement = false
+				succesfullySnapped = false
+			end
+
+			client._state:dispatch({
+				type = "MOUNTED_ATTACHMENT_CHANGED",
+				_mounted_attachment = attachmentPointToSnapTo,
+			})
+
+			client._state:dispatch({
+				type = "ATTACHMENTS_CHANGED",
+				_attachments = attachments,
+			})
+
+			local orientationStrict = StructuresUtils.IsOrientationStrict(structureId, client_structure_id)
+
+			client._state:dispatch({
+				type = "ORIENTATION_STRICT_CHANGED",
+				_is_orientation_strict = orientationStrict,
+			})
+
+			if orientationStrict == true then
+				AttemptToSnapRotationOnStrictOrientation(client)
+			end
+
+			-- change tile to the structure tile
+
+			if structureTile == nil then
+				succesfullySnapped = false
+			end
+
+			if state._tile == nil or state._tile ~= structureTile then
+				client._state:dispatch(TileChanged(structureTile))
+			end
+
+			--self.state.tile = structureTile
+
+			if StructuresUtils.IsIncreasingLevel(structureId, client_structure_id) then
+				client:RaiseLevel()
+			else
+				client._state:dispatch({
+					type = "LEVEL_CHANGED",
+					_level = structure:GetAttribute("Level"),
+				})
+			end
+		end
+	else
+		--self.signals.OnStructureHover:Fire(nil)
+		--self:RemoveStacked()
+		--self.state.canConfirmPlacement = false
+		succesfullySnapped = false
+	end
+
+	--UpdateCanConfirmPlacement(succesfullySnapped)
 end
 
 local function RenderSteppedUpdate(client: PlacementClient, dt: number)
@@ -407,21 +856,10 @@ local function RenderSteppedUpdate(client: PlacementClient, dt: number)
 		UpdateTileState(client, target)
 	else
 		-- Attempt to snap to the attachment
-		--AttemptToSnapToAttachment(closestInstance)
+		AttemptToSnapToAttachment(client, target)
 	end
 
 	UpdatePosition(client)
-end
-
-local function MakeSelectionBox()
-	local selectionBox = Instance.new("SelectionBox")
-	selectionBox.Color3 = Color3.fromRGB(0, 255, 0)
-	selectionBox.LineThickness = 0.05
-
-	selectionBox.SurfaceTransparency = 0.5
-	selectionBox.SurfaceColor3 = Color3.fromRGB(0, 255, 0)
-
-	return selectionBox
 end
 
 ----- Public functions -----

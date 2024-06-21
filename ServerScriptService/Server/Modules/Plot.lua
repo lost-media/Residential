@@ -13,6 +13,10 @@
     They can be represented as a graph data structure in order to
     find paths between them and neighbors/adjacent tiles.
 
+	Each structure that is placed on the plot will generate a unique ID
+	that is used to identify the structure. This can be used to serialize
+	the structure data to the DataStore.
+
 	Members:
 
 		Plot._plot_model   [Instance] -- The model of the plot
@@ -77,7 +81,7 @@ type IPlot = {
 	SetAttribute: (self: Plot, attribute: string, value: any) -> (),
 	GetAttribute: (self: Plot, attribute: string) -> any,
 
-	PlaceStructure: (self: Plot, state: PlacementType.ServerState) -> (),
+	PlaceStructure: (self: Plot, structure: Model, state: PlacementType.ServerState) -> (),
 }
 
 export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))
@@ -96,6 +100,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ---@type LMEngineServer
 local LMEngine = require(ReplicatedStorage.LMEngine)
 
+---@type Trove
+local Trove = require(ReplicatedStorage.LMEngine.Shared.Trove)
+
+local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils)
+
+---@type UniqueIdGenerator
+local UniqueIdGenerator = LMEngine.GetShared("UniqueIdGenerator")
+
 ---@type Graph
 local Graph = require(ReplicatedStorage.LMEngine.Shared.DS.Graph)
 type Graph = Graph.Graph
@@ -104,6 +116,8 @@ type PlotMembers = {
 	_plot_model: Instance,
 	_player: Player?,
 	_tiles: Graph,
+	_trove: Trove.Trove,
+	_uid_generator: UniqueIdGenerator.UniqueIdGenerator,
 }
 
 ---@class Plot
@@ -111,6 +125,15 @@ local Plot: IPlot = {} :: IPlot
 Plot.__index = Plot
 
 ----- Private functions -----
+
+local function ThrowIfStateInvalid(state: PlacementType.ServerState)
+	assert(state, "[PlotService] PlaceStructure: State is nil")
+	assert(state._tile, "[PlotService] PlaceStructure: State._tile is nil")
+	assert(state._structure_id, "[PlotService] PlaceStructure: State._structure_id is nil")
+	assert(state._level, "[PlotService] PlaceStructure: State._level is nil")
+	assert(state._rotation, "[PlotService] PlaceStructure: State._rotation is nil")
+	--assert(state._is_stacked, "[PlotService] PlaceStructure: State._is_stacked is nil")
+end
 
 local function InitializePlotTiles(tiles: { Instance }): Graph
 	local graph = Graph.new() :: Graph
@@ -125,7 +148,7 @@ local function InitializePlotTiles(tiles: { Instance }): Graph
 
 		tile.Name = tostring(i)
 
-		local node = Graph.Node(i, tile)
+		local node = Graph.Node(tile, tile)
 		graph:AddNode(node)
 
 		positions[tile.Position] = node
@@ -184,10 +207,19 @@ function Plot.new(plot_model: Instance)
 	local self = setmetatable({}, Plot)
 	self._plot_model = plot_model
 	self._player = nil :: Player?
+	self._trove = Trove.new()
+	self._uid_generator = UniqueIdGenerator.new()
 
 	self._tiles = InitializePlotTiles(plot_model:FindFirstChild("Tiles"):GetChildren())
 
 	return self
+end
+
+function Plot:Load(data) -- loading existing plot data
+	-- Load existing IDs into the UniqueIdGenerator
+	local ids: { number } = {}
+
+	self._uid_generator:LoadExistingIds(ids)
 end
 
 function Plot:GetPlayer(): Player?
@@ -215,6 +247,53 @@ end
 
 function Plot:GetAttribute(attribute: string): any
 	return self._plot_model:GetAttribute(attribute)
+end
+
+function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState)
+	assert(structure ~= nil, "Structure cannot be nil")
+	assert(state ~= nil, "State cannot be nil")
+
+	ThrowIfStateInvalid(state)
+
+	-- Check if the structure can be placed on the plot
+	local tile = self._tiles:GetNode(state._tile)
+
+	if tile == nil then
+		warn("Tile not found in plot")
+		return
+	end
+
+	-- Create the structure
+	local structure_instance = self._trove:Clone(structure)
+
+	-- Calculate the position of the structure
+
+	tile = tile:GetValue() :: Part
+
+	if state._is_stacked == false then
+		if tile:GetAttribute("Occupied") == true then
+			-- Cannot place structure on an occupied tile
+			return
+		end
+
+		local new_cframe = PlacementUtils.GetSnappedTileCFrame(tile, state)
+
+		-- Set the structure's position to the tile's position
+		PlacementUtils.MoveModelToCFrame(structure_instance, new_cframe, true)
+	else
+	end
+
+	tile:SetAttribute("Occupied", true)
+
+	-- Set the structure's parent to the plot model
+	structure_instance.Parent = self._plot_model.Structures
+
+	-- Set the structure's attributes
+	structure_instance:SetAttribute("PlotId", self._uid_generator:GenerateId())
+	structure_instance:SetAttribute("Tile", tile.Name)
+	structure_instance:SetAttribute("Level", state._level)
+	structure_instance:SetAttribute("Rotation", state._rotation)
+	structure_instance:SetAttribute("IsStacked", state._is_stacked)
 end
 
 function Plot.__tostring(self: Plot): string

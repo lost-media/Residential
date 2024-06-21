@@ -30,7 +30,7 @@ function PlacementUtils.GetSnappedAttachmentCFrame(
 	tile: BasePart,
 	snappedPoint: Attachment,
 	structureInfo,
-	state: { level: number, rotation: number }
+	state: PlacementType.ClientState
 )
 	if tile == nil then
 		error("Tile is nil")
@@ -65,10 +65,10 @@ function PlacementUtils.GetSnappedAttachmentCFrame(
 
 	local newCFrame = CFrame.new(pos)
 
-	newCFrame = newCFrame * CFrame.Angles(0, math.rad(state.rotation), 0)
+	newCFrame = newCFrame * CFrame.Angles(0, math.rad(state._rotation), 0)
 
 	if structureInfo.FullArea == true then
-		newCFrame = newCFrame * CFrame.new(0, state.level * PlotConfigs.PLOT_LEVEL_HEIGHT, 0)
+		newCFrame = newCFrame * CFrame.new(0, state._level * PlotConfigs.PLOT_LEVEL_HEIGHT, 0)
 	end
 
 	return newCFrame

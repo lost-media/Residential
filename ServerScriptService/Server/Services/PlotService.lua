@@ -44,6 +44,7 @@ local PlotServiceRateLimiter = RateLimiter.NewRateLimiter(SETTINGS.MAX_RATE_PER_
 
 local PlacementType = require(ReplicatedStorage.Game.Shared.Placement.Types)
 local Plot = require(script.Parent.Parent.Modules.Plot)
+local StructureUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
 
 type Plot = Plot.Plot
 
@@ -171,13 +172,19 @@ function PlotService:UnassignPlot(player: Player)
 end
 
 function PlotService:PlaceStructure(player: Player, state: PlacementType.ServerState)
-	assert(player, "[PlotService] PlaceStructure: Player is nil")
-	assert(state, "[PlotService] PlaceStructure: State is nil")
+	assert(player ~= nil, "[PlotService] PlaceStructure: Player is nil")
+	assert(state ~= nil, "[PlotService] PlaceStructure: State is nil")
 
 	ThrowIfStateInvalid(state)
 
 	local plot = self._players[player]
 	assert(plot, "[PlotService] PlaceStructure: Player does not have a plot assigned")
+
+	-- Create the structure
+	local structure = StructureUtils.GetStructureModelFromId(state._structure_id)
+	assert(structure ~= nil, "[PlotService] PlaceStructure: Structure not found")
+
+	plot:PlaceStructure(structure, state)
 end
 
 function PlotService.Client:PlaceStructure(player: Player, state: PlacementType.ServerState)
