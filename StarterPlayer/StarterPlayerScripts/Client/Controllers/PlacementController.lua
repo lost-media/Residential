@@ -77,14 +77,14 @@ function PlacementController:Start()
 				self._structures_index = 1
 			end
 			self:StopPlacement()
-			self:StartPlacement(StructuresList[self._structures_index])
+			--self:StartPlacement(StructuresList[self._structures_index])
 		elseif input.KeyCode == Enum.KeyCode.Q then
 			self._structures_index = self._structures_index - 1
 			if self._structures_index < 1 then
 				self._structures_index = #StructuresList
 			end
 			self:StopPlacement()
-			self:StartPlacement(StructuresList[self._structures_index])
+			--self:StartPlacement(StructuresList[self._structures_index])
 		end
 	end)
 

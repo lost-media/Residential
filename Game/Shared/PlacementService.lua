@@ -65,6 +65,20 @@ local SETTINGS = {
 
 	HapticFeedback = false, -- If you want a controller to vibrate when placing objects (only works if the user has a controller with haptic support)
 	HapticVibrationAmount = 1, -- How large the vibration is when placing objects. Choose a value from 0, 1. hapticFeedback must be set to true.
+
+	CONTROLS = {
+		-- PC
+		RotateKey = Enum.KeyCode.R, -- Key to rotate the model
+		TerminateKey = Enum.KeyCode.X, -- Key to terminate placement
+		RaiseKey = Enum.KeyCode.E, -- Key to raise the object
+		LowerKey = Enum.KeyCode.Q, -- Key to lower the object
+
+		-- Xbox
+		XboxRotate = Enum.KeyCode.ButtonR1, -- Key to rotate the model
+		XboxTerminate = Enum.KeyCode.ButtonX, -- Key to terminate placement
+		XboxRaise = Enum.KeyCode.ButtonY, -- Key to raise the object
+		XboxLower = Enum.KeyCode.ButtonB, -- Key to lower the object
+	},
 }
 -- IT IS RECOMMENDED NOT TO EDIT PAST THIS POINT
 
@@ -81,7 +95,7 @@ local audibleFeedback: boolean = script:GetAttribute("AudibleFeedback") -- Toggl
 local buildModePlacement: boolean = script:GetAttribute("BuildModePlacement") -- Toggles "build mode" placement
 local charCollisions: BoolValue = script:GetAttribute("CharacterCollisions") -- Toggles character collisions (Requires "Collisions" to be set to true)
 local collisions: boolean = script:GetAttribute("Collisions") -- Toggles collisions
-local displayGridTexture: boolean = script:GetAttribute("DisplayGridTexture") -- Toggles the grid texture to be shown when placing
+local DisplayGridTexture: boolean = script:GetAttribute("DisplayGridTexture") -- Toggles the grid texture to be shown when placing
 local enableFloors: boolean = script:GetAttribute("EnableFloors") -- Toggles if the raise and lower keys will be enabled
 local gridFadeIn: boolean = script:GetAttribute("GridFadeIn") -- If you want the grid to fade in when activating placement
 local gridFadeOut: boolean = script:GetAttribute("GridFadeOut") -- If you want the grid to fade out when ending placement
@@ -233,13 +247,13 @@ local messages: {} = {
 local fade: TweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, 0)
 
 -- Sets the current state depending on input of function
-local function setCurrentState(state: number)
+local function SetCurrentState(state: number)
 	currentState = clamp(state, 1, 5)
 	lastState = currentState
 end
 
 -- Changes the color of the hitbox depending on the current state
-local function editHitboxColor()
+local function EditHitboxColor()
 	if not primary then
 		return
 	end
@@ -263,14 +277,14 @@ local function editHitboxColor()
 end
 
 -- Checks for collisions on the hitbox
-local function checkHitbox()
+local function CheckHitbox()
 	if not (hitbox:IsDescendantOf(workspace) and SETTINGS.Collisions) then
 		return
 	end
 	if range then
-		setCurrentState(5)
+		SetCurrentState(5)
 	else
-		setCurrentState(1)
+		SetCurrentState(1)
 	end
 	character = player.Character
 
@@ -288,7 +302,7 @@ local function checkHitbox()
 			continue
 		end
 
-		setCurrentState(3)
+		SetCurrentState(3)
 		if SETTINGS.PreferSignals == true then
 			collided:Fire(collisionPoints[i])
 		end
@@ -299,7 +313,7 @@ local function checkHitbox()
 end
 
 -- (Raise and Lower functions) Edits the floor based on the floor step
-local function raiseFloor(actionName: string, inputState: Enum.UserInputState, inputObj: InputObject?)
+local function RaiseFloor(actionName: string, inputState: Enum.UserInputState, inputObj: InputObject?)
 	if not (currentState ~= 4 and inputState == Enum.UserInputState.Begin) then
 		return
 	end
@@ -314,7 +328,7 @@ local function raiseFloor(actionName: string, inputState: Enum.UserInputState, i
 	end
 end
 
-local function lowerFloor(actionName: string, inputState: Enum.UserInputState, inputObj: InputObject?)
+local function LowerFloor(actionName: string, inputState: Enum.UserInputState, inputObj: InputObject?)
 	if not (currentState ~= 4 and inputState == Enum.UserInputState.Begin) then
 		return
 	end
@@ -330,7 +344,7 @@ local function lowerFloor(actionName: string, inputState: Enum.UserInputState, i
 end
 
 -- Handles scaling of the grid texture on placement activation
-local function displayGrid()
+local function DisplayGrid()
 	local gridTex: Texture = Instance.new("Texture")
 	gridTex.Name = "GridTexture"
 	gridTex.Texture = SETTINGS.GridTexture
@@ -354,7 +368,7 @@ local function displayGrid()
 	gridTex.Parent = plot
 end
 
-local function displaySelectionBox()
+local function DisplaySelectionBox()
 	local selectionBox
 
 	if SETTINGS.UseHighlights == true then
@@ -378,7 +392,7 @@ local function displaySelectionBox()
 end
 
 -- Removes any textures/grids
-local function removeTexture()
+local function RemoveTexture()
 	for i, texture: Instance in ipairs(plot:GetChildren()) do
 		if not (texture.Name == "GridTexture" and texture:IsA("Texture")) then
 			continue
@@ -398,23 +412,23 @@ local function removeTexture()
 	end
 end
 
-local function createAudioFeedback()
+local function CreateAudioFeedback()
 	local audio = Instance.new("Sound")
-	audio.Name = "placementFeedback"
+	audio.Name = "PlacementFeedback"
 	audio.Volume = SETTINGS.AudioVolume
 	audio.SoundId = SETTINGS.SoundID
 	audio.Parent = player.PlayerGui
 	placementSFX = audio
 end
 
-local function playAudio()
+local function PlayAudio()
 	if SETTINGS.AudibleFeedback == true and placementSFX then
 		placementSFX:Play()
 	end
 end
 
 -- Checks to see if the model is in range of the maxRange
-local function getRange(): number
+local function GetRange(): number
 	character = player.Character
 	return (primary.Position - character.PrimaryPart.Position).Magnitude
 end
@@ -447,7 +461,7 @@ local function ROTATE(actionName: string, inputState: Enum.UserInputState, input
 end
 
 -- Calculates the Y position to be ontop of the plot (all objects) and any object (when stacking)
-local function calculateYPos(tp: number, ts: number, o: number, normal: number): number
+local function CalculateYPosition(tp: number, ts: number, o: number, normal: number): number
 	if normal == 0 then
 		return (tp + ts * 0.5) - o * 0.5
 	end
@@ -456,7 +470,7 @@ local function calculateYPos(tp: number, ts: number, o: number, normal: number):
 end
 
 -- Clamps the x and z positions so they cannot leave the plot
-local function bounds(c: CFrame, offsetX: number, offsetZ: number): CFrame
+local function Bounds(c: CFrame, offsetX: number, offsetZ: number): CFrame
 	local pos: CFrame = plot.CFrame
 	local xBound: number = (plot.Size.X * 0.5) - offsetX
 	local zBound: number = (plot.Size.Z * 0.5) - offsetZ
@@ -470,7 +484,7 @@ local function bounds(c: CFrame, offsetX: number, offsetZ: number): CFrame
 end
 
 -- Returns a rounded cframe to the nearest grid unit
-local function snapCFrame(c: CFrame): CFrame
+local function SnapCFrame(c: CFrame): CFrame
 	local offsetX: number = (plot.Size.X % (2 * GRID_UNIT)) * 0.5
 	local offsetZ: number = (plot.Size.Z % (2 * GRID_UNIT)) * 0.5
 	local newX: number = round(c.X / GRID_UNIT) * GRID_UNIT - offsetX
@@ -481,7 +495,7 @@ local function snapCFrame(c: CFrame): CFrame
 end
 
 -- Calculates the "tilt" angle
-local function calcAngle(last: CFrame, current: CFrame): CFrame
+local function CalculateAngle(last: CFrame, current: CFrame): CFrame
 	if not SETTINGS.AngleTilt then
 		return anglesXYZ(0, 0, 0)
 	end
@@ -497,7 +511,7 @@ local function calcAngle(last: CFrame, current: CFrame): CFrame
 end
 
 -- Calculates the position of the object
-local function calculateItemLocation(last, final: boolean): CFrame
+local function CalculateItemLocation(last, final: boolean): CFrame
 	local x: number, z: number
 	local sizeX: number, sizeZ: number = primary.Size.X * 0.5, primary.Size.Z * 0.5
 	local offsetX: number, offsetZ: number = sizeX, sizeZ
@@ -546,31 +560,31 @@ local function calculateItemLocation(last, final: boolean): CFrame
 	local pltCFrame: CFrame = plot.CFrame
 	local positionCFrame = cframe(x, 0, z) * cframe(offsetX, 0, offsetZ)
 
-	y = calculateYPos(plot.Position.Y, plot.Size.Y, primary.Size.Y, 1) + floorHeight
+	y = CalculateYPosition(plot.Position.Y, plot.Size.Y, primary.Size.Y, 1) + floorHeight
 
 	-- Changes y depending on mouse target
 	if stackable and target and (target:IsDescendantOf(placedObjects) or target == plot) then
 		if ray and ray.Normal then
 			local normal =
 				cframe(ray.Normal):VectorToWorldSpace(Vector3.FromNormalId(Enum.NormalId.Top)):Dot(ray.Normal)
-			y = calculateYPos(target.Position.Y, target.Size.Y, primary.Size.Y, normal)
+			y = CalculateYPosition(target.Position.Y, target.Size.Y, primary.Size.Y, normal)
 		end
 	end
 
 	if SETTINGS.MoveByGrid == true then
 		-- Calculates the correct position
 		local rel: CFrame = pltCFrame:Inverse() * positionCFrame
-		local snappedRel: CFrame = snapCFrame(rel) * cframe(offsetX, 0, offsetZ)
+		local snappedRel: CFrame = SnapCFrame(rel) * cframe(offsetX, 0, offsetZ)
 
 		if not removePlotDependencies then
-			snappedRel = bounds(snappedRel, sizeX, sizeZ)
+			snappedRel = Bounds(snappedRel, sizeX, sizeZ)
 		end
 		finalC = pltCFrame * snappedRel
 	else
 		finalC = pltCFrame:Inverse() * positionCFrame
 
 		if not removePlotDependencies then
-			finalC = bounds(finalC, sizeX, sizeZ)
+			finalC = Bounds(finalC, sizeX, sizeZ)
 		end
 		finalC = pltCFrame * finalC
 	end
@@ -583,16 +597,18 @@ local function calculateItemLocation(last, final: boolean): CFrame
 		return (finalC * cframe(0, y - plot.Position.Y, 0)) * anglesXYZ(0, rotation * pi / 180, 0)
 	end
 
-	return (finalC * cframe(0, y - plot.Position.Y, 0)) * anglesXYZ(0, rotation * pi / 180, 0) * calcAngle(last, finalC)
+	return (finalC * cframe(0, y - plot.Position.Y, 0))
+		* anglesXYZ(0, rotation * pi / 180, 0)
+		* CalculateAngle(last, finalC)
 end
 
 -- Used for sending a final CFrame to the server when using interpolation.
-local function getFinalCFrame(): CFrame
-	return calculateItemLocation(nil, true)
+local function GetFinalCFrame(): CFrame
+	return CalculateItemLocation(nil, true)
 end
 
 -- Finds a surface for non plot dependant placements
-local function findPlot(): BasePart
+local function FindPlot(): BasePart
 	local cam: Camera = workspace.CurrentCamera
 	local ray
 	local nilRay
@@ -615,16 +631,16 @@ local function findPlot(): BasePart
 end
 
 -- Sets the position of the object
-local function translateObj(dt)
+local function TranslateObject(dt)
 	if not (currentState ~= 2 and currentState ~= 4) then
 		return
 	end
 
 	range = false
-	setCurrentState(1)
+	SetCurrentState(1)
 
-	if getRange() > SETTINGS.MaxRange then
-		setCurrentState(5)
+	if GetRange() > SETTINGS.MaxRange then
+		SetCurrentState(5)
 
 		if SETTINGS.PreferSignals == true then
 			outOfRange:Fire()
@@ -633,26 +649,26 @@ local function translateObj(dt)
 		range = true
 	end
 
-	checkHitbox()
-	editHitboxColor()
+	CheckHitbox()
+	EditHitboxColor()
 
 	if removePlotDependencies then
-		plot = findPlot() or plot
+		plot = FindPlot() or plot
 	end
 
 	if SETTINGS.Interpolation == true and not setup then
 		object:PivotTo(
-			primary.CFrame:Lerp(calculateItemLocation(primary.CFrame.Position, false), speed * dt * SETTINGS.TargetFPS)
+			primary.CFrame:Lerp(CalculateItemLocation(primary.CFrame.Position, false), speed * dt * SETTINGS.TargetFPS)
 		)
-		hitbox:PivotTo(calculateItemLocation(hitbox.CFrame.Position, true))
+		hitbox:PivotTo(CalculateItemLocation(hitbox.CFrame.Position, true))
 	else
-		object:PivotTo(calculateItemLocation(primary.CFrame.Position, false))
-		hitbox:PivotTo(calculateItemLocation(hitbox.CFrame.Position, true))
+		object:PivotTo(CalculateItemLocation(primary.CFrame.Position, false))
+		hitbox:PivotTo(CalculateItemLocation(hitbox.CFrame.Position, true))
 	end
 end
 
 -- Unbinds all inputs
-local function unbindInputs()
+local function UnbindInputs()
 	contextActionService:UnbindAction("Rotate")
 	contextActionService:UnbindAction("Terminate")
 	contextActionService:UnbindAction("Pause")
@@ -664,7 +680,7 @@ local function unbindInputs()
 end
 
 -- Resets variables on termination
-local function reset()
+local function Reset()
 	if selection then
 		selection:Destroy()
 	end
@@ -712,11 +728,11 @@ local function TERMINATE_PLACEMENT()
 	if not hitbox then
 		return
 	end
-	setCurrentState(4)
+	SetCurrentState(4)
 
 	-- Removes grid texture from plot
 	if SETTINGS.DisplayGridTexture and not removePlotDependencies then
-		removeTexture()
+		RemoveTexture()
 	end
 
 	if SETTINGS.AudibleFeedback == true and placementSFX then
@@ -728,21 +744,39 @@ local function TERMINATE_PLACEMENT()
 		end)
 	end
 
-	reset()
-	unbindInputs()
+	Reset()
+	UnbindInputs()
 	if SETTINGS.PreferSignals == true then
 		terminated:Fire()
 	end
 end
 
 -- Binds all inputs for PC and Xbox
-local function bindInputs()
-	contextActionService:BindAction("Rotate", ROTATE, false, rotateKey, xboxRotate)
-	contextActionService:BindAction("Terminate", TERMINATE_PLACEMENT, false, terminateKey, xboxTerminate)
+local function BindInputs()
+	contextActionService:BindAction("Rotate", ROTATE, false, SETTINGS.CONTROLS.RotateKey, SETTINGS.CONTROLS.XboxRotate)
+	contextActionService:BindAction(
+		"Terminate",
+		TERMINATE_PLACEMENT,
+		false,
+		SETTINGS.CONTROLS.TerminateKey,
+		SETTINGS.CONTROLS.XboxTerminate
+	)
 
 	if SETTINGS.EnableFloors == true and not stackable then
-		contextActionService:BindAction("Raise", raiseFloor, false, raiseKey, xboxRaise)
-		contextActionService:BindAction("Lower", lowerFloor, false, lowerKey, xboxLower)
+		contextActionService:BindAction(
+			"Raise",
+			RaiseFloor,
+			false,
+			SETTINGS.CONTROLS.RaiseKey,
+			SETTINGS.CONTROLS.XboxRaise
+		)
+		contextActionService:BindAction(
+			"Lower",
+			LowerFloor,
+			false,
+			SETTINGS.CONTROLS.LowerKey,
+			SETTINGS.CONTROLS.XboxLower
+		)
 	end
 end
 
@@ -762,7 +796,7 @@ local function coolDown(plr: Player, cd: number): boolean
 end
 
 -- Generates vibrations on placement if the player is using a controller
-local function createHapticFeedback()
+local function CreateHapticFeedback()
 	local isVibrationSupported = hapticService:IsVibrationSupported(Enum.UserInputType.Gamepad1)
 	local largeSupported
 
@@ -788,64 +822,8 @@ local function createHapticFeedback()
 	end))
 end
 
-local function updateAttributes()
-	SETTINGS.AngleTilt = script:GetAttribute("AngleTilt")
-	SETTINGS.AudibleFeedback = script:GetAttribute("AudibleFeedback")
-	SETTINGS.BuildModePlacement = script:GetAttribute("BuildModePlacement")
-	SETTINGS.CharacterCollisions = script:GetAttribute("CharacterCollisions")
-	SETTINGS.Collisions = script:GetAttribute("Collisions")
-	SETTINGS.DisplayGridTexture = script:GetAttribute("DisplayGridTexture")
-	SETTINGS.EnableFloors = script:GetAttribute("EnableFloors")
-	SETTINGS.GridFadeIn = script:GetAttribute("GridFadeIn")
-	SETTINGS.GridFadeOut = script:GetAttribute("GridFadeOut")
-	SETTINGS.IncludeSelectionBox = script:GetAttribute("IncludeSelectionBox")
-	SETTINGS.InstantActivation = script:GetAttribute("InstantActivation")
-	SETTINGS.Interpolation = script:GetAttribute("Interpolation")
-	SETTINGS.InvertAngleTilt = script:GetAttribute("InvertAngleTilt")
-	SETTINGS.MoveByGrid = script:GetAttribute("MoveByGrid")
-	SETTINGS.PreferSignals = script:GetAttribute("PreferSignals")
-	SETTINGS.SmartDisplay = script:GetAttribute("SmartDisplay")
-	SETTINGS.TransparentModel = script:GetAttribute("TransparentModel")
-	SETTINGS.RemoveCollisionsIfIgnored = script:GetAttribute("RemoveCollisionsIfIgnored")
-	SETTINGS.UseHighlights = script:GetAttribute("UseHighlights")
-
-	-- Color3
-	SETTINGS.CollisionColor = script:GetAttribute("CollisionColor3")
-	SETTINGS.HitboxColor = script:GetAttribute("HitboxColor3")
-	SETTINGS.SelectionCollisionColor = script:GetAttribute("SelectionBoxCollisionColor3")
-	SETTINGS.SelectionColor = script:GetAttribute("SelectionBoxColor3")
-
-	-- Integers (Will round to nearest unit if given float)
-	SETTINGS.FloorStep = script:GetAttribute("FloorStep")
-	SETTINGS.GridTextureScale = script:GetAttribute("GridTextureScale")
-	SETTINGS.MaxHeight = script:GetAttribute("MaxHeight")
-	SETTINGS.MaxRange = script:GetAttribute("MaxRange")
-	SETTINGS.RotationStep = script:GetAttribute("RotationStep")
-
-	-- Numbers/Floats
-	SETTINGS.AngleTiltAmplitude = script:GetAttribute("AngleTiltAmplitude")
-	SETTINGS.AudioVolume = script:GetAttribute("AudioVolume")
-	SETTINGS.HitboxTransparency = script:GetAttribute("HitboxTransparency")
-	SETTINGS.LerpSpeed = script:GetAttribute("LerpSpeed")
-	SETTINGS.LineThickness = script:GetAttribute("LineThickness")
-	SETTINGS.LineTransparency = script:GetAttribute("LineTransparency")
-	SETTINGS.PlacementCooldown = script:GetAttribute("PlacementCooldown")
-	SETTINGS.TargetFPS = script:GetAttribute("TargetFPS")
-	SETTINGS.TransparencyDelta = script:GetAttribute("TransparencyDelta")
-
-	-- Other
-	SETTINGS.GridTexture = script:GetAttribute("GridTextureID")
-	SETTINGS.SoundID = script:GetAttribute("SoundID")
-
-	-- Cross Platform
-	SETTINGS.HapticFeedback = script:GetAttribute("HapticFeedback")
-	SETTINGS.VibrateAmount = script:GetAttribute("HapticVibrationAmount")
-
-	speed = SETTINGS.Interpolation and clamp(abs(1 - SETTINGS.LerpSpeed), 0, 0.9) or 1
-end
-
 -- Rounds all integer attributes to the nearest whole number (int)
-local function roundInts()
+local function RoundInts()
 	SETTINGS.MaxHeight = round(SETTINGS.MaxHeight)
 	SETTINGS.FloorStep = round(SETTINGS.FloorStep)
 	SETTINGS.RotationStep = round(SETTINGS.RotationStep)
@@ -861,7 +839,7 @@ local function roundInts()
 	--updateAttributes()
 end
 
-local function placementFeedback(objectName, callback)
+local function PlacementFeedback(objectName, callback)
 	if SETTINGS.PreferSignals == true then
 		placed:Fire(objectName)
 	else
@@ -890,24 +868,24 @@ local function PLACEMENT(self, Function: RemoteFunction, callback: () -> ()?)
 	if not (currentState == 2 or currentState == 1) then
 		return
 	end
-	cf = getFinalCFrame()
-	checkHitbox()
+	cf = GetFinalCFrame()
+	CheckHitbox()
 
 	print(objectName, placedObjects, self.Prefabs, Function, plot)
 	if not Function:InvokeServer(objectName, placedObjects, self.Prefabs, cf, plot) then
 		return
 	end
 	if SETTINGS.BuildModePlacement == true then
-		setCurrentState(1)
+		SetCurrentState(1)
 	else
 		TERMINATE_PLACEMENT()
 	end
 	if SETTINGS.HapticFeedback == true and guiService:IsTenFootInterface() then
-		createHapticFeedback()
+		CreateHapticFeedback()
 	end
 
-	playAudio()
-	placementFeedback(objectName, callback)
+	PlayAudio()
+	PlacementFeedback(objectName, callback)
 end
 
 -- Returns the current platform
@@ -925,13 +903,13 @@ local function GET_PLATFORM(): string
 end
 
 -- Verifys that the plane which the object is going to be placed upon is the correct size
-local function verifyPlane(): boolean
+local function VerifyPlane(): boolean
 	return plot.Size.X % GRID_UNIT == 0 and plot.Size.Z % GRID_UNIT == 0
 end
 
 -- Checks if there are any problems with the users setup
-local function approveActivation()
-	if not verifyPlane() then
+local function ApproveActivation()
+	if not VerifyPlane() then
 		warn(messages["201"])
 	end
 	assert(not (GRID_UNIT >= min(plot.Size.X, plot.Size.Z)), messages["401"])
@@ -940,41 +918,21 @@ end
 -- Methods
 
 -- Constructor function
-function PlacementInfo.new(
-	GridUnit: number,
-	Prefabs: Instance,
-	RotateKey: Enum.KeyCode,
-	TerminateKey: Enum.KeyCode,
-	RaiseKey: Enum.KeyCode,
-	LowerKey: Enum.KeyCode,
-	XboxRotate: Enum.KeyCode,
-	XboxTerminate: Enum.KeyCode,
-	XboxRaise: Enum.KeyCode,
-	XboxLower: Enum.KeyCode,
-	...: Instance?
-)
+function PlacementInfo.new(GridUnit: number, Prefabs: Instance, ...: Instance?)
 	local self = setmetatable({}, PlacementInfo)
 
 	-- Sets variables needed
 	GRID_UNIT = abs(round(GridUnit))
-	rotateKey = RotateKey or Enum.KeyCode.R
-	terminateKey = TerminateKey or Enum.KeyCode.X
-	raiseKey = RaiseKey or Enum.KeyCode.E
-	lowerKey = LowerKey or Enum.KeyCode.Q
-	xboxRotate = XboxRotate or Enum.KeyCode.ButtonX
-	xboxTerminate = XboxTerminate or Enum.KeyCode.ButtonB
-	xboxRaise = XboxRaise or Enum.KeyCode.ButtonY
-	xboxLower = XboxLower or Enum.KeyCode.ButtonA
 
 	self.GridUnit = GRID_UNIT
 	self.Items = Prefabs
-	self.ROTATE_KEY = rotateKey
-	self.CANCEL_KEY = terminateKey
-	self.RAISE_KEY = raiseKey
-	self.LOWER_KEY = lowerKey
-	self.XBOX_ROTATE = xboxRotate
-	self.XBOX_TERMINATE = xboxTerminate
-	self.XBOX_RAISE = xboxRaise
+	self.ROTATE_KEY = SETTINGS.CONTROLS.RotateKey
+	self.CANCEL_KEY = SETTINGS.CONTROLS.CancelKey
+	self.RAISE_KEY = SETTINGS.CONTROLS.RaiseKey
+	self.LOWER_KEY = SETTINGS.CONTROLS.LowerKey
+	self.XBOX_ROTATE = SETTINGS.CONTROLS.XboxRotate
+	self.XBOX_TERMINATE = SETTINGS.CONTROLS.XboxTerminate
+	self.XBOX_RAISE = SETTINGS.CONTROLS.XboxRaise
 	self.Version = "1.6.2"
 	self.Creator = "zblox164"
 	self.MobileUI = script:FindFirstChildOfClass("ScreenGui")
@@ -1024,29 +982,29 @@ function PlacementInfo:pauseCurrentState()
 end
 
 -- Resumes the current state if paused
-function PlacementInfo:resume()
+function PlacementInfo:Resume()
 	if object then
-		setCurrentState(lastState)
+		SetCurrentState(lastState)
 	end
 end
 
-function PlacementInfo:raise()
-	raiseFloor("Raise", Enum.UserInputState.Begin)
+function PlacementInfo:Raise()
+	RaiseFloor("Raise", Enum.UserInputState.Begin)
 end
 
-function PlacementInfo:lower()
-	lowerFloor("Lower", Enum.UserInputState.Begin)
+function PlacementInfo:Lower()
+	LowerFloor("Lower", Enum.UserInputState.Begin)
 end
 
-function PlacementInfo:rotate()
+function PlacementInfo:Rotate()
 	ROTATE("Rotate", Enum.UserInputState.Begin)
 end
 
-function PlacementInfo:terminate()
+function PlacementInfo:Terminate()
 	TERMINATE_PLACEMENT()
 end
 
-function PlacementInfo:haltPlacement()
+function PlacementInfo:HaltPlacement()
 	if not autoPlace then
 		return
 	end
@@ -1055,10 +1013,10 @@ function PlacementInfo:haltPlacement()
 	end
 end
 
-function PlacementInfo:editAttribute(attribute: string, input: any)
+function PlacementInfo:EditAttribute(attribute: string, input: any)
 	if script:GetAttribute(attribute) ~= nil then
 		script:SetAttribute(attribute, input)
-		roundInts()
+		RoundInts()
 		--updateAttributes()
 
 		return
@@ -1068,7 +1026,7 @@ function PlacementInfo:editAttribute(attribute: string, input: any)
 end
 
 -- Requests to place down the object
-function PlacementInfo:requestPlacement(func: RemoteFunction, callback: (...any?) -> ())
+function PlacementInfo:RequestPlacement(func: RemoteFunction, callback: (...any?) -> ())
 	if not autoPlace then
 		PLACEMENT(self, func, callback)
 		return
@@ -1083,7 +1041,7 @@ function PlacementInfo:requestPlacement(func: RemoteFunction, callback: (...any?
 end
 
 -- Activates placement
-function PlacementInfo:activate(
+function PlacementInfo:Activate(
 	ID: string,
 	PlacedObjects: Instance,
 	Plot: BasePart,
@@ -1105,16 +1063,16 @@ function PlacementInfo:activate(
 	placedObjects = PlacedObjects
 	primary = object.PrimaryPart
 
-	approveActivation()
+	ApproveActivation()
 
 	if SETTINGS.DisplayGridTexture then
-		displayGrid()
+		DisplayGrid()
 	end
 	if SETTINGS.IncludeSelectionBox then
-		displaySelectionBox()
+		DisplaySelectionBox()
 	end
 	if SETTINGS.AudibleFeedback then
-		createAudioFeedback()
+		CreateAudioFeedback()
 	end
 
 	-- Sets properties of the model (CanCollide, Transparency)
@@ -1157,16 +1115,16 @@ function PlacementInfo:activate(
 	end]]
 
 	-- Gets the initial y pos and gives it to y
-	initialY = calculateYPos(Plot.Position.Y, Plot.Size.Y, object.PrimaryPart.Size.Y, 1)
+	initialY = CalculateYPosition(Plot.Position.Y, Plot.Size.Y, object.PrimaryPart.Size.Y, 1)
 	y = initialY
 	removePlotDependencies = false
 	autoPlace = AutoPlace
 	local preSpeed = 1
 
 	set()
-	editHitboxColor()
-	roundInts()
-	bindInputs()
+	EditHitboxColor()
+	RoundInts()
+	BindInputs()
 
 	if SETTINGS.Interpolation == true then
 		preSpeed = clamp(abs(tonumber(1 - SETTINGS.LerpSpeed) :: number), 0, 0.9)
@@ -1183,10 +1141,10 @@ function PlacementInfo:activate(
 		TERMINATE_PLACEMENT()
 		warn(messages["101"])
 	end
-	setCurrentState(1)
+	SetCurrentState(1)
 
 	if SETTINGS.InstantActivation == true then
-		translateObj()
+		TranslateObject()
 	end
 	object.Parent = PlacedObjects
 
@@ -1197,6 +1155,10 @@ function PlacementInfo:activate(
 		activated:Fire()
 	end
 	setup = false
+end
+
+function PlacementInfo:ChangeGridSize(newGridSize: number)
+	self.GridUnit = abs(round(newGridSize))
 end
 
 -- REMOVE THIS FUNCTION IF YOU ARE NOT GOING TO USE IT
@@ -1210,7 +1172,7 @@ function PlacementInfo:noPlotActivate(ID: string, PlacedObjects: Instance, Smart
 
 	-- Sets necessary variables for placement
 	character = player.Character or player.CharacterAdded:Wait()
-	plot = findPlot()
+	plot = FindPlot()
 	object = self.Prefabs:FindFirstChild(tostring(ID)):Clone()
 	placedObjects = PlacedObjects
 	primary = object.PrimaryPart
@@ -1241,10 +1203,10 @@ function PlacementInfo:noPlotActivate(ID: string, PlacedObjects: Instance, Smart
 	end
 
 	if SETTINGS.IncludeSelectionBox == true then
-		displaySelectionBox()
+		DisplaySelectionBox()
 	end
 	if SETTINGS.AudibleFeedback == true then
-		createAudioFeedback()
+		CreateAudioFeedback()
 	end
 
 	object.PrimaryPart.Transparency = SETTINGS.HitboxTransparency
@@ -1268,9 +1230,9 @@ function PlacementInfo:noPlotActivate(ID: string, PlacedObjects: Instance, Smart
 	local preSpeed = 1
 
 	set()
-	editHitboxColor()
-	roundInts()
-	bindInputs()
+	EditHitboxColor()
+	RoundInts()
+	BindInputs()
 
 	if SETTINGS.Interpolation == true then
 		preSpeed = clamp(abs(tonumber(1 - SETTINGS.LerpSpeed) :: number), 0, 0.9)
@@ -1287,10 +1249,10 @@ function PlacementInfo:noPlotActivate(ID: string, PlacedObjects: Instance, Smart
 		TERMINATE_PLACEMENT()
 		warn(messages["101"])
 	end
-	setCurrentState(1)
+	SetCurrentState(1)
 
 	if SETTINGS.InstantActivation == true then
-		translateObj()
+		TranslateObject()
 	end
 	object.Parent = PlacedObjects
 
@@ -1303,7 +1265,7 @@ function PlacementInfo:noPlotActivate(ID: string, PlacedObjects: Instance, Smart
 	setup = false
 end
 
-runService:BindToRenderStep("Input", Enum.RenderPriority.Input.Value, translateObj)
+runService:BindToRenderStep("Input", Enum.RenderPriority.Input.Value, TranslateObject)
 
 return PlacementInfo
 
