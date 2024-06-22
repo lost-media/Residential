@@ -64,12 +64,15 @@
 --]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LMEngine = require(ReplicatedStorage.LMEngine.Client)
+
 local Mouse = require(ReplicatedStorage.LMEngine.Client.Modules.Mouse)
 local Rodux = require(ReplicatedStorage.LMEngine.Shared.Rodux)
 local Signal = require(ReplicatedStorage.LMEngine.Shared.Signal)
 local Trove = require(ReplicatedStorage.LMEngine.Shared.Trove)
 
-local PlacementType = require(ReplicatedStorage.Game.Shared.Placement.Types)
+local PlacementType = require(LMEngine.Game.Shared.Placement.Types)
 
 local SETTINGS = {
 	INITIAL_STATE = {

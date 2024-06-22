@@ -317,7 +317,7 @@ function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState)
 
 		local placeableInfo = StructureUtils.GetStructureFromId(state._structure_id)
 
-		local snappedPointsTaken: { Attachment } = { snappedPoint } -- state._attachments or { snappedPoint }
+		local snappedPointsTaken: { Attachment } = { snappedPoint } -- state._attachments or { snappedPoint }
 
 		-- Set all snapped points as occupied
 		for _, taken in ipairs(snappedPointsTaken) do
@@ -336,8 +336,6 @@ function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState)
 	structure_instance.Parent = self._plot_model.Structures
 
 	-- Set the structure's attributes
-
-	print(state._level)
 
 	structure_instance:SetAttribute("PlotId", self._uid_generator:GenerateId())
 	structure_instance:SetAttribute("Tile", tile.Name)
