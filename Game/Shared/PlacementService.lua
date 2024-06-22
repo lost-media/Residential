@@ -186,6 +186,7 @@ local xboxLower: Enum.KeyCode
 local mobileUI: ScreenGui = script:FindFirstChildOfClass("ScreenGui")
 
 -- signals
+--[[
 local placed: BindableEvent
 local collided: BindableEvent
 local outOfRange: BindableEvent
@@ -193,6 +194,7 @@ local rotated: BindableEvent
 local terminated: BindableEvent
 local changeFloors: BindableEvent
 local activated: BindableEvent
+-]]
 
 -- bools
 local autoPlace: boolean?
@@ -344,7 +346,7 @@ local function LowerFloor(actionName: string, inputState: Enum.UserInputState, i
 end
 
 -- Handles scaling of the grid texture on placement activation
-local function DisplayGrid()
+local function DisplayGrid(grid_unit: number)
 	local gridTex: Texture = Instance.new("Texture")
 	gridTex.Name = "GridTexture"
 	gridTex.Texture = SETTINGS.GridTexture
@@ -354,8 +356,8 @@ local function DisplayGrid()
 	gridTex.StudsPerTileV = SETTINGS.GridTextureScale
 
 	if SETTINGS.SmartDisplay == true then
-		gridTex.StudsPerTileU = GRID_UNIT
-		gridTex.StudsPerTileV = GRID_UNIT
+		gridTex.StudsPerTileU = grid_unit
+		gridTex.StudsPerTileV = grid_unit
 	end
 
 	if SETTINGS.GridFadeIn == true then
@@ -484,11 +486,12 @@ local function Bounds(c: CFrame, offsetX: number, offsetZ: number): CFrame
 end
 
 -- Returns a rounded cframe to the nearest grid unit
-local function SnapCFrame(c: CFrame): CFrame
-	local offsetX: number = (plot.Size.X % (2 * GRID_UNIT)) * 0.5
-	local offsetZ: number = (plot.Size.Z % (2 * GRID_UNIT)) * 0.5
-	local newX: number = round(c.X / GRID_UNIT) * GRID_UNIT - offsetX
-	local newZ: number = round(c.Z / GRID_UNIT) * GRID_UNIT - offsetZ
+local function SnapCFrame(c: CFrame, grid_unit: number): CFrame
+
+	local offsetX: number = (plot.Size.X % (2 * grid_unit)) * 0.5
+	local offsetZ: number = (plot.Size.Z % (2 * grid_unit)) * 0.5
+	local newX: number = round(c.X / grid_unit) * grid_unit - offsetX
+	local newZ: number = round(c.Z / grid_unit) * grid_unit - offsetZ
 	local newCFrame: CFrame = cframe(newX, 0, newZ)
 
 	return newCFrame
@@ -511,7 +514,7 @@ local function CalculateAngle(last: CFrame, current: CFrame): CFrame
 end
 
 -- Calculates the position of the object
-local function CalculateItemLocation(last, final: boolean): CFrame
+local function CalculateItemLocation(last, final: boolean, placement_service): CFrame
 	local x: number, z: number
 	local sizeX: number, sizeZ: number = primary.Size.X * 0.5, primary.Size.Z * 0.5
 	local offsetX: number, offsetZ: number = sizeX, sizeZ
@@ -523,8 +526,8 @@ local function CalculateItemLocation(last, final: boolean): CFrame
 	end
 
 	if SETTINGS.MoveByGrid == true then
-		offsetX = sizeX - floor(sizeX / GRID_UNIT) * GRID_UNIT
-		offsetZ = sizeZ - floor(sizeZ / GRID_UNIT) * GRID_UNIT
+		offsetX = sizeX - floor(sizeX / placement_service._grid_unit) * placement_service._grid_unit
+		offsetZ = sizeZ - floor(sizeZ / placement_service._grid_unit) * placement_service._grid_unit
 	end
 
 	local cam: Camera = workspace.CurrentCamera
@@ -574,7 +577,7 @@ local function CalculateItemLocation(last, final: boolean): CFrame
 	if SETTINGS.MoveByGrid == true then
 		-- Calculates the correct position
 		local rel: CFrame = pltCFrame:Inverse() * positionCFrame
-		local snappedRel: CFrame = SnapCFrame(rel) * cframe(offsetX, 0, offsetZ)
+		local snappedRel: CFrame = SnapCFrame(rel, placement_service._grid_unit) * cframe(offsetX, 0, offsetZ)
 
 		if not removePlotDependencies then
 			snappedRel = Bounds(snappedRel, sizeX, sizeZ)
@@ -603,8 +606,8 @@ local function CalculateItemLocation(last, final: boolean): CFrame
 end
 
 -- Used for sending a final CFrame to the server when using interpolation.
-local function GetFinalCFrame(): CFrame
-	return CalculateItemLocation(nil, true)
+local function GetFinalCFrame(placement_service): CFrame
+	return CalculateItemLocation(nil, true, placement_service);
 end
 
 -- Finds a surface for non plot dependant placements
@@ -631,7 +634,7 @@ local function FindPlot(): BasePart
 end
 
 -- Sets the position of the object
-local function TranslateObject(dt)
+local function TranslateObject(dt, placement_service)
 	if not (currentState ~= 2 and currentState ~= 4) then
 		return
 	end
@@ -658,12 +661,12 @@ local function TranslateObject(dt)
 
 	if SETTINGS.Interpolation == true and not setup then
 		object:PivotTo(
-			primary.CFrame:Lerp(CalculateItemLocation(primary.CFrame.Position, false), speed * dt * SETTINGS.TargetFPS)
+			primary.CFrame:Lerp(CalculateItemLocation(primary.CFrame.Position, false, placement_service), speed * dt * SETTINGS.TargetFPS)
 		)
-		hitbox:PivotTo(CalculateItemLocation(hitbox.CFrame.Position, true))
+		hitbox:PivotTo(CalculateItemLocation(hitbox.CFrame.Position, true, placement_service))
 	else
-		object:PivotTo(CalculateItemLocation(primary.CFrame.Position, false))
-		hitbox:PivotTo(CalculateItemLocation(hitbox.CFrame.Position, true))
+		object:PivotTo(CalculateItemLocation(primary.CFrame.Position, false, placement_service))
+		hitbox:PivotTo(CalculateItemLocation(hitbox.CFrame.Position, placement_service, true))
 	end
 end
 
@@ -868,10 +871,11 @@ local function PLACEMENT(self, Function: RemoteFunction, callback: () -> ()?)
 	if not (currentState == 2 or currentState == 1) then
 		return
 	end
-	cf = GetFinalCFrame()
+	
+	cf = GetFinalCFrame(self)
 	CheckHitbox()
 
-	print(objectName, placedObjects, self.Prefabs, Function, plot)
+	--print(objectName, placedObjects, self.Prefabs, Function, plot)
 	if not Function:InvokeServer(objectName, placedObjects, self.Prefabs, cf, plot) then
 		return
 	end
@@ -903,16 +907,16 @@ local function GET_PLATFORM(): string
 end
 
 -- Verifys that the plane which the object is going to be placed upon is the correct size
-local function VerifyPlane(): boolean
-	return plot.Size.X % GRID_UNIT == 0 and plot.Size.Z % GRID_UNIT == 0
+local function VerifyPlane(grid_unit: number): boolean
+	return plot.Size.X % grid_unit == 0 and plot.Size.Z % grid_unit == 0
 end
 
 -- Checks if there are any problems with the users setup
-local function ApproveActivation()
-	if not VerifyPlane() then
+local function ApproveActivation(grid_unit: number)
+	if not VerifyPlane(grid_unit) then
 		warn(messages["201"])
 	end
-	assert(not (GRID_UNIT >= min(plot.Size.X, plot.Size.Z)), messages["401"])
+	assert(not (grid_unit >= min(plot.Size.X, plot.Size.Z)), messages["401"])
 end
 
 -- Methods
@@ -922,9 +926,11 @@ function PlacementInfo.new(GridUnit: number, Prefabs: Instance, ...: Instance?)
 	local self = setmetatable({}, PlacementInfo)
 
 	-- Sets variables needed
-	GRID_UNIT = abs(round(GridUnit))
+	GRID_UNIT = abs(round(GridUnit));
 
-	self.GridUnit = GRID_UNIT
+	self.GridUnit = GRID_UNIT;
+	self._grid_unit = GridUnit;
+
 	self.Items = Prefabs
 	self.ROTATE_KEY = SETTINGS.CONTROLS.RotateKey
 	self.CANCEL_KEY = SETTINGS.CONTROLS.CancelKey
@@ -959,6 +965,10 @@ function PlacementInfo.new(GridUnit: number, Prefabs: Instance, ...: Instance?)
 	self.Terminated = terminated.Event
 	self.ChangedFloors = changeFloors.Event
 	self.Activated = activated.Event
+
+	runService:BindToRenderStep("Input", Enum.RenderPriority.Input.Value, function(dt)
+		TranslateObject(dt, self)
+	end)
 
 	return self
 end
@@ -1063,10 +1073,10 @@ function PlacementInfo:Activate(
 	placedObjects = PlacedObjects
 	primary = object.PrimaryPart
 
-	ApproveActivation()
+	ApproveActivation(self._grid_unit);
 
 	if SETTINGS.DisplayGridTexture then
-		DisplayGrid()
+		DisplayGrid(self._grid_unit);
 	end
 	if SETTINGS.IncludeSelectionBox then
 		DisplaySelectionBox()
@@ -1144,7 +1154,7 @@ function PlacementInfo:Activate(
 	SetCurrentState(1)
 
 	if SETTINGS.InstantActivation == true then
-		TranslateObject()
+		TranslateObject(self)
 	end
 	object.Parent = PlacedObjects
 
@@ -1154,11 +1164,13 @@ function PlacementInfo:Activate(
 	if SETTINGS.PreferSignals == true then
 		activated:Fire()
 	end
+
 	setup = false
 end
 
 function PlacementInfo:ChangeGridSize(newGridSize: number)
 	self.GridUnit = abs(round(newGridSize))
+	self._grid_unit = newGridSize
 end
 
 -- REMOVE THIS FUNCTION IF YOU ARE NOT GOING TO USE IT
@@ -1252,7 +1264,7 @@ function PlacementInfo:noPlotActivate(ID: string, PlacedObjects: Instance, Smart
 	SetCurrentState(1)
 
 	if SETTINGS.InstantActivation == true then
-		TranslateObject()
+		TranslateObject(nil, self)
 	end
 	object.Parent = PlacedObjects
 
@@ -1264,8 +1276,6 @@ function PlacementInfo:noPlotActivate(ID: string, PlacedObjects: Instance, Smart
 	end
 	setup = false
 end
-
-runService:BindToRenderStep("Input", Enum.RenderPriority.Input.Value, TranslateObject)
 
 return PlacementInfo
 
