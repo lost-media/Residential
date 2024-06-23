@@ -177,6 +177,7 @@ type State = {
 	_running: boolean,
 	_current_model: Model?,
 	_last_state: number,
+	_auto_placement: boolean, -- Determines if the client is auto placing
 
 	_grid_unit: number,
 
@@ -216,16 +217,17 @@ type PlacementClientMembers = {
 	_selection_box: SelectionBox?,
 	_ignored_items: { Instance },
 	_raycast_params: RaycastParams,
+	_sound: Sound,
 
-	Placed: Signal.Signal<PlacementType.ServerState>,
-	Collided: Signal.Signal<PlacementType.ServerState>,
-	Rotated: Signal.Signal<PlacementType.ServerState>,
-	Cancelled: Signal.Signal<PlacementType.ServerState>,
-	LevelChanged: Signal.Signal<PlacementType.ServerState>,
-	OutOfRange: Signal.Signal<PlacementType.ServerState>,
-	Initiated: Signal.Signal<PlacementType.ServerState>,
+	Placed: Signal.Signal,
+	Collided: Signal.Signal,
+	Rotated: Signal.Signal,
+	Cancelled: Signal.Signal,
+	LevelChanged: Signal.Signal,
+	OutOfRange: Signal.Signal,
+	Initiated: Signal.Signal,
 
-	PlacementConfirmed: Signal.Signal<PlacementType.ServerState>,
+	PlacementConfirmed: Signal.Signal,
 }
 
 export type PlacementClient = typeof(setmetatable({} :: PlacementClientMembers, {} :: IPlacementClient))
@@ -241,6 +243,8 @@ local dir_Z: number
 local initial_Y: number
 
 local ContextActionService = game:GetService("ContextActionService")
+local GuiService = game:GetService("GuiService")
+local HapticService = game:GetService("HapticService")
 local UserInputService = game:GetService("UserInputService")
 
 local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils)
@@ -329,6 +333,12 @@ local floor_height_changed = Rodux.createReducer(0, {
 	end,
 })
 
+local auto_placement_changed = Rodux.createReducer(false, {
+	["AUTO_PLACEMENT_CHANGED"] = function(state: State, action)
+		return action._auto_placement
+	end,
+})
+
 local reducers = Rodux.combineReducers({
 	_current_state = current_state_changed,
 	_last_state = last_state_changed,
@@ -342,6 +352,7 @@ local reducers = Rodux.combineReducers({
 	_current_rot = current_rot_changed,
 	_amplitude = amplitude_changed,
 	_floor_height = floor_height_changed,
+	_auto_placement = auto_placement_changed,
 })
 
 ----- Actions -----
@@ -1091,6 +1102,117 @@ local function BindInputs(client: PlacementClient)
 	end
 end
 
+-- Used for sending a final CFrame to the server when using interpolation.
+local function GetFinalCFrame(client: PlacementClient): CFrame
+	return CalculateItemLocation(nil, true, client)
+end
+
+-- Generates vibrations on placement if the player is using a controller
+local function CreateHapticFeedback()
+	local isVibrationSupported = HapticService:IsVibrationSupported(Enum.UserInputType.Gamepad1)
+	local largeSupported
+
+	coroutine.resume(coroutine.create(function()
+		if not isVibrationSupported then
+			return
+		end
+		largeSupported = HapticService:IsMotorSupported(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Large)
+
+		if largeSupported then
+			HapticService:SetMotor(
+				Enum.UserInputType.Gamepad1,
+				Enum.VibrationMotor.Large,
+				SETTINGS.PLACEMENT_CONFIGS.VibrateAmount
+			)
+
+			task.wait(0.2)
+
+			HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Large, 0)
+		else
+			HapticService:SetMotor(
+				Enum.UserInputType.Gamepad1,
+				Enum.VibrationMotor.Small,
+				SETTINGS.PLACEMENT_CONFIGS.VibrateAmount
+			)
+
+			task.wait(0.2)
+
+			HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Small, 0)
+		end
+	end))
+end
+
+local function PlayAudio(client: PlacementClient)
+	if SETTINGS.PLACEMENT_CONFIGS.AudibleFeedback == true and client._sound ~= nil then
+		client._sound:Play()
+	end
+end
+
+local function PlacementFeedback(object_id: string, callback, client: PlacementClient)
+	if SETTINGS.PLACEMENT_CONFIGS.PreferSignals == true then
+		client.PlacementConfirmed:Fire(object_id)
+	else
+		xpcall(function()
+			if callback then
+				callback()
+			end
+		end, function(err)
+			warn("Error in callback: " .. err)
+		end)
+	end
+end
+
+local function PLACEMENT(self: PlacementClient, Function: RemoteFunction, callback: () -> ()?)
+	local state: State = self._state:getState()
+
+	if
+		state._current_state == 3
+		or state._current_state == 4
+		or state._current_state == 5
+		or state._current_model == nil
+	then
+		return
+	end
+
+	local cf: CFrame
+	local objectName = state._current_model.Name
+
+	-- Makes sure you have waited the cooldown period before placing
+	--if not coolDown(player, SETTINGS.PlacementCooldown) then
+	--	return
+	--end
+	if state._current_state ~= 2 and state._current_state ~= 1 then
+		return
+	end
+
+	cf = GetFinalCFrame(self)
+	CheckHitbox(self)
+
+	--print(objectName, placedObjects, self.Prefabs, Function, plot)
+	--[[if not Function:InvokeServer(objectName, placedObjects, self.Prefabs, cf, plot) then
+		return
+	end]]
+
+	-- get the ID
+	local id = state._current_model:GetAttribute("Id")
+
+	if id == nil then
+		error("Object does not have an ID attribute")
+	end
+
+	if SETTINGS.PLACEMENT_CONFIGS.BuildModePlacement == true then
+		SetCurrentState(1, self)
+	else
+		TERMINATE_PLACEMENT(self)
+	end
+	if SETTINGS.PLACEMENT_CONFIGS.HapticFeedback == true and GuiService:IsTenFootInterface() then
+		CreateHapticFeedback()
+	end
+
+	PlayAudio(self)
+	PlacementFeedback(id, callback, self)
+end
+
 ----- Public functions -----
 
 function PlacementClient.new(plot: Model, grid_unit: number?)
@@ -1126,6 +1248,9 @@ function PlacementClient.new(plot: Model, grid_unit: number?)
 	self.LevelChanged = Signal.new()
 	self.OutOfRange = Signal.new()
 	self.Initiated = Signal.new()
+	self.PlacementConfirmed = Signal.new()
+
+	self._sound = SETTINGS.PLACEMENT_CONFIGS.AudibleFeedback and Instance.new("Sound") or nil
 
 	self._ignored_items = {}
 	self._selection_box = self._trove:Add(Instance.new("SelectionBox"))
@@ -1274,7 +1399,26 @@ function PlacementClient:LowerLevel()
 	LowerFloor("Lower", Enum.UserInputState.Begin, nil, self)
 end
 
-function PlacementClient:ConfirmPlacement() end
+function PlacementClient:ConfirmPlacement()
+	local state: State = self._state:getState()
+
+	if state._current_state == 4 then
+		return
+	end
+
+	if state._auto_placement == false then
+		PLACEMENT(self)
+		return
+	end
+
+	self._state:dispatch(RunningChanged(true))
+
+	repeat
+		PLACEMENT(self)
+
+		task.wait(SETTINGS.PlacementCooldown)
+	until (self._state:getState() :: State)._running == false
+end
 
 function PlacementClient:Destroy()
 	self._state:destruct()
