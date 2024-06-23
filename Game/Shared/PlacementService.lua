@@ -487,7 +487,6 @@ end
 
 -- Returns a rounded cframe to the nearest grid unit
 local function SnapCFrame(c: CFrame, grid_unit: number): CFrame
-
 	local offsetX: number = (plot.Size.X % (2 * grid_unit)) * 0.5
 	local offsetZ: number = (plot.Size.Z % (2 * grid_unit)) * 0.5
 	local newX: number = round(c.X / grid_unit) * grid_unit - offsetX
@@ -607,7 +606,7 @@ end
 
 -- Used for sending a final CFrame to the server when using interpolation.
 local function GetFinalCFrame(placement_service): CFrame
-	return CalculateItemLocation(nil, true, placement_service);
+	return CalculateItemLocation(nil, true, placement_service)
 end
 
 -- Finds a surface for non plot dependant placements
@@ -661,7 +660,10 @@ local function TranslateObject(dt, placement_service)
 
 	if SETTINGS.Interpolation == true and not setup then
 		object:PivotTo(
-			primary.CFrame:Lerp(CalculateItemLocation(primary.CFrame.Position, false, placement_service), speed * dt * SETTINGS.TargetFPS)
+			primary.CFrame:Lerp(
+				CalculateItemLocation(primary.CFrame.Position, false, placement_service),
+				speed * dt * SETTINGS.TargetFPS
+			)
 		)
 		hitbox:PivotTo(CalculateItemLocation(hitbox.CFrame.Position, true, placement_service))
 	else
@@ -871,7 +873,7 @@ local function PLACEMENT(self, Function: RemoteFunction, callback: () -> ()?)
 	if not (currentState == 2 or currentState == 1) then
 		return
 	end
-	
+
 	cf = GetFinalCFrame(self)
 	CheckHitbox()
 
@@ -926,10 +928,10 @@ function PlacementInfo.new(GridUnit: number, Prefabs: Instance, ...: Instance?)
 	local self = setmetatable({}, PlacementInfo)
 
 	-- Sets variables needed
-	GRID_UNIT = abs(round(GridUnit));
+	GRID_UNIT = abs(round(GridUnit))
 
-	self.GridUnit = GRID_UNIT;
-	self._grid_unit = GridUnit;
+	self.GridUnit = GRID_UNIT
+	self._grid_unit = GridUnit
 
 	self.Items = Prefabs
 	self.ROTATE_KEY = SETTINGS.CONTROLS.RotateKey
@@ -1073,10 +1075,10 @@ function PlacementInfo:Activate(
 	placedObjects = PlacedObjects
 	primary = object.PrimaryPart
 
-	ApproveActivation(self._grid_unit);
+	ApproveActivation(self._grid_unit)
 
 	if SETTINGS.DisplayGridTexture then
-		DisplayGrid(self._grid_unit);
+		DisplayGrid(self._grid_unit)
 	end
 	if SETTINGS.IncludeSelectionBox then
 		DisplaySelectionBox()

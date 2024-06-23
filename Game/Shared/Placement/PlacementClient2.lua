@@ -80,65 +80,65 @@ local PlacementType = require(LMEngine.Game.Shared.Placement.Types)
 local SETTINGS = {
 	-- Bools
 	PLACEMENT_CONFIGS = {
-        AngleTilt = false, -- Toggles if you want the object to tilt when moving (based on speed)
-        AudibleFeedback = true, -- Toggles sound feedback on placement
-        BuildModePlacement = true, -- Toggles "build mode" placement
-        CharacterCollisions = false, -- Toggles character collisions (Requires "Collisions" to be set to true)
-        Collisions = true, -- Toggles collisions
-        DisplayGridTexture = false, -- Toggles the grid texture to be shown when placing
-        EnableFloors = true, -- Toggles if the raise and lower keys will be enabled
-        GridFadeIn = true, -- If you want the grid to fade in when activating placement
-        GridFadeOut = true, -- If you want the grid to fade out when ending placement
-        IncludeSelectionBox = true, -- Toggles if a selection box will be shown while placing
-        InstantActivation = false, -- Toggles if the model will appear at the mouse position immediately when activating placement
-        Interpolation = true, -- Toggles interpolation (smoothing)
-        InvertAngleTilt = false, -- Inverts the direction of the angle tilt
-        MoveByGrid = true, -- Toggles grid system
-        PreferSignals = true, -- Controls if you want to use signals or callbacks
-        RemoveCollisionsIfIgnored = true, -- Toggles if you want to remove collisions on objects that are ignored by the mouse
-        SmartDisplay = true, -- Toggles smart display for the grid. If true, it will rescale the grid texture to match your gridsize
-        TransparentModel = true, -- Toggles if the model itself will be transparent
-        UseHighlights = false, -- Toggles whether the selection box will be a highlight object or a selection box (TransparencyDelta must be 0)
+		AngleTilt = false, -- Toggles if you want the object to tilt when moving (based on speed)
+		AudibleFeedback = true, -- Toggles sound feedback on placement
+		BuildModePlacement = true, -- Toggles "build mode" placement
+		CharacterCollisions = false, -- Toggles character collisions (Requires "Collisions" to be set to true)
+		Collisions = true, -- Toggles collisions
+		DisplayGridTexture = false, -- Toggles the grid texture to be shown when placing
+		EnableFloors = true, -- Toggles if the raise and lower keys will be enabled
+		GridFadeIn = true, -- If you want the grid to fade in when activating placement
+		GridFadeOut = true, -- If you want the grid to fade out when ending placement
+		IncludeSelectionBox = true, -- Toggles if a selection box will be shown while placing
+		InstantActivation = true, -- Toggles if the model will appear at the mouse position immediately when activating placement
+		Interpolation = true, -- Toggles interpolation (smoothing)
+		InvertAngleTilt = false, -- Inverts the direction of the angle tilt
+		MoveByGrid = true, -- Toggles grid system
+		PreferSignals = true, -- Controls if you want to use signals or callbacks
+		RemoveCollisionsIfIgnored = true, -- Toggles if you want to remove collisions on objects that are ignored by the mouse
+		SmartDisplay = true, -- Toggles smart display for the grid. If true, it will rescale the grid texture to match your gridsize
+		TransparentModel = true, -- Toggles if the model itself will be transparent
+		UseHighlights = false, -- Toggles whether the selection box will be a highlight object or a selection box (TransparencyDelta must be 0)
 
-        -- Color3
-        CollisionColor3 = Color3.fromRGB(255, 75, 75), -- Color of the hitbox when colliding
-        HitboxColor3 = Color3.fromRGB(75, 255, 75), -- Color of the hitbox while not colliding
-        SelectionBoxCollisionColor3 = Color3.fromRGB(255, 0, 0), -- Color of the selectionBox lines when colliding (includeSelectionBox much be set to true)
-        SelectionBoxColor3 = Color3.fromRGB(0, 255, 0), -- Color of the selectionBox lines (includeSelectionBox much be set to true)
+		-- Color3
+		CollisionColor3 = Color3.fromRGB(255, 75, 75), -- Color of the hitbox when colliding
+		HitboxColor3 = Color3.fromRGB(75, 255, 75), -- Color of the hitbox while not colliding
+		SelectionBoxCollisionColor3 = Color3.fromRGB(255, 0, 0), -- Color of the selectionBox lines when colliding (includeSelectionBox much be set to true)
+		SelectionBoxColor3 = Color3.fromRGB(0, 255, 0), -- Color of the selectionBox lines (includeSelectionBox much be set to true)
 
-        -- Integers (Will round to nearest unit)
-        FloorStep = 8, -- The step (in studs) that the object will be raised or lowered
-        GridTextureScale = 1, -- How large the StudsPerTileU/V is displayed (smartDisplay must be set to false)
-        MaxHeight = 100, -- Max height you can place objects (in studs)
-        MaxRange = 100, -- Max range for the model (in studs)
-        RotationStep = 90, -- Rotation step
-        TargetFPS = 60, -- The target constant FPS
+		-- Integers (Will round to nearest unit)
+		FloorStep = 8, -- The step (in studs) that the object will be raised or lowered
+		GridTextureScale = 1, -- How large the StudsPerTileU/V is displayed (smartDisplay must be set to false)
+		MaxHeight = 100, -- Max height you can place objects (in studs)
+		MaxRange = 100, -- Max range for the model (in studs)
+		RotationStep = 90, -- Rotation step
+		TargetFPS = 60, -- The target constant FPS
 
-        -- Numbers/Floats
-        AngleTiltAmplitude = 5, -- How much the object will tilt when moving. 0 = min, 10 = max
-        AudioVolume = 0.5, -- Volume of the sound feedback
-        HitboxTransparency = 0.5, -- Hitbox transparency when placing
-        LerpSpeed = 0.8, -- Speed of interpolation. 0 = no interpolation, 0.9 = major interpolation
-        LineThickness = 0.05, -- How thick the line of the selection box is (includeSelectionBox much be set to true)
-        LineTransparency = 0.5, -- How transparent the line of the selection box is (includeSelectionBox must be set to true)
-        PlacementCooldown = 0.5, -- How quickly the user can place down objects (in seconds)
-        TransparencyDelta = 0.6, -- Transparency of the model itself (transparentModel must equal true)
+		-- Numbers/Floats
+		AngleTiltAmplitude = 5, -- How much the object will tilt when moving. 0 = min, 10 = max
+		AudioVolume = 0.5, -- Volume of the sound feedback
+		HitboxTransparency = 0.5, -- Hitbox transparency when placing
+		LerpSpeed = 0.8, -- Speed of interpolation. 0 = no interpolation, 0.9 = major interpolation
+		LineThickness = 0.05, -- How thick the line of the selection box is (includeSelectionBox much be set to true)
+		LineTransparency = 0.5, -- How transparent the line of the selection box is (includeSelectionBox must be set to true)
+		PlacementCooldown = 0.5, -- How quickly the user can place down objects (in seconds)
+		TransparencyDelta = 0.6, -- Transparency of the model itself (transparentModel must equal true)
 
-        -- Other
+		-- Other
 
-        GridTexture = "rbxassetid://2415319308", -- ID of the grid texture shown while placing (requires DisplayGridTexture == true)
-        SoundID = "rbxassetid://9116367462", -- ID of the sound played on Placement (requires audibleFeedback == true)
+		GridTexture = "rbxassetid://2415319308", -- ID of the grid texture shown while placing (requires DisplayGridTexture == true)
+		SoundID = "rbxassetid://9116367462", -- ID of the sound played on Placement (requires audibleFeedback == true)
 
-        -- Cross Platform
+		-- Cross Platform
 
-        HapticFeedback = false, -- If you want a controller to vibrate when placing objects (only works if the user has a controller with haptic support)
-        HapticVibrationAmount = 1, -- How large the vibration is when placing objects. Choose a value from 0, 1. hapticFeedback must be set to true.
-    },
+		HapticFeedback = false, -- If you want a controller to vibrate when placing objects (only works if the user has a controller with haptic support)
+		HapticVibrationAmount = 1, -- How large the vibration is when placing objects. Choose a value from 0, 1. hapticFeedback must be set to true.
+	},
 
 	CONTROLS = {
 		-- PC
 		RotateKey = Enum.KeyCode.R, -- Key to rotate the model
-		TerminateKey = Enum.KeyCode.X, -- Key to terminate placement
+		TerminateKey = Enum.KeyCode.C, -- Key to terminate placement
 		RaiseKey = Enum.KeyCode.E, -- Key to raise the object
 		LowerKey = Enum.KeyCode.Q, -- Key to lower the object
 
@@ -149,41 +149,43 @@ local SETTINGS = {
 		XboxLower = Enum.KeyCode.ButtonB, -- Key to lower the object
 	},
 
-    DefaultGridSize = 8, -- Default grid size
+	DefaultGridSize = 8, -- Default grid size
 
-    INITIAL_STATE = {
-        _current_state = 4,
-        _last_state = 4,
-        _running = false,
-        _current_model = nil,
-        _is_setup = false,
-        _stackable = false,
-        _grid_unit = 8,
-        _hitbox = nil,
-        _current_rot = false,
+	INITIAL_STATE = {
+		_current_state = 4,
+		_last_state = 4,
+		_running = false,
+		_current_model = nil,
+		_is_setup = false,
+		_stackable = false,
+		_grid_unit = 8,
+		_hitbox = nil,
+		_current_rot = false,
+		_floor_height = 0,
 
-        _rotation = 0,
-        _amplitude = 5,
-    },
+		_rotation = 0,
+		_amplitude = 5,
+	},
 
-    POSSIBLE_STATES = { "Movement", "Placing", "Colliding", "Inactive", "Out-of-range" };
+	POSSIBLE_STATES = { "Movement", "Placing", "Colliding", "Inactive", "Out-of-range" },
 }
 
 ----- Types -----
 
 type State = {
-    _current_state: number,
-    _running: boolean,
-    _current_model: Model?,
-    _last_state: number,
+	_current_state: number,
+	_running: boolean,
+	_current_model: Model?,
+	_last_state: number,
 
-    _grid_unit: number,
+	_grid_unit: number,
 
-    _hitbox: BasePart,
-    _is_setup: boolean,
-    _stackable: boolean,
-    _current_rot: boolean,
-    _amplitude: number,
+	_hitbox: BasePart,
+	_is_setup: boolean,
+	_stackable: boolean,
+	_current_rot: boolean,
+	_amplitude: number,
+	_floor_height: number,
 }
 
 type IPlacementClient = {
@@ -199,9 +201,9 @@ type IPlacementClient = {
 	RaiseLevel: (self: PlacementClient) -> (),
 	LowerLevel: (self: PlacementClient) -> (),
 
-    GetPlatform: (self: PlacementClient) -> string,
-    IsMobile: (self: PlacementClient) -> boolean,
-    IsConsole: (self: PlacementClient) -> boolean,
+	GetPlatform: (self: PlacementClient) -> string,
+	IsMobile: (self: PlacementClient) -> boolean,
+	IsConsole: (self: PlacementClient) -> boolean,
 }
 
 type PlacementClientMembers = {
@@ -212,13 +214,16 @@ type PlacementClientMembers = {
 	_plot: Model,
 	_active: boolean,
 	_selection_box: SelectionBox?,
+	_ignored_items: { Instance },
+	_raycast_params: RaycastParams,
 
-    Placed: Signal.Signal<PlacementType.ServerState>,
-    Collided: Signal.Signal<PlacementType.ServerState>,
-    Rotated: Signal.Signal<PlacementType.ServerState>,
-    Cancelled: Signal.Signal<PlacementType.ServerState>,
-    LevelChanged: Signal.Signal<PlacementType.ServerState>,
-    OutOfRange: Signal.Signal<PlacementType.ServerState>,
+	Placed: Signal.Signal<PlacementType.ServerState>,
+	Collided: Signal.Signal<PlacementType.ServerState>,
+	Rotated: Signal.Signal<PlacementType.ServerState>,
+	Cancelled: Signal.Signal<PlacementType.ServerState>,
+	LevelChanged: Signal.Signal<PlacementType.ServerState>,
+	OutOfRange: Signal.Signal<PlacementType.ServerState>,
+	Initiated: Signal.Signal<PlacementType.ServerState>,
 
 	PlacementConfirmed: Signal.Signal<PlacementType.ServerState>,
 }
@@ -234,12 +239,11 @@ local y: number
 local dir_X: number
 local dir_Z: number
 local initial_Y: number
-local floor_height: number = 0
 
+local ContextActionService = game:GetService("ContextActionService")
 local UserInputService = game:GetService("UserInputService")
 
 local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils)
-
 local StructuresUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
 
 ---@type LMEngineClient
@@ -255,197 +259,209 @@ PlacementClient.__index = PlacementClient
 
 local current_state_changed = Rodux.createReducer(4, {
 	["CURRENT_STATE_CHANGED"] = function(state: State, action)
-		return action._current_state;
+		return action._current_state
 	end,
-});
+})
 
 local last_state_changed = Rodux.createReducer(4, {
-    ["LAST_STATE_CHANGED"] = function(state: State, action)
-        return action._last_state;
-    end,
-});
+	["LAST_STATE_CHANGED"] = function(state: State, action)
+		return action._last_state
+	end,
+})
 
 local running_changed = Rodux.createReducer(false, {
-    ["RUNNING_CHANGED"] = function(state: State, action)
-        return action._running;
-    end,
-});
+	["RUNNING_CHANGED"] = function(state: State, action)
+		return action._running
+	end,
+})
 
 local current_model_changed = Rodux.createReducer(nil, {
-    ["CURRENT_MODEL_CHANGED"] = function(state: State, action)
-        return action._current_model;
-    end,
-});
+	["CURRENT_MODEL_CHANGED"] = function(state: State, action)
+		return action._current_model
+	end,
+})
 
 local hitbox_changed = Rodux.createReducer(nil, {
-    ["HITBOX_CHANGED"] = function(state: State, action)
-        return action._hitbox;
-    end,
-});
+	["HITBOX_CHANGED"] = function(state: State, action)
+		return action._hitbox
+	end,
+})
 
 local is_setup_changed = Rodux.createReducer(false, {
-    ["IS_SETUP_CHANGED"] = function(state: State, action)
-        return action._is_setup;
-    end,
-});
+	["IS_SETUP_CHANGED"] = function(state: State, action)
+		return action._is_setup
+	end,
+})
 
 local stackable_changed = Rodux.createReducer(false, {
-    ["STACKABLE_CHANGED"] = function(state: State, action)
-        return action._stackable;
-    end,
-});
+	["STACKABLE_CHANGED"] = function(state: State, action)
+		return action._stackable
+	end,
+})
 
 local rotation_changed = Rodux.createReducer(0, {
-    ["ROTATION_CHANGED"] = function(state: State, action)
-        return action._rotation;
-    end,
-});
+	["ROTATION_CHANGED"] = function(state: State, action)
+		return action._rotation
+	end,
+})
 
 local grid_unit_changed = Rodux.createReducer(SETTINGS.DefaultGridSize, {
-    ["GRID_UNIT_CHANGED"] = function(state: State, action)
-        return action._grid_unit;
-    end,
-});
+	["GRID_UNIT_CHANGED"] = function(state: State, action)
+		return action._grid_unit
+	end,
+})
 
 local current_rot_changed = Rodux.createReducer(false, {
-    ["CURRENT_ROT_CHANGED"] = function(state: State, action)
-        return action._current_rot;
-    end,
-});
+	["CURRENT_ROT_CHANGED"] = function(state: State, action)
+		return action._current_rot
+	end,
+})
 
 local amplitude_changed = Rodux.createReducer(5, {
-    ["AMPLITUDE_CHANGED"] = function(state: State, action)
-        return action._amplitude;
-    end,
-});
+	["AMPLITUDE_CHANGED"] = function(state: State, action)
+		return action._amplitude
+	end,
+})
+
+local floor_height_changed = Rodux.createReducer(0, {
+	["FLOOR_HEIGHT_CHANGED"] = function(state: State, action)
+		return action._floor_height
+	end,
+})
 
 local reducers = Rodux.combineReducers({
-    _current_state = current_state_changed,
-    _last_state = last_state_changed,
-    _running = running_changed,
-    _current_model = current_model_changed,
-    _hitbox = hitbox_changed,
-    _is_setup = is_setup_changed,
-    _stackable = stackable_changed,
-    _rotation = rotation_changed,
-    _grid_unit = grid_unit_changed,
-    _current_rot = current_rot_changed,
-    _amplitude = amplitude_changed,
-});
+	_current_state = current_state_changed,
+	_last_state = last_state_changed,
+	_running = running_changed,
+	_current_model = current_model_changed,
+	_hitbox = hitbox_changed,
+	_is_setup = is_setup_changed,
+	_stackable = stackable_changed,
+	_rotation = rotation_changed,
+	_grid_unit = grid_unit_changed,
+	_current_rot = current_rot_changed,
+	_amplitude = amplitude_changed,
+	_floor_height = floor_height_changed,
+})
 
 ----- Actions -----
 
 local function CurrentStateChanged(current_state: number)
-    return {
-        type = "CURRENT_STATE_CHANGED",
-        _current_state = current_state,
-    };
+	return {
+		type = "CURRENT_STATE_CHANGED",
+		_current_state = current_state,
+	}
 end
 
 local function LastStateChanged(last_state: number)
-    return {
-        type = "LAST_STATE_CHANGED",
-        _last_state = last_state,
-    };
+	return {
+		type = "LAST_STATE_CHANGED",
+		_last_state = last_state,
+	}
 end
 
 local function RunningChanged(running: boolean)
-    return {
-        type = "RUNNING_CHANGED",
-        _running = running,
-    };
+	return {
+		type = "RUNNING_CHANGED",
+		_running = running,
+	}
 end
 
 local function CurrentModelChanged(current_model: Model)
-    return {
-        type = "CURRENT_MODEL_CHANGED",
-        _current_model = current_model,
-    };
+	return {
+		type = "CURRENT_MODEL_CHANGED",
+		_current_model = current_model,
+	}
 end
 
 local function HitboxChanged(hitbox: BasePart)
-    return {
-        type = "HITBOX_CHANGED",
-        _hitbox = hitbox,
-    };
+	return {
+		type = "HITBOX_CHANGED",
+		_hitbox = hitbox,
+	}
 end
 
 local function IsSetupChanged(is_setup: boolean)
-    return {
-        type = "IS_SETUP_CHANGED",
-        _is_setup = is_setup,
-    };
+	return {
+		type = "IS_SETUP_CHANGED",
+		_is_setup = is_setup,
+	}
 end
 
 local function StackableChanged(stackable: boolean)
-    return {
-        type = "STACKABLE_CHANGED",
-        _stackable = stackable,
-    };
+	return {
+		type = "STACKABLE_CHANGED",
+		_stackable = stackable,
+	}
 end
 
 local function RotationChanged(rotation: number)
-    return {
-        type = "ROTATION_CHANGED",
-        _rotation = rotation,
-    };
+	return {
+		type = "ROTATION_CHANGED",
+		_rotation = rotation,
+	}
 end
 
 local function GridUnitChanged(grid_unit: number)
-    return {
-        type = "GRID_UNIT_CHANGED",
-        _grid_unit = grid_unit,
-    };
+	return {
+		type = "GRID_UNIT_CHANGED",
+		_grid_unit = grid_unit,
+	}
 end
 
 local function CurrentRotChanged(current_rot: boolean)
-    return {
-        type = "CURRENT_ROT_CHANGED",
-        _current_rot = current_rot,
-    };
+	return {
+		type = "CURRENT_ROT_CHANGED",
+		_current_rot = current_rot,
+	}
 end
 
 local function AmplitudeChanged(amplitude: number)
-    return {
-        type = "AMPLITUDE_CHANGED",
-        _amplitude = amplitude,
-    };
+	return {
+		type = "AMPLITUDE_CHANGED",
+		_amplitude = amplitude,
+	}
 end
 
-
+local function FloorHeightChanged(floor_height: number)
+	return {
+		type = "FLOOR_HEIGHT_CHANGED",
+		_floor_height = floor_height,
+	}
+end
 
 ----- Private functions -----
 
 local function GetRange(part: BasePart): number
-	local character = LMEngine.Player.Character;
+	local character = LMEngine.Player.Character
 
-    if (character == nil) then
-        return 0;
-    end
+	if character == nil then
+		return 0
+	end
 
-	return (part.Position - character.PrimaryPart.Position).Magnitude;
+	return (part.Position - character.PrimaryPart.Position).Magnitude
 end
 
 -- Clamps the x and z positions so they cannot leave the plot
 local function Bounds(platform: BasePart, cframe: CFrame, offsetX: number, offsetZ: number): CFrame
 	local pos: CFrame = platform.CFrame
-	local xBound: number = (platform.Size.X * 0.5) - offsetX;
-	local zBound: number = (platform.Size.Z * 0.5) - offsetZ;
+	local xBound: number = (platform.Size.X * 0.5) - offsetX
+	local zBound: number = (platform.Size.Z * 0.5) - offsetZ
 
-	local newX: number = math.clamp(cframe.X, -xBound, xBound);
-	local newZ: number = math.clamp(cframe.Z, -zBound, zBound);
+	local newX: number = math.clamp(cframe.X, -xBound, xBound)
+	local newZ: number = math.clamp(cframe.Z, -zBound, zBound)
 
-	local newCFrame: CFrame = CFrame.new(newX, 0, newZ);
+	local newCFrame: CFrame = CFrame.new(newX, 0, newZ)
 
-	return newCFrame;
+	return newCFrame
 end
 
-local function SetCurrentState(state: number, client: PlacementClient)
-    local state: State = client._state:getState();
+local function SetCurrentState(num_state: number, client: PlacementClient)
+	local state: State = client._state:getState()
 
-    local last_state = state.current_state;
-    client._state:dispatch(CurrentStateChanged(state));
-    client._state:dispatch(LastStateChanged(last_state));
+	local last_state = state.current_state
+	client._state:dispatch(CurrentStateChanged(num_state))
+	client._state:dispatch(LastStateChanged(last_state))
 end
 
 function UndimModel(model: Model)
@@ -492,27 +508,27 @@ local function ModelIsPlot(model: Model)
 		return false
 	end
 
-    local platform = model:FindFirstChild("Platform");
+	local platform = model:FindFirstChild("Platform")
 
-    if platform == nil then
-        return false;
-    end
+	if platform == nil then
+		return false
+	end
 
-    if (platform:IsA("Part") == false) then
-        return false;
-    end
+	if platform:IsA("Part") == false then
+		return false
+	end
 
 	return true
 end
 
 local function CheckHitbox(client: PlacementClient)
-    local state: State = client._state:getState();
+	local state: State = client._state:getState()
 
-    local hitbox = state._hitbox;
-    local current_model = state._current_model;
-    local plot = client._plot;
+	local hitbox = state._hitbox
+	local current_model = state._current_model
+	local plot = client._plot
 
-	if (hitbox:IsDescendantOf(workspace) == false and SETTINGS.PLACEMENT_CONFIGS.Collisions == false) then
+	if hitbox:IsDescendantOf(workspace) == false and SETTINGS.PLACEMENT_CONFIGS.Collisions == false then
 		return
 	end
 
@@ -522,30 +538,33 @@ local function CheckHitbox(client: PlacementClient)
 		SetCurrentState(1, client);
 	end]]
 
-	local collisionPoints: { BasePart } = workspace:GetPartsInPart(hitbox);
+	local collisionPoints: { BasePart } = workspace:GetPartsInPart(hitbox)
 
-    local character = LMEngine.Player.Character;
+	local character = LMEngine.Player.Character
 
-    if (character == nil) then
-        return;
-    end
+	if character == nil then
+		return
+	end
 
 	-- Checks if there is collision on any object that is not a child of the object and is not a child of the player
 	for i: number = 1, #collisionPoints, 1 do
-		if (collisionPoints[i].CanTouch == false) then
+		if collisionPoints[i].CanTouch == false then
 			continue
 		end
-		if (SETTINGS.PLACEMENT_CONFIGS.CharacterCollisions ~= true and collisionPoints[i]:IsDescendantOf(character) == true) then
+		if
+			SETTINGS.PLACEMENT_CONFIGS.CharacterCollisions ~= true
+			and collisionPoints[i]:IsDescendantOf(character) == true
+		then
 			continue
 		end
 
-		if (collisionPoints[i]:IsDescendantOf(current_model) == true or collisionPoints[i] == plot) then
-			continue;
+		if collisionPoints[i]:IsDescendantOf(current_model) == true or collisionPoints[i] == plot then
+			continue
 		end
 
-		SetCurrentState(3, client);
+		SetCurrentState(3, client)
 		if SETTINGS.PLACEMENT_CONFIGS.PreferSignals == true then
-			client.Collided:Fire(collisionPoints[i]);
+			client.Collided:Fire(collisionPoints[i])
 		end
 		break
 	end
@@ -554,29 +573,29 @@ local function CheckHitbox(client: PlacementClient)
 end
 
 local function EditHitboxColor(client: PlacementClient)
-    local state: State = client._state:getState();
+	local state: State = client._state:getState()
 
-    local current_model = state._current_model;
+	local current_model = state._current_model
 
-    if current_model == nil then
-        return;
-    end
+	if current_model == nil then
+		return
+	end
 
-    if current_model.PrimaryPart == nil then
-        return;
-    end
+	if current_model.PrimaryPart == nil then
+		return
+	end
 
-	local color = SETTINGS.PLACEMENT_CONFIGS.HitboxColor3;
-	local color2 = SETTINGS.PLACEMENT_CONFIGS.SelectionBoxColor3;
+	local color = SETTINGS.PLACEMENT_CONFIGS.HitboxColor3
+	local color2 = SETTINGS.PLACEMENT_CONFIGS.SelectionBoxColor3
 
-	if (state._current_state) >= 3 then
-		color = SETTINGS.CollisionColor3;
-		color2 = SETTINGS.SelectionBoxCollisionColor3;
+	if state._current_state >= 3 then
+		color = SETTINGS.PLACEMENT_CONFIGS.CollisionColor3
+		color2 = SETTINGS.PLACEMENT_CONFIGS.SelectionBoxCollisionColor3
 	end
 
 	current_model.PrimaryPart.Color = color
 
-	if (SETTINGS.PLACEMENT_CONFIGS.IncludeSelectionBox == true) then
+	if SETTINGS.PLACEMENT_CONFIGS.IncludeSelectionBox == true then
 		if SETTINGS.PLACEMENT_CONFIGS.UseHighlights then
 			client._selection_box.OutlineColor = color2
 		else
@@ -585,19 +604,19 @@ local function EditHitboxColor(client: PlacementClient)
 	end
 end
 
-
 -- Returns a rounded cframe to the nearest grid unit
-local function SnapCFrame(platform: BasePart, cframe: CFrame, client: PlacementClient): CFrame
+local function SnapCFrame(cframe: CFrame, client: PlacementClient): CFrame
+	local state: State = client._state:getState()
 
-    local state: State = client._state:getState();
+	local platform = client._plot:FindFirstChild("Platform")
 
-    local grid_unit = state._grid_unit;
+	local grid_unit = state._grid_unit
 
 	local offsetX: number = (platform.Size.X % (2 * grid_unit)) * 0.5
 	local offsetZ: number = (platform.Size.Z % (2 * grid_unit)) * 0.5
 	local newX: number = math.round(cframe.X / grid_unit) * grid_unit - offsetX
 	local newZ: number = math.round(cframe.Z / grid_unit) * grid_unit - offsetZ
-	local newCFrame: CFrame = cframe(newX, 0, newZ)
+	local newCFrame: CFrame = CFrame.new(newX, 0, newZ)
 
 	return newCFrame
 end
@@ -617,11 +636,11 @@ local function CalculateAngle(last: CFrame, current: CFrame, client: PlacementCl
 		return CFrame.fromEulerAnglesXYZ(0, 0, 0)
 	end
 
-    local state: State = client._state:getState();
+	local state: State = client._state:getState()
 
-    local rotation = state._rotation;
+	local rotation = state._rotation
 
-    local platform = client._plot:FindFirstChild("Platform");
+	local platform = client._plot:FindFirstChild("Platform")
 
 	-- Calculates and clamps the proper angle amount
 	local tiltX = (math.clamp((last.X - current.X), -10, 10) * math.pi / 180) * state._amplitude
@@ -629,28 +648,31 @@ local function CalculateAngle(last: CFrame, current: CFrame, client: PlacementCl
 	local preCalc = (rotation + platform.Orientation.Y) * math.pi / 180
 
 	-- Returns the proper angle based on rotation
-	return (CFrame.fromEulerAnglesXYZ(dir_Z * tiltZ, 0, dir_X * tiltX):Inverse() * CFrame.fromEulerAnglesXYZ(0, preCalc, 0)):Inverse()
-		* CFrame.fromEulerAnglesXYZ(0, preCalc, 0)
+	return (CFrame.fromEulerAnglesXYZ(dir_Z * tiltZ, 0, dir_X * tiltX):Inverse() * CFrame.fromEulerAnglesXYZ(
+		0,
+		preCalc,
+		0
+	)):Inverse() * CFrame.fromEulerAnglesXYZ(0, preCalc, 0)
 end
 
 -- Calculates the position of the object
 local function CalculateItemLocation(last, final: boolean, client: PlacementClient): CFrame
-	
-    local state: State = client._state:getState();
+	local state: State = client._state:getState()
 
-    local current_model = state._current_model;
-    local primary = current_model.PrimaryPart;
+	local current_model = state._current_model
+	local primary = current_model.PrimaryPart
+	local floor_height = state._floor_height
 
-    local platform = client._plot:FindFirstChild("Platform");
+	local platform = client._plot:FindFirstChild("Platform")
 
-    local x: number, z: number
+	local x: number, z: number
 	local sizeX: number, sizeZ: number = primary.Size.X * 0.5, primary.Size.Z * 0.5
 	local offsetX: number, offsetZ: number = sizeX, sizeZ
 	local finalC: CFrame
 
-	if (state._current_rot == false) then
-		sizeX = primary.Size.Z * 0.5;
-		sizeZ = primary.Size.X * 0.5;
+	if state._current_rot == false then
+		sizeX = primary.Size.Z * 0.5
+		sizeZ = primary.Size.X * 0.5
 	end
 
 	if SETTINGS.PLACEMENT_CONFIGS.MoveByGrid == true then
@@ -658,23 +680,27 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 		offsetZ = sizeZ - math.floor(sizeZ / state._grid_unit) * state._grid_unit
 	end
 
-    local raycastParams = RaycastParams.new()
+	local raycastParams = client._raycast_params
 	local cam: Camera = workspace.CurrentCamera
 	local ray
 	local nilRay
 	local target
 
-	if (client:IsMobile() == true) then
+	if client:IsMobile() == true then
 		local camPos: Vector3 = cam.CFrame.Position
 		ray = workspace:Raycast(camPos, cam.CFrame.LookVector * range_of_ray, raycastParams)
-		nilRay = camPos + cam.CFrame.LookVector * (SETTINGS.PLACEMENT_CONFIGS.MaxRange + platform.Size.X * 0.5 + platform.Size.Z * 0.5)
+		nilRay = camPos
+			+ cam.CFrame.LookVector
+				* (SETTINGS.PLACEMENT_CONFIGS.MaxRange + platform.Size.X * 0.5 + platform.Size.Z * 0.5)
 	else
+		local mouse = client._mouse
+		local mouse_position = mouse:GetPosition()
+		local player_mouse = LMEngine.Player:GetMouse()
 
-        local mouse = client._mouse;
-        local mouse_position = mouse:GetPosition();
-		local unit: Ray = cam:ScreenPointToRay(mouse_position.X, mouse_position.Y, 1)
+		local unit: Ray = cam:ScreenPointToRay(player_mouse.X, player_mouse.Y, 1)
 		ray = workspace:Raycast(unit.Origin, unit.Direction * range_of_ray, raycastParams)
-		nilRay = unit.Origin + unit.Direction * (SETTINGS.PLACEMENT_CONFIGS.MaxRange + platform.Size.X * 0.5 + platform.Size.Z * 0.5)
+		nilRay = unit.Origin
+			+ unit.Direction * (SETTINGS.PLACEMENT_CONFIGS.MaxRange + platform.Size.X * 0.5 + platform.Size.Z * 0.5)
 	end
 
 	if ray then
@@ -687,10 +713,10 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 			target = plot
 		end
         --]]
-        target = platform;
+		target = platform
 	else
 		x, z = nilRay.X - offsetX, nilRay.Z - offsetZ
-		target = platform;
+		target = platform
 	end
 
 	target = target
@@ -698,10 +724,14 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 	local pltCFrame: CFrame = platform.CFrame
 	local positionCFrame = CFrame.new(x, 0, z) * CFrame.new(offsetX, 0, offsetZ)
 
-	y = CalculateYPosition(platform.Position.Y, platform.Size.Y, primary.Size.Y, 1) + floor_height;
+	y = CalculateYPosition(platform.Position.Y, platform.Size.Y, primary.Size.Y, 1) + floor_height
 
 	-- Changes y depending on mouse target
-	if state._stackable and target and (target:IsDescendantOf(client._plot:FindFirstChild("Structures")) or target == platform) then
+	if
+		state._stackable
+		and target
+		and (target:IsDescendantOf(client._plot:FindFirstChild("Structures")) or target == platform)
+	then
 		if ray and ray.Normal then
 			local normal =
 				CFrame.new(ray.Normal):VectorToWorldSpace(Vector3.FromNormalId(Enum.NormalId.Top)):Dot(ray.Normal)
@@ -712,16 +742,16 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 	if SETTINGS.PLACEMENT_CONFIGS.MoveByGrid == true then
 		-- Calculates the correct position
 		local rel: CFrame = pltCFrame:Inverse() * positionCFrame
-		local snappedRel: CFrame = SnapCFrame(rel, state._grid_unit) * CFrame.new(offsetX, 0, offsetZ)
+		local snappedRel: CFrame = SnapCFrame(rel, client) * CFrame.new(offsetX, 0, offsetZ)
 
 		--if not removePlotDependencies then
-			--snappedRel = Bounds(snappedRel, sizeX, sizeZ)
+		snappedRel = Bounds(platform, snappedRel, sizeX, sizeZ)
 		--end
 		finalC = pltCFrame * snappedRel
 	else
 		finalC = pltCFrame:Inverse() * positionCFrame
 
-		finalC = Bounds(finalC, sizeX, sizeZ)
+		finalC = Bounds(platform, finalC, sizeX, sizeZ)
 
 		finalC = pltCFrame * finalC
 	end
@@ -730,8 +760,9 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 	y = math.clamp(y, initial_Y, SETTINGS.PLACEMENT_CONFIGS.MaxHeight + initial_Y)
 
 	-- For placement or no intepolation
-	if final or not SETTINGS.PLACEMENT_CONFIGS.Interpolation then
-		return (finalC * CFrame.new(0, y - platform.Position.Y, 0)) * CFrame.fromEulerAnglesXYZ(0, state._rotation * math.pi / 180, 0)
+	if final or SETTINGS.PLACEMENT_CONFIGS.Interpolation == false then
+		return (finalC * CFrame.new(0, y - platform.Position.Y, 0))
+			* CFrame.fromEulerAnglesXYZ(0, state._rotation * math.pi / 180, 0)
 	end
 
 	return (finalC * CFrame.new(0, y - platform.Position.Y, 0))
@@ -740,21 +771,26 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 end
 
 local function TranslateObject(dt: number, client: PlacementClient)
-    local state: State = client._state:getState();
+	local state: State = client._state:getState()
 
-    local current_model = state._current_model;
-    local primary = current_model.PrimaryPart;
-    local hitbox = state._hitbox;
+	local current_model = state._current_model
+	local hitbox = state._hitbox
 
-	if (state._current_state == 2 or state._current_state == 4) then
+	if state._current_state == 2 or state._current_state == 4 then
+		return
+	end
+
+	local primary = current_model.PrimaryPart
+
+	if primary == nil then
 		return
 	end
 
 	--range = false
-	SetCurrentState(1, client);
+	SetCurrentState(1, client)
 
 	if GetRange(primary) > SETTINGS.PLACEMENT_CONFIGS.MaxRange then
-		SetCurrentState(5, client);
+		SetCurrentState(5, client)
 
 		if SETTINGS.PLACEMENT_CONFIGS.PreferSignals == true then
 			client.OutOfRange:Fire()
@@ -763,12 +799,15 @@ local function TranslateObject(dt: number, client: PlacementClient)
 		--range = true
 	end
 
-	CheckHitbox();
-	EditHitboxColor();
+	CheckHitbox(client)
+	EditHitboxColor(client)
 
-	if (SETTINGS.PLACEMENT_CONFIGS.Interpolation == true and state._is_setup == false) then
+	if SETTINGS.PLACEMENT_CONFIGS.Interpolation == true and state._is_setup == true then
 		current_model:PivotTo(
-			primary.CFrame:Lerp(CalculateItemLocation(primary.CFrame.Position, false, client), speed * dt * SETTINGS.PLACEMENT_CONFIGS.TargetFPS)
+			primary.CFrame:Lerp(
+				CalculateItemLocation(primary.CFrame.Position, false, client),
+				speed * dt * SETTINGS.PLACEMENT_CONFIGS.TargetFPS
+			)
 		)
 		hitbox:PivotTo(CalculateItemLocation(hitbox.CFrame.Position, true, client))
 	else
@@ -777,70 +816,465 @@ local function TranslateObject(dt: number, client: PlacementClient)
 	end
 end
 
+-- (Raise and Lower functions) Edits the floor based on the floor step
+local function RaiseFloor(
+	actionName: string,
+	inputState: Enum.UserInputState,
+	inputObj: InputObject?,
+	client: PlacementClient
+)
+	local state: State = client._state:getState()
+
+	if not (state._current_state ~= 4 and inputState == Enum.UserInputState.Begin) then
+		return
+	end
+
+	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == false or state._stackable == true then
+		return
+	end
+
+	local floor_height = state._floor_height
+	floor_height += math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.FloorStep))
+	floor_height = math.clamp(floor_height, 0, SETTINGS.PLACEMENT_CONFIGS.MaxHeight)
+
+	client._state:dispatch(FloorHeightChanged(floor_height))
+
+	if SETTINGS.PLACEMENT_CONFIGS.PreferSignals == true then
+		client.LevelChanged:Fire(true)
+	end
+end
+
+local function LowerFloor(
+	actionName: string,
+	inputState: Enum.UserInputState,
+	inputObj: InputObject?,
+	client: PlacementClient
+)
+	local state: State = client._state:getState()
+
+	if not (state._current_state ~= 4 and inputState == Enum.UserInputState.Begin) then
+		return
+	end
+
+	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == false or state._stackable == true then
+		return
+	end
+
+	local floor_height = state._floor_height
+	floor_height -= math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.FloorStep))
+	floor_height = math.clamp(floor_height, 0, SETTINGS.PLACEMENT_CONFIGS.MaxHeight)
+
+	client._state:dispatch(FloorHeightChanged(floor_height))
+
+	if SETTINGS.PLACEMENT_CONFIGS.PreferSignals == true then
+		client.LevelChanged:Fire(false)
+	end
+end
+
+-- Verifys that the plane which the object is going to be placed upon is the correct size
+local function VerifyPlane(platform: BasePart, grid_unit: number): boolean
+	return platform.Size.X % grid_unit == 0 and platform.Size.Z % grid_unit == 0
+end
+
+-- Checks if there are any problems with the users setup
+local function ApproveActivation(platform: BasePart, grid_unit: number)
+	if VerifyPlane(platform, grid_unit) == false then
+		warn("[PlacementClient2] ApproveActivation: The plot is not the correct size")
+	end
+	assert(
+		not (grid_unit >= math.min(platform.Size.X, platform.Size.Z)),
+		"[PlacementClient2] ApproveActivation: The grid unit is too large"
+	)
+end
+
+-- Sets up variables for activation
+local function SetupInitialization(client: PlacementClient)
+	local state: State = client._state:getState()
+
+	local current_model = state._current_model
+
+	if current_model == nil then
+		return
+	end
+
+	local hitbox = client._trove:Clone(current_model.PrimaryPart)
+	client._state:dispatch(HitboxChanged(hitbox))
+
+	--hitbox = object.PrimaryPart:Clone()
+	hitbox.Transparency = 1
+	hitbox.Name = "Hitbox"
+	hitbox.Parent = current_model
+
+	client._state:dispatch(RotationChanged(0))
+	client._state:dispatch(AmplitudeChanged(math.clamp(SETTINGS.PLACEMENT_CONFIGS.AngleTiltAmplitude, 0, 10)))
+	client._state:dispatch(CurrentRotChanged(true))
+
+	dirX = -1
+	dirZ = 1
+
+	if SETTINGS.PLACEMENT_CONFIGS.InvertAngleTilt then
+		dirX = 1
+		dirZ = -1
+	end
+
+	-- Sets up interpolation speed
+	speed = 1
+end
+
+-- Handles rotation of the model
+local function ROTATE(
+	actionName: string,
+	inputState: Enum.UserInputState,
+	inputObj: InputObject?,
+	client: PlacementClient
+)
+	local state: State = client._state:getState()
+
+	if state._current_state == 4 or state._current_state == 2 or inputState ~= Enum.UserInputState.Begin then
+		return
+	end
+
+	--[[if smartRot then
+		-- Rotates the model depending on if currentRot is true/false
+		if currentRot then
+			rotation += SETTINGS.PLACEMENT_CONFIGS.RotationStep
+		else
+			rotation -= SETTINGS.PLACEMENT_CONFIGS.RotationStep
+		end
+	else
+		rotation += SETTINGS.PLACEMENT_CONFIGS.RotationStep
+	end]]
+
+	-- Toggles currentRot
+	local rotation = state._rotation
+
+	rotation += SETTINGS.PLACEMENT_CONFIGS.RotationStep
+
+	local rotateAmount = math.round(rotation / 90)
+
+	local currentRot = rotateAmount % 2 == 0 and true or false
+	if rotation >= 360 then
+		rotation = 0
+	end
+
+	client._state:dispatch(CurrentRotChanged(currentRot))
+	client._state:dispatch(RotationChanged(rotation))
+
+	if SETTINGS.PLACEMENT_CONFIGS.PreferSignals == true then
+		client.Rotated:Fire()
+	end
+end
+
+local function UnbindInputs()
+	ContextActionService:UnbindAction("Rotate")
+	ContextActionService:UnbindAction("Terminate")
+	ContextActionService:UnbindAction("Pause")
+
+	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == true then
+		ContextActionService:UnbindAction("Raise")
+		ContextActionService:UnbindAction("Lower")
+	end
+end
+
+-- Resets variables on termination
+local function Reset(client: PlacementClient)
+	local state: State = client._state:getState()
+
+	local hitbox = state._hitbox
+	local current_model = state._current_model
+
+	client._trove:Destroy()
+
+	--if mobileUI ~= nil then
+	--	mobileUI.Parent = script
+	--end
+
+	client._state:dispatch(CurrentModelChanged(nil))
+	client._state:dispatch(HitboxChanged(nil))
+	client._state:dispatch(IsSetupChanged(false))
+	client._state:dispatch(StackableChanged(false))
+	client._state:dispatch(CurrentRotChanged(false))
+	client._state:dispatch(RotationChanged(0))
+	client._state:dispatch(AmplitudeChanged(5))
+	client._state:dispatch(FloorHeightChanged(0))
+
+	if hitbox ~= nil then
+		hitbox:Destroy()
+	end
+
+	--canActivate = true
+end
+
+-- Terminates the current placement
+local function TERMINATE_PLACEMENT(client: PlacementClient)
+	local state: State = client._state:getState()
+
+	if state._current_state == 4 then
+		return
+	end
+
+	local hitbox = state._hitbox
+
+	if hitbox == nil then
+		return
+	end
+
+	SetCurrentState(4, client)
+
+	-- Removes grid texture from plot
+	--if SETTINGS.DisplayGridTexture and not removePlotDependencies then
+	--RemoveTexture()
+	--end
+
+	--[[
+    if SETTINGS.PLACEMENT_CONFIGS.AudibleFeedback == true and placementSFX then
+		task.spawn(function()
+			if currentState == 2 then
+				placementSFX.Ended:Wait()
+			end
+			placementSFX:Destroy()
+		end)
+	end
+    ]]
+
+	Reset(client)
+
+	if SETTINGS.PLACEMENT_CONFIGS.PreferSignals == true then
+		client.Cancelled:Fire()
+	end
+end
+
+local function BindInputs(client: PlacementClient)
+	local state: State = client._state:getState()
+
+	local stackable = state._stackable
+
+	ContextActionService:BindAction(
+		"Rotate",
+		function(actionName: string, inputState: Enum.UserInputState, inputObj: InputObject?)
+			ROTATE(actionName, inputState, inputObj, client)
+		end,
+		false,
+		SETTINGS.CONTROLS.RotateKey,
+		SETTINGS.CONTROLS.XboxRotate
+	)
+
+	ContextActionService:BindAction(
+		"Terminate",
+		function(actionName: string, inputState: Enum.UserInputState, inputObj: InputObject?)
+			TERMINATE_PLACEMENT(client)
+		end,
+		false,
+		SETTINGS.CONTROLS.TerminateKey,
+		SETTINGS.CONTROLS.XboxTerminate
+	)
+
+	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == true and stackable ~= true then
+		ContextActionService:BindAction(
+			"Raise",
+			function(actionName: string, inputState: Enum.UserInputState, inputObj: InputObject?)
+				RaiseFloor(actionName, inputState, inputObj, client)
+			end,
+			false,
+			SETTINGS.CONTROLS.RaiseKey,
+			SETTINGS.CONTROLS.XboxRaise
+		)
+		ContextActionService:BindAction(
+			"Lower",
+			function(actionName: string, inputState: Enum.UserInputState, inputObj: InputObject?)
+				LowerFloor(actionName, inputState, inputObj, client)
+			end,
+			false,
+			SETTINGS.CONTROLS.LowerKey,
+			SETTINGS.CONTROLS.XboxLower
+		)
+	end
+end
+
 ----- Public functions -----
 
 function PlacementClient.new(plot: Model, grid_unit: number?)
-	assert(ModelIsPlot(plot) == true, "[PlacementClient] new: Plot must be a plot object");
+	assert(ModelIsPlot(plot) == true, "[PlacementClient] new: Plot must be a plot object")
 
-	local self = setmetatable({}, PlacementClient);
+	grid_unit = grid_unit or SETTINGS.DefaultGridSize
 
-	self._state = Store.new(reducers, SETTINGS.INITIAL_STATE, {});
+	-- Verify the plot
+	ApproveActivation(plot:FindFirstChild("Platform"), grid_unit)
 
-    -- Properties
-    self._grid_unit = grid_unit or SETTINGS.DefaultGridSize;
+	local self = setmetatable({}, PlacementClient)
 
-	self._active = true;
-	self._mouse = Mouse.new();
-	self._trove = Trove.new();
-	self._plot = plot;
+	self._state = Store.new(reducers, SETTINGS.INITIAL_STATE, {})
 
-	self._mouse:SetFilterType(Enum.RaycastFilterType.Include);
+	-- Properties
+	self._grid_unit = grid_unit
+
+	self._active = true
+	self._mouse = Mouse.new()
+	self._trove = Trove.new()
+	self._plot = plot
+
+	self._mouse:SetFilterType(Enum.RaycastFilterType.Include)
 	self._mouse:SetTargetFilter({
 		plot:FindFirstChild("Tiles"),
 		plot:FindFirstChild("Structures"),
-	});
+	})
 
-	self.Placed = Signal.new();
-    self.Collided = Signal.new();
-    self.Rotated = Signal.new();
-    self.Cancelled = Signal.new();
-    self.LevelChanged = Signal.new();
-    self.OutOfRange = Signal.new();
+	self.Placed = Signal.new()
+	self.Collided = Signal.new()
+	self.Rotated = Signal.new()
+	self.Cancelled = Signal.new()
+	self.LevelChanged = Signal.new()
+	self.OutOfRange = Signal.new()
+	self.Initiated = Signal.new()
 
-    self._trove:BindToRenderStep("Input", Enum.RenderPriority.Input.Value, function(dt)
-        
-    end)
-	return self;
+	self._ignored_items = {}
+	self._selection_box = self._trove:Add(Instance.new("SelectionBox"))
+	self._selection_box.Parent = self._plot
+
+	self._raycast_params = RaycastParams.new()
+
+	self._state:dispatch(GridUnitChanged(grid_unit))
+
+	return self
 end
 
-function PlacementClient:InitiatePlacement(model: Model)
+type ModelSettings = {
+	can_stack: boolean,
+}
+
+function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings?)
 	assert(model ~= nil, "[PlacementClient] InitiatePlacement: Model must not be nil")
 	assert(model.ClassName == "Model", "[PlacementClient] InitiatePlacement: Model must be a Model")
 	assert(model:IsA("Model"), "[PlacementClient] InitiatePlacement: Model must be a Model")
 
+	local state = self._state:getState()
+
+	if state._current_state ~= 4 then
+		-- TERMINATE
+		self:CancelPlacement()
+	end
+
+	if self:IsMobile() == true then
+		-- add the mobile UI to the screen
+	end
+
+	local character = LMEngine.Player.Character
+
+	self._trove:Add(model)
+
+	self._state:dispatch(CurrentModelChanged(model))
+
+	-- Sets properties of the model (CanCollide, Transparency)
+	for i, inst in ipairs(model:GetDescendants()) do
+		if inst:IsA("BasePart") == false then
+			continue
+		end
+		if SETTINGS.PLACEMENT_CONFIGS.TransparentModel == true then
+			inst.Transparency = inst.Transparency + SETTINGS.PLACEMENT_CONFIGS.TransparencyDelta
+		end
+
+		inst.CanCollide = false
+		inst.Anchored = true
+	end
+
+	if SETTINGS.PLACEMENT_CONFIGS.RemoveCollisionsIfIgnored == true then
+		for i, v: Instance in ipairs(self._ignored_items) do
+			if v:IsA("BasePart") then
+				v.CanTouch = false
+			end
+		end
+	end
+
+	model.PrimaryPart.Transparency = SETTINGS.PLACEMENT_CONFIGS.HitboxTransparency
+
+	self._raycast_params.FilterDescendantsInstances = {
+		self._plot:FindFirstChild("Structures"),
+		character,
+		unpack(self._ignored_items),
+	}
+
+	self._raycast_params.FilterType = Enum.RaycastFilterType.Exclude
+
+	if settings ~= nil then
+		if settings.can_stack ~= nil then
+			self._state:dispatch(StackableChanged(settings.can_stack))
+
+			if settings.can_stack == true then
+				self._raycast_params.FilterDescendantsInstances = {
+					model,
+					character,
+					unpack(self._ignored_items),
+				}
+			end
+		end
+	end
+
+	local platform = self._plot:FindFirstChild("Platform")
+
+	initial_Y = CalculateYPosition(platform.Position.Y, platform.Size.Y, model.PrimaryPart.Size.Y, 1)
+
+	EditHitboxColor(self)
+
+	local pre_speed = 1
+
+	SetupInitialization(self)
+	BindInputs(self)
+
+	if SETTINGS.PLACEMENT_CONFIGS.Interpolation == true then
+		pre_speed = math.clamp(math.abs(tonumber(1 - SETTINGS.PLACEMENT_CONFIGS.LerpSpeed) :: number), 0, 0.9)
+		speed = pre_speed
+
+		if SETTINGS.InstantActivation == true then
+			self._state:dispatch(IsSetupChanged(true))
+			speed = 1
+		end
+	end
+
+	-- Parents the object to the location given
+
+	SetCurrentState(1, self)
+
+	if SETTINGS.PLACEMENT_CONFIGS.PreferSignals == true then
+		self.Placed:Fire()
+	end
+
+	if SETTINGS.PLACEMENT_CONFIGS.InstantActivation then
+		TranslateObject(1, self)
+	end
+
+	model.Parent = self._plot:FindFirstChild("Structures")
+
+	speed = pre_speed
+
+	if SETTINGS.PLACEMENT_CONFIGS.PreferSignals == true then
+		self.Initiated:Fire()
+	end
+
+	self._state:dispatch(RunningChanged(true))
+	self._state:dispatch(IsSetupChanged(true))
+
+	self._trove:BindToRenderStep("Input", Enum.RenderPriority.Input.Value, function(dt)
+		TranslateObject(dt, self)
+	end)
 end
 
-function PlacementClient:IsPlacing()
-	
-end
+function PlacementClient:IsPlacing() end
 
-function PlacementClient:IsActive()
-	
-end
+function PlacementClient:IsActive() end
 
 function PlacementClient:CancelPlacement()
+	TERMINATE_PLACEMENT(self)
 end
 
 function PlacementClient:RaiseLevel()
-	
+	RaiseFloor("Raise", Enum.UserInputState.Begin, nil, self)
 end
 
 function PlacementClient:LowerLevel()
-	
+	LowerFloor("Lower", Enum.UserInputState.Begin, nil, self)
 end
 
-function PlacementClient:ConfirmPlacement()
-end
+function PlacementClient:ConfirmPlacement() end
 
 function PlacementClient:Destroy()
 	self._state:destruct()
@@ -863,11 +1297,11 @@ function PlacementClient:GetPlatform(): string
 end
 
 function PlacementClient:IsMobile(): boolean
-    return self:GetPlatform() == "Mobile"
+	return self:GetPlatform() == "Mobile"
 end
 
 function PlacementClient:IsConsole(): boolean
-    return self:GetPlatform() == "Console"
+	return self:GetPlatform() == "Console"
 end
 
 return PlacementClient
