@@ -117,7 +117,7 @@ local SETTINGS = {
 		-- Numbers/Floats
 		AngleTiltAmplitude = 5, -- How much the object will tilt when moving. 0 = min, 10 = max
 		AudioVolume = 0.5, -- Volume of the sound feedback
-		HitboxTransparency = 0.5, -- Hitbox transparency when placing
+		HitboxTransparency = 0.6, -- Hitbox transparency when placing
 		LerpSpeed = 0.8, -- Speed of interpolation. 0 = no interpolation, 0.9 = major interpolation
 		LineThickness = 0.05, -- How thick the line of the selection box is (includeSelectionBox much be set to true)
 		LineTransparency = 0.5, -- How transparent the line of the selection box is (includeSelectionBox must be set to true)
@@ -498,6 +498,37 @@ local function UncollideModel(model: Model)
 			instance.CanCollide = false
 		end
 	end
+end
+
+local function MakeSelectionBox(client: PlacementClient)
+	local object = (client._state:getState() :: State)._current_model
+
+	if object == nil then
+		return
+	end
+
+	local selectionBox
+
+	if SETTINGS.PLACEMENT_CONFIGS.UseHighlights == true then
+		selectionBox = Instance.new("Highlight")
+		selectionBox.OutlineColor = SETTINGS.PLACEMENT_CONFIGS.SelectionBoxColor3
+		selectionBox.OutlineTransparency = SETTINGS.PLACEMENT_CONFIGS.LineTransparency
+		selectionBox.FillTransparency = 1
+		selectionBox.DepthMode = Enum.HighlightDepthMode.Occluded
+		selectionBox.Adornee = object
+	else
+		selectionBox = Instance.new("SelectionBox")
+		selectionBox.LineThickness = SETTINGS.PLACEMENT_CONFIGS.LineThickness
+		selectionBox.Color3 = SETTINGS.PLACEMENT_CONFIGS.SelectionBoxColor3
+		selectionBox.Transparency = SETTINGS.PLACEMENT_CONFIGS.LineTransparency
+		selectionBox.Adornee = object.PrimaryPart
+	end
+
+	selectionBox.Parent = LMEngine.Player.PlayerGui
+	selectionBox.Name = "[PLACEMENT] Outline"
+
+	client._trove:Add(selectionBox)
+	client._selection_box = selectionBox
 end
 
 local function ModelIsPlot(model: Model)
@@ -1213,6 +1244,16 @@ local function PLACEMENT(self: PlacementClient, Function: RemoteFunction, callba
 	PlacementFeedback(id, callback, self)
 end
 
+local function CreateAudioFeedback()
+	local audio = Instance.new("Sound")
+	audio.Name = "PlacementFeedback"
+	audio.Volume = SETTINGS.PLACEMENT_CONFIGS.AudioVolume
+	audio.SoundId = SETTINGS.PLACEMENT_CONFIGS.SoundID
+	audio.Parent = game:GetService("SoundService")
+
+	return audio
+end
+
 ----- Public functions -----
 
 function PlacementClient.new(plot: Model, grid_unit: number?)
@@ -1250,11 +1291,7 @@ function PlacementClient.new(plot: Model, grid_unit: number?)
 	self.Initiated = Signal.new()
 	self.PlacementConfirmed = Signal.new()
 
-	self._sound = SETTINGS.PLACEMENT_CONFIGS.AudibleFeedback and Instance.new("Sound") or nil
-
 	self._ignored_items = {}
-	self._selection_box = self._trove:Add(Instance.new("SelectionBox"))
-	self._selection_box.Parent = self._plot
 
 	self._raycast_params = RaycastParams.new()
 
@@ -1285,6 +1322,7 @@ function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings
 
 	local character = LMEngine.Player.Character
 
+	self._sound = self._trove:Add(CreateAudioFeedback())
 	self._trove:Add(model)
 
 	self._state:dispatch(CurrentModelChanged(model))
@@ -1338,11 +1376,20 @@ function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings
 
 	initial_Y = CalculateYPosition(platform.Position.Y, platform.Size.Y, model.PrimaryPart.Size.Y, 1)
 
+	local pre_speed = 1
+
+	-- SETUP
+
+	if SETTINGS.PLACEMENT_CONFIGS.IncludeSelectionBox == true then
+		MakeSelectionBox(self)
+	end
+
 	EditHitboxColor(self)
 
 	local pre_speed = 1
 
 	SetupInitialization(self)
+
 	BindInputs(self)
 
 	if SETTINGS.PLACEMENT_CONFIGS.Interpolation == true then
