@@ -1,3 +1,4 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --[=[
 	@interface Middleware
 	.Inbound ServerMiddleware?
@@ -121,6 +122,8 @@ local KnitServer = {}
 
 local dir_Shared = script.Parent.Shared
 
+local dir_Game = ReplicatedStorage:FindFirstChild("Game")
+
 local SIGNAL_MARKER = newproxy(true)
 getmetatable(SIGNAL_MARKER).__tostring = function()
 	return "SIGNAL_MARKER"
@@ -147,8 +150,15 @@ local ServerComm = Comm.ServerComm
 local dir_Services = script.Services
 local dir_Modules = script.Modules
 
-local SharedLoader = LazyLoader.new(dir_Shared)
-local ModulesLoader = LazyLoader.new(dir_Modules)
+local SharedLoader = LazyLoader.new()
+local ModulesLoader = LazyLoader.new()
+
+KnitServer.Shared = SharedLoader
+KnitServer.Util = ModulesLoader
+
+KnitServer.SharedDir = dir_Shared
+
+KnitServer.Game = dir_Game
 
 local services: { [string]: Service } = {}
 local started = false

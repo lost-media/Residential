@@ -25,10 +25,13 @@ local SETTINGS = {
 	MAX_RETRIES = 5,
 
 	MAX_RATE_PER_SECOND = 10,
+
+	TEST_ENCODED_DATA = "",
 }
 
 ----- Private variables -----
 
+local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 ---@type LMEngineClient
@@ -40,11 +43,12 @@ local RetryAsync = LMEngine.GetShared("RetryAsync")
 ---@type RateLimiter
 local RateLimiter = LMEngine.GetModule("RateLimiter")
 
+local Base64 = require(ReplicatedStorage.LMEngine.Shared.Base64)
+
 local PlotServiceRateLimiter = RateLimiter.NewRateLimiter(SETTINGS.MAX_RATE_PER_SECOND)
 
-local PlacementType = require(ReplicatedStorage.Game.Shared.Placement.Types)
-local Plot = require(script.Parent.Parent.Modules.Plot)
-local StructureUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
+local Plot = require(script.Parent.Parent.Modules.Plot2)
+local StructureFactory = require(ReplicatedStorage.Game.Shared.Structures.StructureFactory)
 
 type Plot = Plot.Plot
 
@@ -57,7 +61,7 @@ local PlotService = LMEngine.CreateService({
 		PlaceStructure = LMEngine.CreateSignal(),
 	},
 
-	---@type Plot[]
+	---@type Plot2[]
 	_plots = {},
 
 	---@type table<Player, Plot>
@@ -97,15 +101,6 @@ local function CreatePlotObjects()
 	return plot_objects
 end
 
-local function ThrowIfStateInvalid(state: PlacementType.ServerState)
-	assert(state, "[PlotService] PlaceStructure: State is nil")
-	assert(state._tile, "[PlotService] PlaceStructure: State._tile is nil")
-	assert(state._structure_id, "[PlotService] PlaceStructure: State._structure_id is nil")
-	assert(state._level, "[PlotService] PlaceStructure: State._level is nil")
-	assert(state._rotation, "[PlotService] PlaceStructure: State._rotation is nil")
-	--assert(state._is_stacked, "[PlotService] PlaceStructure: State._is_stacked is nil")
-end
-
 ----- Public functions -----
 
 function PlotService:Init()
@@ -124,6 +119,15 @@ function PlotService:Start()
 		local success, data = RetryAsync(function()
 			local plot = GetRandomFreePlot(self._plots)
 			self:AssignPlot(player, plot)
+
+			-- Decode the test data
+			local decoded_data = Base64.FromBase64(SETTINGS.TEST_ENCODED_DATA)
+
+			local success, err = pcall(function()
+				local data = HttpService:JSONDecode(decoded_data)
+
+				plot:Load(data)
+			end)
 		end, SETTINGS.MAX_RETRIES)
 
 		if not success then
@@ -136,6 +140,18 @@ function PlotService:Start()
 
 	PlayerService:RegisterPlayerRemoved(function(player)
 		local success, data = RetryAsync(function()
+			-- Serialize the plot data
+			local plot = self._players[player]
+			assert(plot, "[PlotService] Player does not have a plot assigned")
+
+			local plot_data = plot:Serialize()
+			local serialized_data = HttpService:JSONEncode(plot_data)
+
+			-- base64 encode the data
+			local base64_data = Base64.ToBase64(serialized_data)
+
+			print("[PlotService] Base64 encoded data: " .. base64_data)
+
 			self:UnassignPlot(player)
 		end, SETTINGS.MAX_RETRIES)
 
@@ -171,30 +187,39 @@ function PlotService:UnassignPlot(player: Player)
 	self._players[player] = nil
 end
 
-function PlotService:PlaceStructure(player: Player, state: PlacementType.ServerState)
+function PlotService:PlaceStructure(player: Player, structure_id: string, cframe: CFrame): boolean
 	assert(player ~= nil, "[PlotService] PlaceStructure: Player is nil")
-	assert(state ~= nil, "[PlotService] PlaceStructure: State is nil")
+	assert(structure_id ~= nil, "[PlotService] PlaceStructure: Structure ID is nil")
+	assert(cframe ~= nil, "[PlotService] PlaceStructure: CFrame is nil")
 
-	ThrowIfStateInvalid(state)
+	local success, err = pcall(function()
+		local plot = self._players[player]
+		assert(plot, "[PlotService] PlaceStructure: Player does not have a plot assigned")
 
-	local plot = self._players[player]
-	assert(plot, "[PlotService] PlaceStructure: Player does not have a plot assigned")
+		-- Create the structure
+		local structure = StructureFactory.MakeStructure(structure_id)
+		assert(structure ~= nil, "[PlotService] PlaceStructure: Structure not found")
 
-	-- Create the structure
-	local structure = StructureUtils.GetStructureModelFromId(state._structure_id)
-	assert(structure ~= nil, "[PlotService] PlaceStructure: Structure not found")
+		local place_successful = plot:PlaceStructure(structure, cframe)
 
-	plot:PlaceStructure(structure, state)
+		return place_successful
+	end)
+
+	if success ~= true then
+		warn("[PlotService] Failed to place structure: " .. err)
+		return false
+	end
+
+	return err
 end
 
-function PlotService.Client:PlaceStructure(player: Player, state: PlacementType.ServerState)
+function PlotService.Client:PlaceStructure(player: Player, structure_id: string, cframe: CFrame): boolean
 	-- Rate limit the function
 	assert(PlotServiceRateLimiter:CheckRate(player) == true, "[PlotService] PlaceStructure: Rate limited")
-	assert(state ~= nil, "[PlotService] PlaceStructure: State is nil")
+	assert(structure_id ~= nil, "[PlotService] PlaceStructure: Structure ID is nil")
+	assert(cframe ~= nil, "[PlotService] PlaceStructure: CFrame is nil")
 
-	ThrowIfStateInvalid(state)
-
-	self.Server:PlaceStructure(player, state)
+	return self.Server:PlaceStructure(player, structure_id, cframe) :: boolean
 end
 
 return PlotService

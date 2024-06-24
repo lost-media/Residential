@@ -1,3 +1,5 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 --[=[
 	@interface Middleware
 	.Inbound ClientMiddleware?
@@ -105,6 +107,7 @@ local KnitClient = {}
 KnitClient.Player = game:GetService("Players").LocalPlayer
 
 local dir_Shared = script.Parent.Shared
+local dir_Game = ReplicatedStorage:FindFirstChild("Game")
 
 local Comm = require(dir_Shared.Comm)
 local LazyLoader = require(dir_Shared.LazyLoader)
@@ -132,6 +135,10 @@ local ModulesLoader = LazyLoader.new()
 
 KnitClient.Shared = SharedLoader
 KnitClient.Modules = ModulesLoader
+
+KnitClient.SharedDir = dir_Shared
+
+KnitClient.Game = dir_Game
 
 ----- Private functions -----
 

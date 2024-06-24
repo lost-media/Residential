@@ -22,6 +22,15 @@
         PlacementClient._plot [Model] -- The plot model
             The plot model
 
+		PlacementClient._active [boolean] -- Determines if the client is active
+			Determines if the client is active
+
+		PlacementClient._selection_box [SelectionBox] -- The selection box
+			The selection box
+
+		PlacementClient.PlacementConfirmed [Signal] -- Signal
+
+
     Functions:
 
         PlacementClient.new  [PlacementClient] -- Constructor
@@ -31,6 +40,8 @@
 
         PlacementClient:Destroy() -- Destructor
             Destroys the placement client
+			THIS CAN ONLY BE CALLED ONCE. 
+			This will destroy the state of the client and remove all connections.
 
         PlacementClient:InitiatePlacement(model: Model) -- Method
             Initiates the placement of a model
@@ -53,12 +64,15 @@
 --]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LMEngine = require(ReplicatedStorage.LMEngine.Client)
+
 local Mouse = require(ReplicatedStorage.LMEngine.Client.Modules.Mouse)
 local Rodux = require(ReplicatedStorage.LMEngine.Shared.Rodux)
 local Signal = require(ReplicatedStorage.LMEngine.Shared.Signal)
 local Trove = require(ReplicatedStorage.LMEngine.Shared.Trove)
 
-local PlacementType = require(ReplicatedStorage.Game.Shared.Placement.Types)
+local PlacementType = require(LMEngine.Game.Shared.Placement.Types)
 
 local SETTINGS = {
 	INITIAL_STATE = {
@@ -104,6 +118,7 @@ type PlacementClientMembers = {
 	_trove: Trove.Trove,
 	_plot: Model,
 	_active: boolean,
+	_selection_box: SelectionBox?,
 
 	PlacementConfirmed: Signal.Signal<PlacementType.ServerState>,
 }
@@ -398,6 +413,13 @@ local function StackedChanged(is_stacked: boolean)
 	}
 end
 
+local function StructureIdChanged(structure_id: string)
+	return {
+		type = "STRUCTURE_ID_CHANGED",
+		_structure_id = structure_id,
+	}
+end
+
 local function CanConfirmPlacementChanged(can_confirm_placement: boolean)
 	return {
 		type = "CAN_CONFIRM_PLACEMENT_CHANGED",
@@ -644,6 +666,16 @@ local function AttemptToSnapRotationOnStrictOrientation(client: PlacementClient)
 	end
 end
 
+local function UpdateSelectionBox(selection_box: SelectionBox, can_place: boolean)
+	if can_place == true then
+		selection_box.Color3 = Color3.fromRGB(0, 255, 0)
+		selection_box.SurfaceColor3 = Color3.fromRGB(0, 255, 0)
+	else
+		selection_box.Color3 = Color3.fromRGB(255, 0, 0)
+		selection_box.SurfaceColor3 = Color3.fromRGB(255, 0, 0)
+	end
+end
+
 function AttemptToSnapToAttachment(client: PlacementClient, closestInstance: BasePart)
 	local mouse = client._mouse
 	local state: State = client._state:getState()
@@ -860,6 +892,18 @@ local function RenderSteppedUpdate(client: PlacementClient, dt: number)
 	end
 
 	UpdatePosition(client)
+
+	-- get the updated state
+
+	state = client._state:getState()
+
+	local can_place = PlacementUtils.CanPlaceStructure(plot, state)
+	client._state:dispatch(CanConfirmPlacementChanged(can_place))
+
+	-- Update the selection box
+	if client._selection_box then
+		UpdateSelectionBox(client._selection_box, can_place)
+	end
 end
 
 ----- Public functions -----
@@ -898,6 +942,12 @@ function PlacementClient:InitiatePlacement(model: Model)
 		return
 	end
 
+	local structure_id = model:GetAttribute("Id")
+
+	if structure_id == nil then
+		return
+	end
+
 	-- Set up the ghost structure
 	DimModel(model)
 	UncollideModel(model)
@@ -911,8 +961,11 @@ function PlacementClient:InitiatePlacement(model: Model)
 
 	self._trove:Add(selection_box)
 
+	self._selection_box = selection_box
+
 	self._state:dispatch(PlacementTypeChanged("Place"))
 	self._state:dispatch(UpdateGhostStructure(model))
+	self._state:dispatch(StructureIdChanged(structure_id))
 
 	self._trove:BindToRenderStep("PlacementClient", 2, function(dt: number)
 		RenderSteppedUpdate(self, dt)

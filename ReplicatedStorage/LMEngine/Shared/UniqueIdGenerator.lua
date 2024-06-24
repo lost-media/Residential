@@ -31,15 +31,15 @@
 
 local SETTINGS = {
 	-- The minimum value for the generated identifier
-	MIN_ID = 0,
+	DEFAULT_MIN_ID = 0,
 
 	-- The maximum value for the generated identifier
-	MAX_ID = 9999,
+	DEFAULT_MAX_ID = 9999,
 }
 ----- Types -----
 type IUniqueIdGenerator = {
 	__index: IUniqueIdGenerator,
-	new: () -> UniqueIdGenerator,
+	new: (min_id: number?, max_id: number?) -> UniqueIdGenerator,
 
 	GenerateId: (self: UniqueIdGenerator) -> number,
 	AddExistingId: (self: UniqueIdGenerator, id: number) -> (),
@@ -48,6 +48,8 @@ type IUniqueIdGenerator = {
 
 type UniqueIdGeneratorMembers = {
 	_ids: { [number]: boolean },
+	_min_id: number,
+	_max_id: number,
 }
 
 export type UniqueIdGenerator = typeof(setmetatable({} :: UniqueIdGeneratorMembers, {} :: IUniqueIdGenerator))
@@ -60,14 +62,18 @@ UniqueIdGenerator.__index = UniqueIdGenerator
 
 ----- Private functions -----
 
-local function GenerateId(): number
-	return math.random(SETTINGS.MIN_ID, SETTINGS.MAX_ID)
+local function GenerateId(min_id: number, max_id: number): number
+	return math.random(min_id, max_id)
 end
 
 ----- Public functions -----
 
-function UniqueIdGenerator.new(): UniqueIdGenerator
+function UniqueIdGenerator.new(min_id: number?, max_id: number?): UniqueIdGenerator
 	local self = setmetatable({}, UniqueIdGenerator)
+
+	self._min_id = min_id or SETTINGS.DEFAULT_MIN_ID
+	self._max_id = max_id or SETTINGS.DEFAULT_MAX_ID
+
 	self._ids = {}
 	return self
 end
@@ -83,7 +89,7 @@ function UniqueIdGenerator:LoadExistingIds(ids: { number })
 end
 
 function UniqueIdGenerator:GenerateId(): number
-	local id = GenerateId()
+	local id = GenerateId(self._min_id, self._max_id)
 
 	while self._ids[id] do
 		id = GenerateId()

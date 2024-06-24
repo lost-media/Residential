@@ -36,6 +36,8 @@ local StructuresCollection = require(dir_Structures)
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine)
 
+local PlotConfigs = require(LMEngine.Game.Shared.Configs.Plot)
+
 ---@type WeldLib
 local WeldLib = LMEngine.GetShared("Weld")
 
@@ -57,7 +59,7 @@ function StructureService:Init()
 	for _, structures in StructuresCollection do
 		for _, structure in pairs(structures) do
 			WeldLib.WeldModelToPrimaryPart(structure.Model)
-			structure.Model:SetAttribute("Id", structure.Id)
+			structure.Model:SetAttribute(PlotConfigs.STRUCTURE_ID_ATTRIBUTE_KEY, structure.Id)
 		end
 	end
 end
