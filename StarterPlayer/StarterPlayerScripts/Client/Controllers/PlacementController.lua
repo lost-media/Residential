@@ -17,8 +17,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
+local PlacementClient = require(LMEngine.Game.Shared.Placement.PlacementClient2)
 ---@type PlacementClient
-local PlacementClient = LMEngine.GetModule("PlacementClient")
+--local PlacementClient = LMEngine.GetModule("PlacementClient")
 
 ---@type Signal
 local Signal = LMEngine.GetShared("Signal")
@@ -57,7 +58,6 @@ end
 function PlacementController:Start()
 	print("[PlacementController] started")
 
-	---@type PlotService
 	local PlotService = LMEngine.GetService("PlotService")
 
 	---@type PlotController
@@ -77,28 +77,31 @@ function PlacementController:Start()
 				self._structures_index = 1
 			end
 			self:StopPlacement()
-			--self:StartPlacement(StructuresList[self._structures_index])
+			self:StartPlacement(StructuresList[self._structures_index])
 		elseif input.KeyCode == Enum.KeyCode.Q then
 			self._structures_index = self._structures_index - 1
 			if self._structures_index < 1 then
 				self._structures_index = #StructuresList
 			end
 			self:StopPlacement()
-			--self:StartPlacement(StructuresList[self._structures_index])
+			self:StartPlacement(StructuresList[self._structures_index])
 		end
 	end)
 
-	self._placement_client.PlacementConfirmed:Connect(function(state)
+	self._placement_client.PlacementConfirmed:Connect(function(structure_id, cframe)
 		---@type Promise
-		local placement_promise = PlotService:PlaceStructure(state)
+		local placement_promise = PlotService:PlaceStructure(structure_id, cframe)
+
 		placement_promise
 			:andThen(function(successful: boolean)
 				if successful == true then
 					print("[PlacementController] Structure placed successfully")
+				else
+					print("[PlacementController] Structure placement failed")
 				end
 			end)
 			:catch(function(err)
-				--warn("[PlacementController] Failed to place structure: " .. err);
+				warn("[PlacementController] Failed to place structure: " .. err)
 				-- TODO: Handle error, show toast message
 			end)
 		--self:StopPlacement();
@@ -111,11 +114,17 @@ function PlacementController:StartPlacement(structureId: string)
 
 	-- fetch the structure from the structures list
 	if self._placement_client == nil then
-		self._placement_client = PlacementClient.new()
+		local PlotController = LMEngine.GetController("PlotController")
+		local plot = PlotController:WaitForPlot()
+
+		self._placement_client = PlacementClient.new(plot)
 	end
 
 	if self._placement_client:IsActive() == false then
-		self._placement_client = PlacementClient.new()
+		local PlotController = LMEngine.GetController("PlotController")
+		local plot = PlotController:WaitForPlot()
+
+		self._placement_client = PlacementClient.new(plot)
 	end
 
 	local clone = structure.Model:Clone()

@@ -187,13 +187,14 @@ type State = {
 	_current_rot: boolean,
 	_amplitude: number,
 	_floor_height: number,
+	_cframe: CFrame,
 }
 
 type IPlacementClient = {
 	__index: IPlacementClient,
-	new: () -> PlacementClient,
+	new: (plot: Model, grid_unit: number?) -> PlacementClient,
 
-	InitiatePlacement: (self: PlacementClient, model: Model) -> (),
+	InitiatePlacement: (self: PlacementClient, model: Model, settings: ModelSettings?) -> (),
 	IsPlacing: (self: PlacementClient) -> boolean,
 	CancelPlacement: (self: PlacementClient) -> (),
 	IsActive: (self: PlacementClient) -> boolean,
@@ -205,6 +206,8 @@ type IPlacementClient = {
 	GetPlatform: (self: PlacementClient) -> string,
 	IsMobile: (self: PlacementClient) -> boolean,
 	IsConsole: (self: PlacementClient) -> boolean,
+
+	ConfirmPlacement: (self: PlacementClient) -> (),
 }
 
 type PlacementClientMembers = {
@@ -339,6 +342,12 @@ local auto_placement_changed = Rodux.createReducer(false, {
 	end,
 })
 
+local cframe_changed = Rodux.createReducer(CFrame.new(), {
+	["CFRAME_CHANGED"] = function(state: State, action)
+		return action._cframe
+	end,
+})
+
 local reducers = Rodux.combineReducers({
 	_current_state = current_state_changed,
 	_last_state = last_state_changed,
@@ -353,6 +362,7 @@ local reducers = Rodux.combineReducers({
 	_amplitude = amplitude_changed,
 	_floor_height = floor_height_changed,
 	_auto_placement = auto_placement_changed,
+	_cframe = cframe_changed,
 })
 
 ----- Actions -----
@@ -438,6 +448,20 @@ local function FloorHeightChanged(floor_height: number)
 	return {
 		type = "FLOOR_HEIGHT_CHANGED",
 		_floor_height = floor_height,
+	}
+end
+
+local function AutoPlacementChanged(auto_placement: boolean)
+	return {
+		type = "AUTO_PLACEMENT_CHANGED",
+		_auto_placement = auto_placement,
+	}
+end
+
+local function CFrameChanged(cframe: CFrame)
+	return {
+		type = "CFRAME_CHANGED",
+		_cframe = cframe,
 	}
 end
 
@@ -550,13 +574,9 @@ local function ModelIsPlot(model: Model)
 		return false
 	end
 
-	local platform = model:FindFirstChild("Platform")
+	local platform = model:WaitForChild("Platform")
 
 	if platform == nil then
-		return false
-	end
-
-	if platform:IsA("Part") == false then
 		return false
 	end
 
@@ -1131,6 +1151,12 @@ local function BindInputs(client: PlacementClient)
 			SETTINGS.CONTROLS.XboxLower
 		)
 	end
+
+	client._trove:Add(UserInputService.InputBegan:Connect(function(input: InputObject)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			client:ConfirmPlacement()
+		end
+	end))
 end
 
 -- Used for sending a final CFrame to the server when using interpolation.
@@ -1180,8 +1206,16 @@ local function PlayAudio(client: PlacementClient)
 end
 
 local function PlacementFeedback(object_id: string, callback, client: PlacementClient)
+	local state: State = client._state:getState()
+
+	local cframe = state._cframe
+
+	if cframe == nil then
+		error("CFrame is nil")
+	end
+
 	if SETTINGS.PLACEMENT_CONFIGS.PreferSignals == true then
-		client.PlacementConfirmed:Fire(object_id)
+		client.PlacementConfirmed:Fire(object_id, cframe)
 	else
 		xpcall(function()
 			if callback then
@@ -1217,6 +1251,9 @@ local function PLACEMENT(self: PlacementClient, Function: RemoteFunction, callba
 	end
 
 	cf = GetFinalCFrame(self)
+
+	self._state:dispatch(CFrameChanged(cf))
+
 	CheckHitbox(self)
 
 	--print(objectName, placedObjects, self.Prefabs, Function, plot)
@@ -1463,7 +1500,7 @@ function PlacementClient:ConfirmPlacement()
 	repeat
 		PLACEMENT(self)
 
-		task.wait(SETTINGS.PlacementCooldown)
+		task.wait(SETTINGS.PLACEMENT_CONFIGS.PlacementCooldown)
 	until (self._state:getState() :: State)._running == false
 end
 

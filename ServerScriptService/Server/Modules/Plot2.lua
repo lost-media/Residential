@@ -55,9 +55,14 @@ local SETTINGS = {
 	-- The size of a tile in studs in X and Z dimensions
 	TILE_SIZE = 8,
 }
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PlacementType = require(ReplicatedStorage.Game.Shared.Placement.Types)
 
-local PlacementType = require(game:GetService("ReplicatedStorage").Game.Shared.Placement.Types)
+---@type Trove
+local Trove = require(ReplicatedStorage.LMEngine.Shared.Trove)
 
+---@type UniqueIdGenerator
+local UniqueIdGenerator = require(ReplicatedStorage.LMEngine.Shared.UniqueIdGenerator)
 ----- Types -----
 
 export type PlotModel = Model & {
@@ -80,7 +85,14 @@ type IPlot = {
 	SetAttribute: (self: Plot, attribute: string, value: any) -> (),
 	GetAttribute: (self: Plot, attribute: string) -> any,
 
-	PlaceStructure: (self: Plot, structure: Model, state: PlacementType.ServerState) -> boolean,
+	PlaceStructure: (self: Plot, structure: Model, cframe: CFrame) -> boolean,
+}
+
+type PlotMembers = {
+	_plot_model: Instance,
+	_player: Player?,
+	_trove: Trove.Trove,
+	_uid_generator: UniqueIdGenerator.UniqueIdGenerator,
 }
 
 export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))
@@ -94,13 +106,8 @@ local NEIGHBORS = {
 	Vector3.new(-SETTINGS.TILE_SIZE, 0, 0),
 }
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 ---@type LMEngineServer
 local LMEngine = require(ReplicatedStorage.LMEngine)
-
----@type Trove
-local Trove = require(ReplicatedStorage.LMEngine.Shared.Trove)
 
 local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils)
 local StructureUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
@@ -108,76 +115,21 @@ local StructureUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
 ---@type UniqueIdGenerator
 local UniqueIdGenerator = LMEngine.GetShared("UniqueIdGenerator")
 
----@type Graph
-local Graph = require(ReplicatedStorage.LMEngine.Shared.DS.Graph)
-type Graph = Graph.Graph
-
-type PlotMembers = {
-	_plot_model: Instance,
-	_player: Player?,
-	_tiles: Graph,
-	_trove: Trove.Trove,
-	_uid_generator: UniqueIdGenerator.UniqueIdGenerator,
-}
-
----@class Plot
+---@class Plot2
 local Plot: IPlot = {} :: IPlot
 Plot.__index = Plot
 
 ----- Private functions -----
 
-local function ThrowIfStateInvalid(state: PlacementType.ServerState)
-	assert(state, "[PlotService] PlaceStructure: State is nil")
-	assert(state._tile, "[PlotService] PlaceStructure: State._tile is nil")
-	assert(state._structure_id, "[PlotService] PlaceStructure: State._structure_id is nil")
-	assert(state._level, "[PlotService] PlaceStructure: State._level is nil")
-	assert(state._rotation, "[PlotService] PlaceStructure: State._rotation is nil")
-	--assert(state._is_stacked, "[PlotService] PlaceStructure: State._is_stacked is nil")
-end
-
-local function InitializePlotTiles(tiles: { Instance }): Graph
-	local graph = Graph.new() :: Graph
-
-	local positions = {} :: { [Vector3]: Graph.Node }
-
-	for i, tile in tiles do
-		if not tile:IsA("Part") then
-			warn("Tile is not a part:", tile)
-			continue
-		end
-
-		tile.Name = tostring(i)
-
-		local node = Graph.Node(tile, tile)
-		graph:AddNode(node)
-
-		positions[tile.Position] = node
-	end
-
-	-- Add edges between adjacent tiles
-
-	for _, tile in tiles do
-		if not tile:IsA("Part") then
-			continue
-		end
-
-		tile = tile :: Part
-		for _, offset in NEIGHBORS do
-			local neighbor_position = tile.Position + offset
-			local neighbor = positions[neighbor_position]
-			if neighbor then
-				graph:AddEdge(positions[tile.Position], neighbor)
-			end
-		end
-	end
-
-	return graph
-end
-
-local function CheckHitbox(character, object, plot)
-	if not object then
+local function CheckHitbox(character: Model, object: Model, plot: Plot)
+	if object == nil then
 		return false
 	end
+
+	if object.PrimaryPart == nil then
+		return false
+	end
+
 	local collisionPoints = workspace:GetPartsInPart(object.PrimaryPart)
 
 	-- Checks if there is collision on any object that is not a child of the object and is not a child of the player
@@ -189,7 +141,7 @@ local function CheckHitbox(character, object, plot)
 		if
 			collisionPoints[i]:IsDescendantOf(object) == true
 			or collisionPoints[i]:IsDescendantOf(character) == true
-			or collisionPoints[i] == plot
+			or collisionPoints[i] == plot:GetModel():FindFirstChild("Platform")
 		then
 			-- Skip this iteration if any of the conditions are true
 			continue
@@ -213,19 +165,20 @@ local function CheckBoundaries(plot: BasePart, primary: BasePart): boolean
 	return currentPos.X > xBound or currentPos.X < -xBound or currentPos.Z > zBound or currentPos.Z < -zBound
 end
 
-local function HandleCollisions(character: Model, item, collisions: boolean, plot): boolean
-	if not collisions then
-		item.PrimaryPart.Transparency = 1
+local function HandleCollisions(character: Model, structure: Model, collisions: boolean, plot: Plot): boolean
+	if collisions ~= true then
+		structure.PrimaryPart.Transparency = 1
 		return true
 	end
 
-	local collision = CheckHitbox(character, item, plot)
-	if collision ~= nil then
-		item:Destroy()
+	local collision = CheckHitbox(character, structure, plot)
+
+	if collision == true then
+		structure:Destroy()
 		return false
 	end
 
-	item.PrimaryPart.Transparency = 1
+	structure.PrimaryPart.Transparency = 1
 	return true
 end
 
@@ -271,13 +224,13 @@ function Plot.ModelIsPlot(model: Instance): boolean
 		return false
 	end
 
-	local tiles = model:FindFirstChildOfClass("Folder")
-	if tiles == nil then
+	local structures = model:FindFirstChildOfClass("Folder")
+	if structures == nil then
 		return false
 	end
 
-	local structures = model:FindFirstChildOfClass("Folder")
-	if structures == nil then
+	local platform = model:FindFirstChildOfClass("Part")
+	if platform == nil then
 		return false
 	end
 
@@ -292,8 +245,6 @@ function Plot.new(plot_model: Instance)
 	self._player = nil :: Player?
 	self._trove = Trove.new()
 	self._uid_generator = UniqueIdGenerator.new()
-
-	self._tiles = InitializePlotTiles(plot_model:FindFirstChild("Tiles"):GetChildren())
 
 	return self
 end
@@ -332,33 +283,27 @@ function Plot:GetAttribute(attribute: string): any
 	return self._plot_model:GetAttribute(attribute)
 end
 
-function Plot:PlaceStructure(structure: Model, state: PlacementType.ServerState): boolean
+function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 	assert(structure ~= nil, "[PlotService] PlaceStructure: Structure is nil")
 
-	local structure_id = structure:GetAttribute("Id")
+	local structure_id: string? = structure:GetAttribute("Id")
 
-	if structure_id == nil then
-		structure_id = self._uid_generator:GenerateId()
-		structure:SetAttribute("Id", structure_id)
+	assert(structure_id ~= nil, "[PlotService] PlaceStructure: Structure ID is nil")
+
+	local collisions = GetCollisions(structure_id)
+
+	structure.PrimaryPart.CanCollide = false
+	structure:PivotTo(cframe)
+
+	local platform = self._plot_model:FindFirstChild("Platform")
+
+	if CheckBoundaries(platform, structure.PrimaryPart) == true then
+		return false
 	end
 
-	local collisions = GetCollisions(structure)
+	structure.Parent = self._plot_model.Structures
 
-	local item = prefabs:FindFirstChild(name):Clone()
-	item.PrimaryPart.CanCollide = false
-	item:PivotTo(cframe)
-
-	if plot then
-		if CheckBoundaries(plot, item.PrimaryPart) == true then
-			return
-		end
-
-		item.Parent = location
-
-		return HandleCollisions(player.Character, item, collisions, plot)
-	end
-
-	return HandleCollisions(player.Character, item, collisions, plot)
+	return HandleCollisions(self._player.Character, structure, collisions, self)
 end
 
 function Plot:GetPlaceable(model: Model)

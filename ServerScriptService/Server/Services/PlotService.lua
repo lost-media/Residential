@@ -43,7 +43,8 @@ local RateLimiter = LMEngine.GetModule("RateLimiter")
 local PlotServiceRateLimiter = RateLimiter.NewRateLimiter(SETTINGS.MAX_RATE_PER_SECOND)
 
 local PlacementType = require(ReplicatedStorage.Game.Shared.Placement.Types)
-local Plot = require(script.Parent.Parent.Modules.Plot)
+local Plot = require(script.Parent.Parent.Modules.Plot2)
+local StructureFactory = require(ReplicatedStorage.Game.Shared.Structures.StructureFactory)
 local StructureUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
 
 type Plot = Plot.Plot
@@ -57,7 +58,7 @@ local PlotService = LMEngine.CreateService({
 		PlaceStructure = LMEngine.CreateSignal(),
 	},
 
-	---@type Plot[]
+	---@type Plot2[]
 	_plots = {},
 
 	---@type table<Player, Plot>
@@ -171,32 +172,39 @@ function PlotService:UnassignPlot(player: Player)
 	self._players[player] = nil
 end
 
-function PlotService:PlaceStructure(player: Player, state: PlacementType.ServerState): boolean
+function PlotService:PlaceStructure(player: Player, structure_id: string, cframe: CFrame): boolean
 	assert(player ~= nil, "[PlotService] PlaceStructure: Player is nil")
-	assert(state ~= nil, "[PlotService] PlaceStructure: State is nil")
+	assert(structure_id ~= nil, "[PlotService] PlaceStructure: Structure ID is nil")
+	assert(cframe ~= nil, "[PlotService] PlaceStructure: CFrame is nil")
 
-	ThrowIfStateInvalid(state)
+	local success, err = pcall(function()
+		local plot = self._players[player]
+		assert(plot, "[PlotService] PlaceStructure: Player does not have a plot assigned")
 
-	local plot = self._players[player]
-	assert(plot, "[PlotService] PlaceStructure: Player does not have a plot assigned")
+		-- Create the structure
+		local structure = StructureFactory.MakeStructure(structure_id)
+		assert(structure ~= nil, "[PlotService] PlaceStructure: Structure not found")
 
-	-- Create the structure
-	local structure = StructureUtils.GetStructureModelFromId(state._structure_id)
-	assert(structure ~= nil, "[PlotService] PlaceStructure: Structure not found")
+		local place_successful = plot:PlaceStructure(structure, cframe)
 
-	local place_successful = plot:PlaceStructure(structure, state)
+		return place_successful
+	end)
 
-	return place_successful
+	if success ~= true then
+		warn("[PlotService] Failed to place structure: " .. err)
+		return false
+	end
+
+	return err
 end
 
-function PlotService.Client:PlaceStructure(player: Player, state: PlacementType.ServerState): boolean
+function PlotService.Client:PlaceStructure(player: Player, structure_id: string, cframe: CFrame): boolean
 	-- Rate limit the function
 	assert(PlotServiceRateLimiter:CheckRate(player) == true, "[PlotService] PlaceStructure: Rate limited")
-	assert(state ~= nil, "[PlotService] PlaceStructure: State is nil")
+	assert(structure_id ~= nil, "[PlotService] PlaceStructure: Structure ID is nil")
+	assert(cframe ~= nil, "[PlotService] PlaceStructure: CFrame is nil")
 
-	ThrowIfStateInvalid(state)
-
-	return self.Server:PlaceStructure(player, state) :: boolean
+	return self.Server:PlaceStructure(player, structure_id, cframe) :: boolean
 end
 
 return PlotService
