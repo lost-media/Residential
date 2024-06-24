@@ -97,6 +97,11 @@ type PlotMembers = {
 
 export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))
 
+type SerializedStructure = {
+	PlotId: number,
+	CFrame: { number },
+}
+
 ----- Private variables -----
 
 local NEIGHBORS = {
@@ -108,6 +113,8 @@ local NEIGHBORS = {
 
 ---@type LMEngineServer
 local LMEngine = require(ReplicatedStorage.LMEngine)
+
+local StructureFactory = require(LMEngine.Game.Shared.Structures.StructureFactory)
 
 local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils)
 local StructureUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
@@ -186,30 +193,6 @@ local function GetCollisions(name: string): boolean
 	return true
 end
 
-local function place(player, name: string, location: Instance, prefabs: Instance, cframe: CFrame, plot: BasePart)
-	local collisions = GetCollisions(name)
-	local item = prefabs:FindFirstChild(name):Clone()
-	item.PrimaryPart.CanCollide = false
-	item:PivotTo(cframe)
-
-	if plot then
-		if CheckBoundaries(plot, item.PrimaryPart) == true then
-			return
-		end
-
-		item.Parent = location
-
-		return HandleCollisions(player.Character, item, collisions, plot)
-	end
-
-	return HandleCollisions(player.Character, item, collisions, plot)
-end
-
--- Edit if you want to have a server check if collisions are enabled or disabled
-local function getCollisions(name: string): boolean
-	return true
-end
-
 ----- Public functions -----
 
 -- Checks if a model instance has the structure of a plot
@@ -249,9 +232,33 @@ function Plot.new(plot_model: Instance)
 	return self
 end
 
-function Plot:Load(data) -- loading existing plot data
+function Plot:Load(data: { [string]: { [number]: SerializedStructure } })
 	-- Load existing IDs into the UniqueIdGenerator
 	local ids: { number } = {}
+
+	local platform: Part = self._plot_model:FindFirstChild("Platform")
+
+	for structure_id, v in data do
+		for _, structure_data in v do
+			local id: number = structure_data.PlotId
+			table.insert(ids, id)
+
+			local structure: Model = StructureFactory.MakeStructure(structure_id)
+
+			if structure == nil then
+				warn("[Plot] Failed to load structure with ID: " .. structure_id)
+				continue
+			end
+
+			local relative_cframe = CFrame.new(unpack(structure_data.CFrame))
+
+			local absolute_cframe = platform.CFrame * relative_cframe
+
+			structure:SetAttribute("PlotId", structure_data.PlotId)
+			structure:PivotTo(absolute_cframe)
+			structure.Parent = self._plot_model.Structures
+		end
+	end
 
 	self._uid_generator:LoadExistingIds(ids)
 end
@@ -303,6 +310,12 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 
 	structure.Parent = self._plot_model.Structures
 
+	-- Generate a unique ID for the structure
+	local id: number = self._uid_generator:GenerateId()
+
+	-- Set the ID attribute of the structure
+	structure:SetAttribute("PlotId", id)
+
 	return HandleCollisions(self._player.Character, structure, collisions, self)
 end
 
@@ -319,17 +332,61 @@ function Plot:GetPlaceable(model: Model)
 
 	return nil
 end
+--- Serializes all the structures on the plot
+---@return table
+function Plot:Serialize(): { [number]: SerializedStructure }
+	local data = {}
 
-function Plot:GetStructuresOnTile(tile: Graph.Node): { Model }
-	local structures = {} :: { Model }
+	local structures = self._plot_model.Structures:GetChildren()
 
-	for _, structure in pairs(self._plot_model.Structures:GetChildren()) do
-		if structure:GetAttribute("Tile") == tile.Name then
-			table.insert(structures, structure)
+	for i = 1, #structures do
+		local structure: Model = structures[i]
+
+		local structure_id = structure:GetAttribute("Id")
+
+		if structure.PrimaryPart == nil then
+			warn("[Plot] Structure does not have a primary part")
+			continue
 		end
+
+		local cframe: CFrame = structure.PrimaryPart.CFrame
+
+		if structure_id == nil then
+			warn("[Plot] Structure does not have an ID")
+			continue
+		end
+
+		local id = structure:GetAttribute("PlotId")
+
+		if id == nil then
+			warn("[Plot] Structure does not have a PlotId")
+			continue
+		end
+
+		-- get the relative CFrame of the structure to the platform
+
+		local platform: Part = self._plot_model:FindFirstChild("Platform")
+
+		if platform == nil then
+			warn("[Plot] Plot does not have a platform")
+			continue
+		end
+
+		local relative_cframe: CFrame = platform.CFrame:Inverse() * cframe
+
+		local serialized_cframe = { relative_cframe:GetComponents() }
+
+		if data[structure_id] == nil then
+			data[structure_id] = {}
+		end
+
+		table.insert(data[structure_id], {
+			PlotId = id,
+			CFrame = serialized_cframe,
+		})
 	end
 
-	return structures
+	return data
 end
 
 function Plot.__tostring(self: Plot): string

@@ -21,6 +21,7 @@ local SharedProperties = {
 	},
 	Price = 100,
 	IsBuilding = true,
+	GridUnit = 4,
 
 	Properties = {
 		Radius = 1, -- Tiles

@@ -107,7 +107,7 @@ local SETTINGS = {
 		SelectionBoxColor3 = Color3.fromRGB(0, 255, 0), -- Color of the selectionBox lines (includeSelectionBox much be set to true)
 
 		-- Integers (Will round to nearest unit)
-		FloorStep = 8, -- The step (in studs) that the object will be raised or lowered
+		FloorStep = 9, -- The step (in studs) that the object will be raised or lowered
 		GridTextureScale = 1, -- How large the StudsPerTileU/V is displayed (smartDisplay must be set to false)
 		MaxHeight = 100, -- Max height you can place objects (in studs)
 		MaxRange = 100, -- Max range for the model (in studs)
@@ -139,8 +139,8 @@ local SETTINGS = {
 		-- PC
 		RotateKey = Enum.KeyCode.R, -- Key to rotate the model
 		TerminateKey = Enum.KeyCode.C, -- Key to terminate placement
-		RaiseKey = Enum.KeyCode.E, -- Key to raise the object
-		LowerKey = Enum.KeyCode.Q, -- Key to lower the object
+		RaiseKey = Enum.KeyCode.Up, -- Key to raise the object
+		LowerKey = Enum.KeyCode.Down, -- Key to lower the object
 
 		-- Xbox
 		XboxRotate = Enum.KeyCode.ButtonR1, -- Key to rotate the model
@@ -208,6 +208,7 @@ type IPlacementClient = {
 	IsConsole: (self: PlacementClient) -> boolean,
 
 	ConfirmPlacement: (self: PlacementClient) -> (),
+	UpdateGridUnit: (self: PlacementClient, grid_unit: number) -> (),
 }
 
 type PlacementClientMembers = {
@@ -768,14 +769,11 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 	if ray then
 		x, z = ray.Position.X - offsetX, ray.Position.Z - offsetZ
 
-		--[[
-        if stackable then
+		if state._stackable == true then
 			target = ray.Instance
 		else
-			target = plot
+			target = platform
 		end
-        --]]
-		target = platform
 	else
 		x, z = nilRay.X - offsetX, nilRay.Z - offsetZ
 		target = platform
@@ -1522,6 +1520,13 @@ function PlacementClient:GetPlatform(): string
 	else
 		return "PC"
 	end
+end
+
+function PlacementClient:UpdateGridUnit(grid_unit: number)
+	assert(grid_unit ~= nil, "[PlacementClient] UpdateGridUnit: Grid unit must not be nil")
+	assert(grid_unit > 0, "[PlacementClient] UpdateGridUnit: Grid unit must be greater than 0")
+
+	self._state:dispatch(GridUnitChanged(grid_unit))
 end
 
 function PlacementClient:IsMobile(): boolean

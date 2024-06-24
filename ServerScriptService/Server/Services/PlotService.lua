@@ -25,10 +25,13 @@ local SETTINGS = {
 	MAX_RETRIES = 5,
 
 	MAX_RATE_PER_SECOND = 10,
+
+	TEST_ENCODED_DATA = "",
 }
 
 ----- Private variables -----
 
+local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 ---@type LMEngineClient
@@ -40,12 +43,12 @@ local RetryAsync = LMEngine.GetShared("RetryAsync")
 ---@type RateLimiter
 local RateLimiter = LMEngine.GetModule("RateLimiter")
 
+local Base64 = require(ReplicatedStorage.LMEngine.Shared.Base64)
+
 local PlotServiceRateLimiter = RateLimiter.NewRateLimiter(SETTINGS.MAX_RATE_PER_SECOND)
 
-local PlacementType = require(ReplicatedStorage.Game.Shared.Placement.Types)
 local Plot = require(script.Parent.Parent.Modules.Plot2)
 local StructureFactory = require(ReplicatedStorage.Game.Shared.Structures.StructureFactory)
-local StructureUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
 
 type Plot = Plot.Plot
 
@@ -98,15 +101,6 @@ local function CreatePlotObjects()
 	return plot_objects
 end
 
-local function ThrowIfStateInvalid(state: PlacementType.ServerState)
-	assert(state, "[PlotService] PlaceStructure: State is nil")
-	assert(state._tile, "[PlotService] PlaceStructure: State._tile is nil")
-	assert(state._structure_id, "[PlotService] PlaceStructure: State._structure_id is nil")
-	assert(state._level, "[PlotService] PlaceStructure: State._level is nil")
-	assert(state._rotation, "[PlotService] PlaceStructure: State._rotation is nil")
-	--assert(state._is_stacked, "[PlotService] PlaceStructure: State._is_stacked is nil")
-end
-
 ----- Public functions -----
 
 function PlotService:Init()
@@ -125,6 +119,15 @@ function PlotService:Start()
 		local success, data = RetryAsync(function()
 			local plot = GetRandomFreePlot(self._plots)
 			self:AssignPlot(player, plot)
+
+			-- Decode the test data
+			local decoded_data = Base64.FromBase64(SETTINGS.TEST_ENCODED_DATA)
+
+			local success, err = pcall(function()
+				local data = HttpService:JSONDecode(decoded_data)
+
+				plot:Load(data)
+			end)
 		end, SETTINGS.MAX_RETRIES)
 
 		if not success then
@@ -137,6 +140,18 @@ function PlotService:Start()
 
 	PlayerService:RegisterPlayerRemoved(function(player)
 		local success, data = RetryAsync(function()
+			-- Serialize the plot data
+			local plot = self._players[player]
+			assert(plot, "[PlotService] Player does not have a plot assigned")
+
+			local plot_data = plot:Serialize()
+			local serialized_data = HttpService:JSONEncode(plot_data)
+
+			-- base64 encode the data
+			local base64_data = Base64.ToBase64(serialized_data)
+
+			print("[PlotService] Base64 encoded data: " .. base64_data)
+
 			self:UnassignPlot(player)
 		end, SETTINGS.MAX_RETRIES)
 

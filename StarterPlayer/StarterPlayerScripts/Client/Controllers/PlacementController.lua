@@ -132,7 +132,17 @@ function PlacementController:StartPlacement(structureId: string)
 
 	TroveObject:Add(clone)
 
-	self._placement_client:InitiatePlacement(clone)
+	-- Get the GridUnit of the structure
+
+	local grid_unit = structure.GridUnit
+
+	-- get the stacking info of the structure
+	local stacking = structure.Stacking.Allowed
+
+	self._placement_client:UpdateGridUnit(grid_unit)
+	self._placement_client:InitiatePlacement(clone, {
+		can_stack = stacking,
+	})
 end
 
 function PlacementController:StopPlacement()

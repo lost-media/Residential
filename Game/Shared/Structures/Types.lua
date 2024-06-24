@@ -34,6 +34,7 @@ export type Structure = {
 	FullArea: boolean, -- If the structure occupies the whole area of the tile
 
 	Stacking: Stacked?,
+	GridUnit: number,
 
 	Properties: {
 		[string]: any,
