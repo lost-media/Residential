@@ -63,8 +63,8 @@ local SETTINGS = {
 	-- The size of a tile in studs in X and Z dimensions
 	TILE_SIZE = 8,
 }
-local ReplicatedStorage = game:GetService("ReplicatedStorage");
-local VFX: Folder = ReplicatedStorage.VFX;
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VFX: Folder = ReplicatedStorage.VFX
 local PlacementType = require(ReplicatedStorage.Game.Shared.Placement.Types)
 
 ---@type Trove
@@ -236,7 +236,6 @@ function Plot.new(plot_model: Instance)
 end
 
 function Plot:Load(data: { [string]: { [number]: SerializedStructure } })
-
 	local platform: Part = self._plot_model:FindFirstChild("Platform")
 
 	for structure_id, v in data do
@@ -259,7 +258,6 @@ function Plot:Load(data: { [string]: { [number]: SerializedStructure } })
 			structure.Parent = self._plot_model.Structures
 		end
 	end
-
 end
 
 function Plot:GetPlayer(): Player?
@@ -309,16 +307,15 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 
 	structure.Parent = self._plot_model.Structures
 
-	local can_place =  HandleCollisions(self._player.Character, structure, collisions, self)
+	local can_place = HandleCollisions(self._player.Character, structure, collisions, self)
 
-	if (can_place == false) then
-		return false;
+	if can_place == false then
+		return false
 	end
 
-	
 	-- add VFX for placing the structure
 	local PlacedDownVFX = VFX.PlacedDown:Clone()
-	PlacedDownVFX.Parent = structure.PrimaryPart;
+	PlacedDownVFX.Parent = structure.PrimaryPart
 
 	-- set the VFX to the correct position
 	PlacedDownVFX.CFrame = structure.PrimaryPart.CFrame * CFrame.new(0, 0.5, 0)
@@ -397,7 +394,7 @@ function Plot:Serialize(): { [number]: SerializedStructure }
 
 		table.insert(data[structure_id], {
 			CFrame = serialized_cframe,
-		});
+		})
 	end
 
 	return data

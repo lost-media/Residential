@@ -933,9 +933,9 @@ function PlacementClient:CreateRadiusVisual(radius: number)
 	self.radiusVisual.CastShadow = false
 
 	-- radius is in tiles, and each tile is 8 studs
-	radius = radius * 8
+	radius = radius * 4
 
-	self.radiusVisual.Size = Vector3.new(0.05, radius * 2 + 8, radius * 2 + 8)
+	self.radiusVisual.Size = Vector3.new(0.05, radius, radius)
 	-- rotate the radius visual so that it is flat
 	self.radiusVisual.Color = Color3.fromRGB(50, 82, 100)
 

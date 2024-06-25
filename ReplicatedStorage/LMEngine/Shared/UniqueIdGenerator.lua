@@ -63,9 +63,9 @@ UniqueIdGenerator.__index = UniqueIdGenerator
 ----- Private functions -----
 
 local function GenerateId(min_id: number, max_id: number): number
-	min_id = min_id or SETTINGS.DEFAULT_MIN_ID;
-	max_id = max_id or SETTINGS.DEFAULT_MAX_ID;
-	
+	min_id = min_id or SETTINGS.DEFAULT_MIN_ID
+	max_id = max_id or SETTINGS.DEFAULT_MAX_ID
+
 	return math.random(min_id, max_id)
 end
 

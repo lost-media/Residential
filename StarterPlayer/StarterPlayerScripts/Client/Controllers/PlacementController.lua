@@ -135,7 +135,7 @@ function PlacementController:StartPlacement(structureId: string)
 
 	-- Get the GridUnit of the structure
 
-	local settings = {};
+	local settings = {}
 
 	local grid_unit = structure.GridUnit
 
@@ -144,14 +144,14 @@ function PlacementController:StartPlacement(structureId: string)
 
 	settings.can_stack = stacking
 
-	local properties = structure.Properties;
+	local properties = structure.Properties
 
-	if (properties ~= nil and properties.Radius ~= nil) then
-		settings.radius = properties.Radius;
+	if properties ~= nil and properties.Radius ~= nil then
+		settings.radius = properties.Radius
 	end
 
 	self._placement_client:UpdateGridUnit(grid_unit)
-	self._placement_client:InitiatePlacement(clone, settings);
+	self._placement_client:InitiatePlacement(clone, settings)
 end
 
 function PlacementController:StopPlacement()

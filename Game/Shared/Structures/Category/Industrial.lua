@@ -24,7 +24,7 @@ local SharedProperties = {
 	GridUnit = 4,
 
 	Properties = {
-		Radius = 1, -- Tiles
+		Radius = 2, -- Tiles
 	},
 }
 
