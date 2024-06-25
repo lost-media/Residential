@@ -72,45 +72,6 @@ local Trove = require(ReplicatedStorage.LMEngine.Shared.Trove)
 
 ---@type UniqueIdGenerator
 local UniqueIdGenerator = require(ReplicatedStorage.LMEngine.Shared.UniqueIdGenerator)
------ Types -----
-
-export type PlotModel = Model & {
-	Tiles: Folder,
-	Structures: Folder,
-}
-
-type IPlot = {
-	__index: IPlot,
-	__tostring: (self: Plot) -> string,
-
-	ModelIsPlot: (model: Instance) -> boolean,
-	new: (plotModel: Instance) -> Plot,
-
-	GetPlayer: (self: Plot) -> Player?,
-	GetModel: (self: Plot) -> Instance,
-	AssignPlayer: (self: Plot, player: Player) -> (),
-	UnassignPlayer: (self: Plot) -> (),
-
-	SetAttribute: (self: Plot, attribute: string, value: any) -> (),
-	GetAttribute: (self: Plot, attribute: string) -> any,
-
-	PlaceStructure: (self: Plot, structure: Model, cframe: CFrame) -> boolean,
-	GetPlaceable: (self: Plot, model: Model) -> Model?,
-	Serialize: (self: Plot) -> { [number]: SerializedStructure },
-}
-
-type PlotMembers = {
-	_plot_model: Instance,
-	_player: Player?,
-	_trove: Trove.Trove,
-}
-
-export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))
-
-type SerializedStructure = {
-	PlotId: number,
-	CFrame: { number },
-}
 
 ----- Private variables -----
 
@@ -123,6 +84,11 @@ local NEIGHBORS = {
 
 ---@type LMEngineServer
 local LMEngine = require(ReplicatedStorage.LMEngine)
+
+local PlotTypes = require(script.Types)
+type IPlot = PlotTypes.IPlot
+type Plot = PlotTypes.Plot
+type SerializedStructure = PlotTypes.SerializedStructure
 
 local StructureFactory = require(LMEngine.Game.Shared.Structures.StructureFactory)
 
@@ -235,7 +201,7 @@ function Plot.new(plot_model: Instance)
 	return self
 end
 
-function Plot:Load(data: { [string]: { [number]: SerializedStructure } })
+function Plot:Load(data: { [string]: { [string]: SerializedStructure } })
 	local platform: Part = self._plot_model:FindFirstChild("Platform")
 
 	for structure_id, v in data do
@@ -315,27 +281,35 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 
 	-- add VFX for placing the structure
 	local PlacedDownVFX = VFX.PlacedDown:Clone()
-	PlacedDownVFX.Parent = structure.PrimaryPart
+	PlacedDownVFX.Parent = workspace
 
 	-- set the VFX to the correct position
 	PlacedDownVFX.CFrame = structure.PrimaryPart.CFrame * CFrame.new(0, 0.5, 0)
 
-	PlacedDownVFX.Smoke:Clear()
-	PlacedDownVFX.Smoke:Emit(100)
+	-- Emit all the particles
 
-	-- after x seconds, remove the VFX
+	for _, v in ipairs(PlacedDownVFX:GetChildren()) do
+		if v:IsA("ParticleEmitter") then
+			v.Enabled = true
+			v:Clear()
+			v:Emit(100)
+		end
+	end
+
+	-- wait for the VFX to finish
 	coroutine.wrap(function()
-		task.wait(0.75)
+		task.wait(1)
 		for _, v in ipairs(PlacedDownVFX:GetChildren()) do
 			if v:IsA("ParticleEmitter") then
 				v.Enabled = false
 			end
 		end
 
-		task.wait(1)
-
+		task.wait(1.5)
 		PlacedDownVFX:Destroy()
 	end)()
+
+	return true
 end
 
 function Plot:GetPlaceable(model: Model)
@@ -353,7 +327,7 @@ function Plot:GetPlaceable(model: Model)
 end
 --- Serializes all the structures on the plot
 ---@return table
-function Plot:Serialize(): { [number]: SerializedStructure }
+function Plot:Serialize(): { [string]: { SerializedStructure } }
 	local data = {}
 
 	local structures = self._plot_model.Structures:GetChildren()

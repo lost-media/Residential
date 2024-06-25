@@ -1480,8 +1480,7 @@ function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings
 			end
 
 			if settings.radius ~= nil and settings.radius > 0 then
-				local radius = MakeRadiusVisual(settings.radius, self)
-				print(radius)
+				MakeRadiusVisual(settings.radius, self)
 			end
 		end
 	end

@@ -37,6 +37,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine)
 
+local dir_Modules = script.Parent.Parent.Modules
+
 ---@type RetryAsync
 local RetryAsync = LMEngine.GetShared("RetryAsync")
 
@@ -47,10 +49,12 @@ local Base64 = require(ReplicatedStorage.LMEngine.Shared.Base64)
 
 local PlotServiceRateLimiter = RateLimiter.NewRateLimiter(SETTINGS.MAX_RATE_PER_SECOND)
 
-local Plot = require(script.Parent.Parent.Modules.Plot2)
+local Plot = require(dir_Modules.Plot2)
+local PlotTypes = require(dir_Modules.Plot2.Types)
+
 local StructureFactory = require(ReplicatedStorage.Game.Shared.Structures.StructureFactory)
 
-type Plot = Plot.Plot
+type Plot = PlotTypes.Plot
 
 ---@class PlotService
 local PlotService = LMEngine.CreateService({
@@ -101,6 +105,16 @@ local function CreatePlotObjects()
 	return plot_objects
 end
 
+local function EncodePlot(plot: Plot): string
+	local plot_data = plot:Serialize()
+	local serialized_data = HttpService:JSONEncode(plot_data)
+
+	-- base64 encode the data
+	local base64_data = Base64.ToBase64(serialized_data)
+
+	return base64_data
+end
+
 ----- Public functions -----
 
 function PlotService:Init()
@@ -115,13 +129,22 @@ function PlotService:Start()
 	---@type PlayerService
 	local PlayerService = LMEngine.GetService("PlayerService")
 
+	---@type DataService
+	local DataService = LMEngine.GetService("DataService")
+
 	PlayerService:RegisterPlayerAdded(function(player)
 		local success, data = RetryAsync(function()
 			local plot = GetRandomFreePlot(self._plots)
 			self:AssignPlot(player, plot)
 
+			local plot_data = DataService:GetPlot(player)
+
+			if plot_data == nil then
+				return
+			end
+
 			-- Decode the test data
-			local decoded_data = Base64.FromBase64(SETTINGS.TEST_ENCODED_DATA)
+			local decoded_data = Base64.FromBase64(plot_data)
 
 			local success, err = pcall(function()
 				local data = HttpService:JSONDecode(decoded_data)
@@ -141,16 +164,14 @@ function PlotService:Start()
 	PlayerService:RegisterPlayerRemoved(function(player)
 		local success, data = RetryAsync(function()
 			-- Serialize the plot data
+
 			local plot = self._players[player]
-			assert(plot, "[PlotService] Player does not have a plot assigned")
+			assert(plot, "[PlotService]: Player does not have a plot assigned")
 
-			local plot_data = plot:Serialize()
-			local serialized_data = HttpService:JSONEncode(plot_data)
+			-- Encode the plot data
+			local encoded_data = EncodePlot(plot)
 
-			-- base64 encode the data
-			local base64_data = Base64.ToBase64(serialized_data)
-
-			--print("[PlotService] Base64 encoded data: " .. base64_data)
+			DataService:UpdatePlot(player, encoded_data)
 
 			self:UnassignPlot(player)
 		end, SETTINGS.MAX_RETRIES)
@@ -192,10 +213,10 @@ function PlotService:PlaceStructure(player: Player, structure_id: string, cframe
 	assert(structure_id ~= nil, "[PlotService] PlaceStructure: Structure ID is nil")
 	assert(cframe ~= nil, "[PlotService] PlaceStructure: CFrame is nil")
 
-	local success, err = pcall(function()
-		local plot = self._players[player]
-		assert(plot, "[PlotService] PlaceStructure: Player does not have a plot assigned")
+	local plot = self._players[player]
+	assert(plot, "[PlotService] PlaceStructure: Player does not have a plot assigned")
 
+	local success, err = pcall(function()
 		-- Create the structure
 		local structure = StructureFactory.MakeStructure(structure_id)
 		assert(structure ~= nil, "[PlotService] PlaceStructure: Structure not found")
@@ -208,6 +229,13 @@ function PlotService:PlaceStructure(player: Player, structure_id: string, cframe
 	if success ~= true then
 		warn("[PlotService] Failed to place structure: " .. err)
 		return false
+	end
+
+	if err == true then
+		---@type DataService
+		--local DataService = LMEngine.GetService("DataService");
+
+		--DataService:UpdatePlot(player, plot);
 	end
 
 	return err
