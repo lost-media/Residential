@@ -26,7 +26,7 @@ local SETTINGS = {
 
 	MAX_RATE_PER_SECOND = 10,
 
-	TEST_ENCODED_DATA = "",
+	TEST_ENCODED_DATA = "eyJJbmR1c3RyaWFsL1dhdGVyIFRvd2VyIjpbeyJDRnJhbWUiOlsxOCw1LjE2NjY2NjUwNzcyMDk0NywtNiwxLDAsMCwwLDEsMCwwLDAsMV0sIlBsb3RJZCI6NDcwNn0seyJDRnJhbWUiOlsxOCw1LjE2NjY2NjUwNzcyMDk0NywyMiwxLDAsMCwwLDEsMCwwLDAsMV0sIlBsb3RJZCI6NDA4N30seyJDRnJhbWUiOlstMiw1LjE2NjY2NjUwNzcyMDk0NywxNCwxLDAsMCwwLDEsMCwwLDAsMV0sIlBsb3RJZCI6MjAyNn0seyJDRnJhbWUiOlsyLDUuMTY2NjY2NTA3NzIwOTQ3LDYsMSwwLDAsMCwxLDAsMCwwLDFdLCJQbG90SWQiOjIzNX1dfQ==",
 }
 
 ----- Private variables -----
@@ -43,7 +43,7 @@ local RetryAsync = LMEngine.GetShared("RetryAsync")
 ---@type RateLimiter
 local RateLimiter = LMEngine.GetModule("RateLimiter")
 
-local Base64 = require(ReplicatedStorage.LMEngine.Shared.Base64)
+local Base64 = require(ReplicatedStorage.LMEngine.Shared.Base64);
 
 local PlotServiceRateLimiter = RateLimiter.NewRateLimiter(SETTINGS.MAX_RATE_PER_SECOND)
 
@@ -148,9 +148,9 @@ function PlotService:Start()
 			local serialized_data = HttpService:JSONEncode(plot_data)
 
 			-- base64 encode the data
-			local base64_data = Base64.ToBase64(serialized_data)
+			local base64_data = Base64.ToBase64(serialized_data);
 
-			print("[PlotService] Base64 encoded data: " .. base64_data)
+			--print("[PlotService] Base64 encoded data: " .. base64_data)
 
 			self:UnassignPlot(player)
 		end, SETTINGS.MAX_RETRIES)

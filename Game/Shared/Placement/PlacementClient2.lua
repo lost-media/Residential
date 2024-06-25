@@ -236,6 +236,11 @@ type PlacementClientMembers = {
 
 export type PlacementClient = typeof(setmetatable({} :: PlacementClientMembers, {} :: IPlacementClient))
 
+type ModelSettings = {
+	can_stack: boolean,
+	radius: number?,
+}
+
 ----- Private variables -----
 
 -- values used for calculations
@@ -476,6 +481,49 @@ local function GetRange(part: BasePart): number
 	end
 
 	return (part.Position - character.PrimaryPart.Position).Magnitude
+end
+
+local function MakeRadiusVisual(radius: number, client: PlacementClient): Part?
+	local state: State = client._state:getState();
+
+	if state._current_state == 4 then
+		return;
+	end
+
+	if self.radiusVisual then
+		self.radiusVisual:Destroy()
+	end
+
+	self.radiusVisual = Instance.new("Part")
+	self.radiusVisual.Shape = Enum.PartType.Cylinder
+	self.radiusVisual.CastShadow = false
+
+	-- radius is in tiles, and each tile is 8 studs
+	radius = radius * 8
+
+	self.radiusVisual.Size = Vector3.new(0.05, radius * 2 + 8, radius * 2 + 8)
+	-- rotate the radius visual so that it is flat
+	self.radiusVisual.Color = Color3.fromRGB(50, 82, 100)
+
+	--self.radiusVisual.Anchored = true
+	self.radiusVisual.CanCollide = false
+	self.radiusVisual.Transparency = 0.3
+	self.radiusVisual.Parent = workspace
+
+	-- Pulse the radius visual
+
+	local part = self.radiusVisual -- replace this with the actual part you want to pulse
+
+	local pulseTween = TweenService:Create(
+		part,
+		TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true),
+		{ Transparency = 0.7 }
+	)
+	pulseTween:Play()
+
+	client._trove:Add(self.radiusVisual)
+
+	return self.radiusVisual
 end
 
 -- Clamps the x and z positions so they cannot leave the plot
@@ -1334,10 +1382,6 @@ function PlacementClient.new(plot: Model, grid_unit: number?)
 
 	return self
 end
-
-type ModelSettings = {
-	can_stack: boolean,
-}
 
 function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings?)
 	assert(model ~= nil, "[PlacementClient] InitiatePlacement: Model must not be nil")

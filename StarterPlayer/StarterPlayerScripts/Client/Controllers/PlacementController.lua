@@ -95,8 +95,9 @@ function PlacementController:Start()
 		placement_promise
 			:andThen(function(successful: boolean)
 				if successful == true then
-					print("[PlacementController] Structure placed successfully")
+					--print("[PlacementController] Structure placed successfully")
 				else
+					-- Show toast message
 					print("[PlacementController] Structure placement failed")
 				end
 			end)
@@ -134,15 +135,23 @@ function PlacementController:StartPlacement(structureId: string)
 
 	-- Get the GridUnit of the structure
 
+	local settings = {};
+
 	local grid_unit = structure.GridUnit
 
 	-- get the stacking info of the structure
 	local stacking = structure.Stacking.Allowed
 
+	settings.can_stack = stacking
+
+	local properties = structure.Properties;
+
+	if (properties ~= nil and properties.Radius ~= nil) then
+		settings.radius = properties.Radius;
+	end
+
 	self._placement_client:UpdateGridUnit(grid_unit)
-	self._placement_client:InitiatePlacement(clone, {
-		can_stack = stacking,
-	})
+	self._placement_client:InitiatePlacement(clone, settings);
 end
 
 function PlacementController:StopPlacement()
