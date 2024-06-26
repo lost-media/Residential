@@ -62,8 +62,4 @@ function StructureService:Init()
 	end
 end
 
-function StructureService:Start()
-	print("[StructureService] started")
-end
-
 return StructureService
