@@ -188,6 +188,8 @@ type State = {
 	_amplitude: number,
 	_floor_height: number,
 	_cframe: CFrame,
+
+	_radius_visual: Part?,
 }
 
 type IPlacementClient = {
@@ -236,6 +238,11 @@ type PlacementClientMembers = {
 
 export type PlacementClient = typeof(setmetatable({} :: PlacementClientMembers, {} :: IPlacementClient))
 
+type ModelSettings = {
+	can_stack: boolean,
+	radius: number?,
+}
+
 ----- Private variables -----
 
 -- values used for calculations
@@ -249,6 +256,7 @@ local initial_Y: number
 local ContextActionService = game:GetService("ContextActionService")
 local GuiService = game:GetService("GuiService")
 local HapticService = game:GetService("HapticService")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils)
@@ -349,6 +357,12 @@ local cframe_changed = Rodux.createReducer(CFrame.new(), {
 	end,
 })
 
+local radius_visual_changed = Rodux.createReducer(nil, {
+	["RADIUS_VISUAL_CHANGED"] = function(state: State, action)
+		return action._radius_visual
+	end,
+})
+
 local reducers = Rodux.combineReducers({
 	_current_state = current_state_changed,
 	_last_state = last_state_changed,
@@ -364,6 +378,7 @@ local reducers = Rodux.combineReducers({
 	_floor_height = floor_height_changed,
 	_auto_placement = auto_placement_changed,
 	_cframe = cframe_changed,
+	_radius_visual = radius_visual_changed,
 })
 
 ----- Actions -----
@@ -466,6 +481,13 @@ local function CFrameChanged(cframe: CFrame)
 	}
 end
 
+local function RadiusVisualChanged(radius_visual: Part?)
+	return {
+		type = "RADIUS_VISUAL_CHANGED",
+		_radius_visual = radius_visual,
+	}
+end
+
 ----- Private functions -----
 
 local function GetRange(part: BasePart): number
@@ -476,6 +498,62 @@ local function GetRange(part: BasePart): number
 	end
 
 	return (part.Position - character.PrimaryPart.Position).Magnitude
+end
+
+local function MakeRadiusVisual(radius: number, client: PlacementClient): Part?
+	local state: State = client._state:getState()
+
+	if state._current_model == nil then
+		return
+	end
+
+	if state._radius_visual ~= nil then
+		-- modify the existing one
+		state._radius_visual:Destroy()
+	end
+
+	local radius_part = Instance.new("Part")
+	radius_part.Shape = Enum.PartType.Cylinder
+	radius_part.CastShadow = false
+
+	-- radius is in tiles, and each tile is 8 studs
+	radius = radius * 8
+
+	radius_part.Size = Vector3.new(0.05, radius * 2 + 8, radius * 2 + 8)
+	-- rotate the radius visual so that it is flat
+	radius_part.CFrame = CFrame.Angles(0, 0, math.rad(90))
+
+	radius_part.Color = Color3.fromRGB(50, 82, 100)
+
+	--radius.Anchored = true
+	radius_part.CanCollide = false
+	radius_part.Transparency = 0.3
+	radius_part.Parent = state._current_model
+
+	-- weld the radius visual to the object
+	local weld = Instance.new("WeldConstraint")
+	weld.Parent = radius_part
+	weld.Part0 = radius_part
+	weld.Part1 = state._current_model.PrimaryPart
+
+	-- set its position to the bottom of the object
+	radius_part.Position = state._current_model.PrimaryPart.Position
+		- Vector3.new(0, state._current_model.PrimaryPart.Size.Y / 2, 0)
+		+ Vector3.new(0, 0.025, 0)
+
+	-- Pulse the radius visual
+
+	local pulseTween = TweenService:Create(
+		radius_part,
+		TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true),
+		{ Transparency = 0.7 }
+	)
+	pulseTween:Play()
+
+	client._trove:Add(radius_part)
+
+	client._state:dispatch(RadiusVisualChanged(radius_part))
+	return radius_part
 end
 
 -- Clamps the x and z positions so they cannot leave the plot
@@ -1335,10 +1413,6 @@ function PlacementClient.new(plot: Model, grid_unit: number?)
 	return self
 end
 
-type ModelSettings = {
-	can_stack: boolean,
-}
-
 function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings?)
 	assert(model ~= nil, "[PlacementClient] InitiatePlacement: Model must not be nil")
 	assert(model.ClassName == "Model", "[PlacementClient] InitiatePlacement: Model must be a Model")
@@ -1403,6 +1477,10 @@ function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings
 					character,
 					unpack(self._ignored_items),
 				}
+			end
+
+			if settings.radius ~= nil and settings.radius > 0 then
+				MakeRadiusVisual(settings.radius, self)
 			end
 		end
 	end

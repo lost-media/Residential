@@ -33,8 +33,6 @@ local InputController = LMEngine.CreateController({
 ----- Public functions -----
 
 function InputController:Init()
-	print("[InputController] initialized")
-
 	UserInputService.InputBegan:Connect(function(input, game_processed)
 		for _, callback in self.InputBeganCallbacks do
 			callback(input, game_processed)
@@ -46,10 +44,6 @@ function InputController:Init()
 			callback(input, game_processed)
 		end
 	end)
-end
-
-function InputController:Start()
-	print("[InputController] started")
 end
 
 function InputController:RegisterInputBegan(key: string, callback: (input: InputObject, game_processed: boolean?) -> ())

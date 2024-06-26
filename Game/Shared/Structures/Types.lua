@@ -37,6 +37,7 @@ export type Structure = {
 	GridUnit: number,
 
 	Properties: {
+		Radius: number?,
 		[string]: any,
 	},
 }
