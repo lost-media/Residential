@@ -32,13 +32,7 @@ local PlotController = LMEngine.CreateController({
 
 ----- Public functions -----
 
-function PlotController:Init()
-	print("[PlotController] initialized")
-end
-
 function PlotController:Start()
-	print("[PlotController] started")
-
 	local PlotService = LMEngine.GetService("PlotService")
 
 	local PlotAssigned: RBXScriptConnection

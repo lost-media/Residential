@@ -51,13 +51,7 @@ local StructuresList = {
 
 ----- Public functions -----
 
-function PlacementController:Init()
-	print("[PlacementController] initialized")
-end
-
 function PlacementController:Start()
-	print("[PlacementController] started")
-
 	local PlotService = LMEngine.GetService("PlotService")
 
 	---@type PlotController

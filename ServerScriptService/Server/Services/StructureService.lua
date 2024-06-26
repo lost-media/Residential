@@ -54,8 +54,6 @@ local StructureService = LMEngine.CreateService({
 ----- Public functions -----
 
 function StructureService:Init()
-	print("[StructureService] initialized")
-
 	for _, structures in StructuresCollection do
 		for _, structure in pairs(structures) do
 			WeldLib.WeldModelToPrimaryPart(structure.Model)

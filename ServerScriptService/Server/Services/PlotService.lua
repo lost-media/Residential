@@ -25,8 +25,6 @@ local SETTINGS = {
 	MAX_RETRIES = 5,
 
 	MAX_RATE_PER_SECOND = 10,
-
-	TEST_ENCODED_DATA = "eyJJbmR1c3RyaWFsL1dhdGVyIFRvd2VyIjpbeyJDRnJhbWUiOlsxOCw1LjE2NjY2NjUwNzcyMDk0NywtNiwxLDAsMCwwLDEsMCwwLDAsMV0sIlBsb3RJZCI6NDcwNn0seyJDRnJhbWUiOlsxOCw1LjE2NjY2NjUwNzcyMDk0NywyMiwxLDAsMCwwLDEsMCwwLDAsMV0sIlBsb3RJZCI6NDA4N30seyJDRnJhbWUiOlstMiw1LjE2NjY2NjUwNzcyMDk0NywxNCwxLDAsMCwwLDEsMCwwLDAsMV0sIlBsb3RJZCI6MjAyNn0seyJDRnJhbWUiOlsyLDUuMTY2NjY2NTA3NzIwOTQ3LDYsMSwwLDAsMCwxLDAsMCwwLDFdLCJQbG90SWQiOjIzNX1dfQ==",
 }
 
 ----- Private variables -----
@@ -118,14 +116,10 @@ end
 ----- Public functions -----
 
 function PlotService:Init()
-	print("[PlotService] initialized")
-
 	self._plots = CreatePlotObjects()
 end
 
 function PlotService:Start()
-	print("[PlotService] started")
-
 	---@type PlayerService
 	local PlayerService = LMEngine.GetService("PlayerService")
 

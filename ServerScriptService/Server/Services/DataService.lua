@@ -62,13 +62,7 @@ local DataService = LMEngine.CreateService({
 
 ----- Public functions -----
 
-function DataService:Init()
-	print("[DataService]: initialized")
-end
-
 function DataService:Start()
-	print("[DataService]: started")
-
 	---@type PlayerService
 	local PlayerService = LMEngine.GetService("PlayerService")
 

@@ -77,8 +77,6 @@ local PlayerService = LMEngine.CreateService({
 ----- Public functions -----
 
 function PlayerService:Init()
-	print("[PlayerService] initialized")
-
 	self.PlayerAdded = game.Players.PlayerAdded:Connect(function(player)
 		for _, scope in SETTINGS.ScopeOrder do
 			if self.PlayerAddedCallbacks[scope] == nil then
@@ -109,10 +107,6 @@ function PlayerService:Init()
 			end
 		end
 	end
-end
-
-function PlayerService:Start()
-	print("[PlayerService] started")
 end
 
 function PlayerService:RegisterPlayerAdded(callback: (player: Player) -> (), scope: Scope?)
