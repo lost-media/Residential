@@ -137,14 +137,7 @@ function PlotService:Start()
 				return
 			end
 
-			-- Decode the test data
-			local decoded_data = Base64.FromBase64(plot_data)
-
-			local success, err = pcall(function()
-				local data = HttpService:JSONDecode(decoded_data)
-
-				plot:Load(data)
-			end)
+			self:LoadPlotData(player, plot_data)
 		end, SETTINGS.MAX_RETRIES)
 
 		if not success then
@@ -242,6 +235,27 @@ function PlotService.Client:PlaceStructure(player: Player, structure_id: string,
 	assert(cframe ~= nil, "[PlotService] PlaceStructure: CFrame is nil")
 
 	return self.Server:PlaceStructure(player, structure_id, cframe) :: boolean
+end
+
+function PlotService:GetPlot(player: Player): Plot?
+	return self._players[player]
+end
+
+function PlotService:LoadPlotData(player: Player, data: string)
+	local plot = self._players[player]
+	assert(plot, "[PlotService] LoadPlotData: Player does not have a plot assigned")
+
+	local success, err = pcall(function()
+		local decoded_data = Base64.FromBase64(data)
+
+		local plot_data = HttpService:JSONDecode(decoded_data)
+
+		plot:Load(plot_data)
+	end)
+
+	if success == false then
+		warn("[PlotService] Failed to load plot data: " .. err)
+	end
 end
 
 return PlotService

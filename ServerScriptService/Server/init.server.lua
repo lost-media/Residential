@@ -1,5 +1,9 @@
 --!strict
+
+local ServerStorage = game:GetService("ServerStorage")
+
 ---@type LMEngineServer
+local Cmdr = require(LMEngine.SharedDir.Cmdr)
 local LMEngine = require(game:GetService("ReplicatedStorage").LMEngine)
 
 local dir_Modules = script.Modules
@@ -7,6 +11,10 @@ local dir_Services = script.Services
 
 LMEngine.LoadModulesFromParent(dir_Modules)
 LMEngine.AddServices(dir_Services)
+
+Cmdr:RegisterDefaultCommands()
+Cmdr:RegisterCommandsIn(ServerStorage.Cmdr.CommandDefinitions)
+Cmdr:RegisterHooksIn(ServerStorage.Cmdr.Hooks)
 
 local start_time = tick()
 LMEngine.Start()

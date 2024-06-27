@@ -102,6 +102,11 @@ function DataService:Start()
 end
 
 function DataService:UpdatePlot(player: Player, plot: string)
+	if plot == nil then
+		warn("[DataService]: Attempted to update plot with nil value")
+		return
+	end
+
 	local profile = self._profiles[player]
 
 	if profile == nil then

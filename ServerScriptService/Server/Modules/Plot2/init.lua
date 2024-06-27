@@ -202,6 +202,9 @@ function Plot.new(plot_model: Instance)
 end
 
 function Plot:Load(data: { [string]: { [string]: SerializedStructure } })
+	-- First, clear the plot
+	self._plot_model.Structures:ClearAllChildren()
+
 	local platform: Part = self._plot_model:FindFirstChild("Platform")
 
 	for structure_id, v in data do
