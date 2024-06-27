@@ -1118,13 +1118,14 @@ local function Reset(client: PlacementClient)
 	local state: State = client._state:getState()
 
 	local hitbox = state._hitbox
-	local current_model = state._current_model
 
 	client._trove:Destroy()
 
 	--if mobileUI ~= nil then
 	--	mobileUI.Parent = script
 	--end
+
+	UnbindInputs()
 
 	client._state:dispatch(CurrentModelChanged(nil))
 	client._state:dispatch(HitboxChanged(nil))
@@ -1157,6 +1158,8 @@ local function TERMINATE_PLACEMENT(client: PlacementClient)
 	end
 
 	SetCurrentState(4, client)
+
+	-- Unbind 	
 
 	-- Removes grid texture from plot
 	--if SETTINGS.DisplayGridTexture and not removePlotDependencies then
