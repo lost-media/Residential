@@ -28,6 +28,8 @@ export type IPlot = {
 	PlaceStructure: (self: Plot, structure: Model, cframe: CFrame) -> boolean,
 	GetPlaceable: (self: Plot, model: Model) -> Model?,
 	Serialize: (self: Plot) -> { [number]: SerializedStructure },
+
+	DeleteStructure: (self: Plot, structure: Model) -> (),
 }
 
 type PlotMembers = {

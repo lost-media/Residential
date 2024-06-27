@@ -3,8 +3,9 @@
 local ServerStorage = game:GetService("ServerStorage")
 
 ---@type LMEngineServer
-local Cmdr = require(LMEngine.SharedDir.Cmdr)
 local LMEngine = require(game:GetService("ReplicatedStorage").LMEngine)
+
+local Cmdr = require(LMEngine.SharedDir.Cmdr)
 
 local dir_Modules = script.Modules
 local dir_Services = script.Services

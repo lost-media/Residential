@@ -58,6 +58,7 @@ type Plot = PlotTypes.Plot
 local PlotService = LMEngine.CreateService({
 	Name = "PlotService",
 	Client = {
+		DeleteStructure = LMEngine.CreateSignal(),
 		PlotAssigned = LMEngine.CreateSignal(),
 		Test = LMEngine.CreateSignal(),
 		PlaceStructure = LMEngine.CreateSignal(),
@@ -256,6 +257,23 @@ function PlotService:LoadPlotData(player: Player, data: string)
 	if success == false then
 		warn("[PlotService] Failed to load plot data: " .. err)
 	end
+end
+
+function PlotService:DeleteStructure(player: Player, structure: Model)
+	assert(player, "[PlotService] DeleteStructure: Player is nil")
+	assert(structure, "[PlotService] DeleteStructure: Structure is nil")
+
+	local plot = self._players[player]
+	assert(plot, "[PlotService] DeleteStructure: Player does not have a plot assigned")
+
+	plot:DeleteStructure(structure)
+end
+
+function PlotService.Client:DeleteStructure(player: Player, structure: Model)
+	assert(player, "[PlotService] DeleteStructure: Player is nil")
+	assert(structure, "[PlotService] DeleteStructure: Structure is nil")
+
+	self.Server:DeleteStructure(player, structure)
 end
 
 return PlotService

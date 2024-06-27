@@ -379,6 +379,16 @@ function Plot:Serialize(): { [string]: { SerializedStructure } }
 	return data
 end
 
+function Plot:DeleteStructure(structure: Model)
+	assert(structure ~= nil, "[PlotService] DeleteStructure: Structure is nil")
+	assert(
+		structure.Parent == self._plot_model.Structures,
+		"[PlotService] DeleteStructure: Structure is not a child of the plot"
+	)
+
+	structure:Destroy()
+end
+
 function Plot.__tostring(self: Plot): string
 	return "Plot " .. self._plot_model.Name
 end

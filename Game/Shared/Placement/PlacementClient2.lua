@@ -232,6 +232,7 @@ type PlacementClientMembers = {
 	LevelChanged: Signal.Signal,
 	OutOfRange: Signal.Signal,
 	Initiated: Signal.Signal,
+	DeleteStructure: Signal.Signal,
 
 	PlacementConfirmed: Signal.Signal,
 }
@@ -1226,9 +1227,18 @@ local function BindInputs(client: PlacementClient)
 		)
 	end
 
-	client._trove:Add(UserInputService.InputBegan:Connect(function(input: InputObject)
+	client._trove:Add(UserInputService.InputBegan:Connect(function(input: InputObject, game_processed: boolean)
+		if game_processed then
+			return
+		end
+
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			client:ConfirmPlacement()
+		end
+
+		if input.KeyCode == Enum.KeyCode.X then
+			-- Delete the current model
+			client:Delete()
 		end
 	end))
 end
@@ -1355,6 +1365,23 @@ local function PLACEMENT(self: PlacementClient, Function: RemoteFunction, callba
 	PlacementFeedback(id, callback, self)
 end
 
+local function DELETE(self: PlacementClient, structure: Model)
+	if structure == nil then
+		return
+	end
+
+	if structure:IsA("Model") == false then
+		return
+	end
+
+	if structure:IsDescendantOf(self._plot:FindFirstChild("Structures")) == false then
+		return
+	end
+
+	-- fire the delete signal
+	self.DeleteStructure:Fire(structure)
+end
+
 local function CreateAudioFeedback()
 	local audio = Instance.new("Sound")
 	audio.Name = "PlacementFeedback"
@@ -1401,6 +1428,7 @@ function PlacementClient.new(plot: Model, grid_unit: number?)
 	self.OutOfRange = Signal.new()
 	self.Initiated = Signal.new()
 	self.PlacementConfirmed = Signal.new()
+	self.DeleteStructure = Signal.new()
 
 	self._ignored_items = {}
 
@@ -1576,6 +1604,46 @@ function PlacementClient:ConfirmPlacement()
 
 		task.wait(SETTINGS.PLACEMENT_CONFIGS.PlacementCooldown)
 	until (self._state:getState() :: State)._running == false
+end
+
+function PlacementClient:Delete()
+	local state: State = self._state:getState()
+
+	if state._current_state == 4 then
+		return
+	end
+
+	local current_model = state._current_model
+
+	if current_model == nil then
+		return
+	end
+
+	-- get the model that the mouse is hovering over
+	local mouse = self._mouse
+	local target = mouse:GetTarget()
+
+	if target == nil then
+		return
+	end
+
+	local model = target:FindFirstAncestorWhichIsA("Model")
+
+	if model == nil then
+		return
+	end
+
+	-- check if the model is a structure
+	if model:IsDescendantOf(self._plot:FindFirstChild("Structures")) == false then
+		return
+	end
+
+	-- check if the model is the current model
+	if model == current_model then
+		return
+	end
+
+	DELETE(self, model)
 end
 
 function PlacementClient:Destroy()
