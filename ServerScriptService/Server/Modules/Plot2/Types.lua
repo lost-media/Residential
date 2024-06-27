@@ -1,5 +1,6 @@
 local LMEngine = require(game:GetService("ReplicatedStorage").LMEngine)
 
+local RoadNetworkTypes = require(script.Parent.RoadNetwork.Types)
 local Trove = require(LMEngine.SharedDir.Trove)
 
 local PlotTypes = {}
@@ -33,6 +34,7 @@ type PlotMembers = {
 	_plot_model: Instance,
 	_player: Player?,
 	_trove: Trove.Trove,
+	_road_network: RoadNetworkTypes.RoadNetwork,
 }
 
 export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))

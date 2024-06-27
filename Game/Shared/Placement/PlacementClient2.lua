@@ -857,8 +857,6 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 		target = platform
 	end
 
-	target = target
-
 	local pltCFrame: CFrame = platform.CFrame
 	local positionCFrame = CFrame.new(x, 0, z) * CFrame.new(offsetX, 0, offsetZ)
 
@@ -868,7 +866,7 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 	if
 		state._stackable
 		and target
-		and (target:IsDescendantOf(client._plot:FindFirstChild("Structures")) or target == platform)
+		and (target:IsDescendantOf(client._plot:FindFirstChild("Structures"))) --  or target == platform)
 	then
 		if ray and ray.Normal then
 			local normal =
@@ -967,7 +965,7 @@ local function RaiseFloor(
 		return
 	end
 
-	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == false or state._stackable == true then
+	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == false then --or state._stackable == true then
 		return
 	end
 
@@ -994,7 +992,7 @@ local function LowerFloor(
 		return
 	end
 
-	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == false or state._stackable == true then
+	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == false then --or state._stackable == true then
 		return
 	end
 

@@ -55,9 +55,14 @@ local StructureService = LMEngine.CreateService({
 
 function StructureService:Init()
 	for _, structures in StructuresCollection do
-		for _, structure in pairs(structures) do
+		for _, structure in structures do
 			WeldLib.WeldModelToPrimaryPart(structure.Model)
 			structure.Model:SetAttribute(PlotConfigs.STRUCTURE_ID_ATTRIBUTE_KEY, structure.Id)
+
+			-- the hitboxes don't need to collide with the player
+			if structure.Model.PrimaryPart ~= nil then
+				structure.Model.PrimaryPart.CanCollide = false
+			end
 		end
 	end
 end

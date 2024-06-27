@@ -63,17 +63,14 @@ local SETTINGS = {
 	-- The size of a tile in studs in X and Z dimensions
 	TILE_SIZE = 8,
 }
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VFX: Folder = ReplicatedStorage.VFX
-local PlacementType = require(ReplicatedStorage.Game.Shared.Placement.Types)
-
----@type Trove
-local Trove = require(ReplicatedStorage.LMEngine.Shared.Trove)
-
----@type UniqueIdGenerator
-local UniqueIdGenerator = require(ReplicatedStorage.LMEngine.Shared.UniqueIdGenerator)
 
 ----- Private variables -----
+
+local RoadNetwork = require(script.RoadNetwork)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local VFX: Folder = ReplicatedStorage.VFX
 
 local NEIGHBORS = {
 	Vector3.new(0, 0, SETTINGS.TILE_SIZE),
@@ -84,6 +81,9 @@ local NEIGHBORS = {
 
 ---@type LMEngineServer
 local LMEngine = require(ReplicatedStorage.LMEngine)
+
+---@type Trove
+local Trove = require(LMEngine.SharedDir.Trove)
 
 local PlotTypes = require(script.Types)
 type IPlot = PlotTypes.IPlot
@@ -197,6 +197,8 @@ function Plot.new(plot_model: Instance)
 	self._plot_model = plot_model
 	self._player = nil :: Player?
 	self._trove = Trove.new()
+
+	self._road_network = RoadNetwork.new(self)
 
 	return self
 end

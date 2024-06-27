@@ -16,10 +16,11 @@ Cmdr:RegisterDefaultCommands()
 Cmdr:RegisterCommandsIn(ServerStorage.Cmdr.CommandDefinitions)
 Cmdr:RegisterHooksIn(ServerStorage.Cmdr.Hooks)
 
-local start_time = tick()
+local start_time = os.clock()
+
 LMEngine.Start()
 	:andThen(function()
-		print("[LM Engine] Server Engine started in", string.format("%.2fms", (tick() - start_time) * 100))
+		print("[LM Engine] Server Engine started in", string.format("%.2fms", (os.clock() - start_time) * 100))
 	end)
 	:catch(function(err)
 		warn("[LM Engine] Engine failed to start", err)
