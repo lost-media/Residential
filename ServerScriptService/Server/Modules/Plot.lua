@@ -240,6 +240,11 @@ end
 function Plot:UnassignPlayer()
 	assert(self._player ~= nil, "Plot is not assigned to a player")
 	self._player = nil
+
+	-- Clear all structures from the plot
+	for _, structure in pairs(self._plot_model.Structures:GetChildren()) do
+		structure:Destroy()
+	end
 end
 
 function Plot:SetAttribute(attribute: string, value: any)
