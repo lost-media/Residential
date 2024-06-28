@@ -67,7 +67,7 @@ local PlotService = LMEngine.CreateService({
 	---@type Plot2[]
 	_plots = {},
 
-	---@type table<Player, Plot>
+	---@type table<Player, Plot2>
 	_players = {},
 })
 
