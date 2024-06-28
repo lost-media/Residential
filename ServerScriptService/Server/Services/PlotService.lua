@@ -81,7 +81,19 @@ local function GetRandomFreePlot(plots: { Plot }): Plot?
 	assert(plots, "[PlotService] GetRandomFreePlot: Free plots is nil")
 	assert(#plots > 0, "[PlotService] GetRandomFreePlot: No free plots available")
 
-	local random = plots[math.random(1, #plots)]
+	local free_plots = {}
+
+	for _, plot in plots do
+		if plot:GetPlayer() == nil then
+			table.insert(free_plots, plot)
+		end
+	end
+
+	if #free_plots == 0 then
+		return nil
+	end
+
+	local random = free_plots[math.random(1, #free_plots)]
 
 	return random
 end
@@ -130,6 +142,10 @@ function PlotService:Start()
 	PlayerService:RegisterPlayerAdded(function(player)
 		local success, data = RetryAsync(function()
 			local plot = GetRandomFreePlot(self._plots)
+
+			if plot == nil then
+				return
+			end
 			--self:AssignPlot(player, plot)
 
 			--[[local plot_data = DataService:GetPlot(player)
@@ -154,12 +170,15 @@ function PlotService:Start()
 			-- Serialize the plot data
 
 			local plot = self._players[player]
-			assert(plot, "[PlotService]: Player does not have a plot assigned")
+
+			if plot == nil then
+				return
+			end
 
 			-- Encode the plot data
 			local encoded_data = EncodePlot(plot)
 
-			DataService:UpdatePlotData(player, encoded_data)
+			DataService:UpdatePlotData(player, plot:GetUUID(), encoded_data)
 
 			self:UnassignPlot(player)
 		end, SETTINGS.MAX_RETRIES)
@@ -188,7 +207,7 @@ function PlotService:UnassignPlot(player: Player)
 	assert(player ~= nil, "[PlotService] UnassignPlot: Player is nil")
 	assert(self._players[player] ~= nil, "[PlotService] UnassignPlot: Player does not have a plot assigned")
 
-	---@type Plot
+	---@type Plot2
 	local plot: Plot = self._players[player]
 
 	plot:UnassignPlayer()
@@ -235,7 +254,7 @@ function PlotService:GetPlot(player: Player): Plot?
 	return self._players[player]
 end
 
-function PlotService:LoadPlotData(player: Player, data: table)
+function PlotService:LoadPlotData(player: Player, data: table, plot_uuid: string)
 	local plot = self._players[player]
 
 	if plot == nil then
@@ -245,14 +264,16 @@ function PlotService:LoadPlotData(player: Player, data: table)
 	plot = self._players[player]
 	assert(plot, "[PlotService] LoadPlotData: Player does not have a plot assigned")
 
-	assert(data.PlotData, "[PlotService] LoadPlotData: Plot data is nil")
+	if data.PlotData == nil then
+		data.PlotData = Base64.ToBase64(HttpService:JSONEncode({}))
+	end
 
 	local success, err = pcall(function()
 		local decoded_data = Base64.FromBase64(data.PlotData)
 
 		local plot_data = HttpService:JSONDecode(decoded_data)
 
-		plot:Load(plot_data)
+		plot:Load(plot_data, plot_uuid)
 	end)
 
 	if success == false then

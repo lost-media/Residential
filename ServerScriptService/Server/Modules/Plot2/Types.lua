@@ -17,6 +17,7 @@ export type IPlot = {
 	ModelIsPlot: (model: Instance) -> boolean,
 	new: (plotModel: Instance) -> Plot,
 
+	GetUUID: (self: Plot) -> string,
 	GetPlayer: (self: Plot) -> Player?,
 	GetModel: (self: Plot) -> Instance,
 	AssignPlayer: (self: Plot, player: Player) -> (),
@@ -37,6 +38,7 @@ type PlotMembers = {
 	_player: Player?,
 	_trove: Trove.Trove,
 	_road_network: RoadNetworkTypes.RoadNetwork,
+	_plot_uuid: string?,
 }
 
 export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))

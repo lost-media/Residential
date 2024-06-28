@@ -1209,7 +1209,7 @@ local function BindInputs(client: PlacementClient)
 		SETTINGS.CONTROLS.XboxTerminate
 	)
 
-	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == true and stackable ~= true then
+	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == true then --and stackable ~= true then
 		ContextActionService:BindAction(
 			"Raise",
 			function(actionName: string, inputState: Enum.UserInputState, inputObj: InputObject?)

@@ -21,25 +21,30 @@
 --]]
 
 local SETTINGS = {
-	MAIN_PROFILE_PREFIX = "Player_",
-	PLOT_PROFILE_PREFIX = "Plot_",
+	ProfileStoreName = "ResidentialDataStore_v1",
+	PlayerProfileScope = "Player",
+	PlotProfileScope = "Plot",
+}
 
-	MainProfileTemplate = {
-		Plots = {},
-		Version = 0,
-	},
+----- Types -----
 
-	PlotProfileTemplate = {
-		Name = "",
-		UserId = -1,
-		PlotData = "",
-		Storage = {},
-		Version = 0,
-	},
+type PlayerSchema = {
+	Plots: { [string]: string },
+	UserId: number,
+	CompletedTutorial: boolean,
+	LastPlotIdUsed: string,
+	Version: number,
+}
+
+type PlotSchema = {
+	PlotData: string,
+	UserId: number,
+	Version: number,
 }
 
 ----- Private variables -----
 
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -51,8 +56,15 @@ local dir_Modules = script.Parent.Parent.Modules
 ---@type ProfileService
 local ProfileService = LMEngine.GetModule("ProfileService")
 
-local ProfileStore = ProfileService.GetProfileStore("PlayerData", SETTINGS.MainProfileTemplate)
-local PlotStore = ProfileService.GetProfileStore("PlotData", SETTINGS.PlotProfileTemplate)
+local PlayerStore = ProfileService.GetProfileStore({
+	Name = SETTINGS.ProfileStoreName,
+	Scope = SETTINGS.PlayerProfileScope,
+}, {})
+
+local PlotStore = ProfileService.GetProfileStore({
+	Name = SETTINGS.ProfileStoreName,
+	Scope = SETTINGS.PlotProfileScope,
+}, {})
 
 ---@type RetryAsync
 local RetryAsync = LMEngine.GetShared("RetryAsync")
@@ -63,6 +75,7 @@ local MigrationManager = require(dir_Modules.MigrationManager)
 local DataService = LMEngine.CreateService({
 	Name = "DataService",
 	Client = {
+		CreatePlot = LMEngine.CreateSignal(),
 		LoadPlot = LMEngine.CreateSignal(),
 		PlayerPlotsLoaded = LMEngine.CreateSignal(),
 	},
@@ -76,6 +89,11 @@ local DataService = LMEngine.CreateService({
 	-- Events
 })
 
+---@type RateLimiter
+local RateLimiter = LMEngine.GetModule("RateLimiter")
+
+local CreatePlotRateLimiter = RateLimiter.NewRateLimiter(1)
+
 ----- Private functions -----
 
 ----- Public functions -----
@@ -85,7 +103,7 @@ function DataService:Start()
 	local PlayerService = LMEngine.GetService("PlayerService")
 
 	PlayerService:RegisterPlayerAdded(function(player)
-		local profile = ProfileStore:LoadProfileAsync(SETTINGS.MAIN_PROFILE_PREFIX .. player.UserId)
+		local profile = PlayerStore:LoadProfileAsync(tostring(player.UserId))
 
 		if profile == nil then
 			-- Other servers are trying to load this profile at the same time
@@ -94,7 +112,6 @@ function DataService:Start()
 		end
 
 		profile:AddUserId(player.UserId)
-		profile:Reconcile()
 
 		profile:ListenToRelease(function()
 			self._profiles[player] = nil
@@ -103,11 +120,12 @@ function DataService:Start()
 		end)
 
 		if player:IsDescendantOf(Players) == true then
+			-- First, migrate the profile
+			profile = MigrationManager.MigratePlayerProfile(player, profile)
+
 			self._profiles[player] = profile
 
-			self.Client.PlayerPlotsLoaded:Fire(player, profile.Data.Plots)
-			-- Migrate the profile
-			--profile = MigrationManager.MigratePlayerProfile(player, profile)
+			self.Client.PlayerPlotsLoaded:Fire(player, profile.Data.Plots, profile.Data.LastPlotIdUsed)
 		else
 			profile:Release()
 		end
@@ -117,27 +135,24 @@ function DataService:Start()
 	PlayerService:RegisterPlayerRemoved(function(player)
 		local profile = self._profiles[player]
 
-		local plots = profile.Data.Plots
+		local last_plot_id_used = profile.Data.LastPlotIdUsed
 
 		if profile ~= nil then
 			profile:Release()
 		end
 
-		if plots ~= nil then
-			for plot_uuid, plot_name in plots do
-				local plot_profile = self._plots[plot_uuid]
+		if last_plot_id_used ~= nil then
+			local plot_profile = self._plots[last_plot_id_used]
 
-				if plot_profile ~= nil then
-					print("[DataService]: Releasing plot for player: " .. player.Name)
-					plot_profile:Release()
-				end
+			if plot_profile ~= nil then
+				plot_profile:Release()
+				self._plots[last_plot_id_used] = nil
 			end
 		end
 	end, "LOW")
 end
 
 function DataService:LoadPlot(player: Player, plot_uuid: string)
-	print(plot_uuid)
 	local profile = self._profiles[player]
 
 	if profile == nil then
@@ -155,11 +170,10 @@ function DataService:LoadPlot(player: Player, plot_uuid: string)
 	local plot_profile = self._plots[plot_uuid]
 
 	if plot_profile == nil then
-		plot_profile = PlotStore:LoadProfileAsync(SETTINGS.PLOT_PROFILE_PREFIX .. plot_uuid)
+		plot_profile = PlotStore:LoadProfileAsync(plot_uuid)
 		self._plots[plot_uuid] = plot_profile
 
 		plot_profile:AddUserId(player.UserId)
-		plot_profile:Reconcile()
 
 		plot_profile:ListenToRelease(function()
 			self._plots[plot_uuid] = nil
@@ -171,8 +185,10 @@ function DataService:LoadPlot(player: Player, plot_uuid: string)
 		end
 
 		-- Migrate the plot profile
-		--plot_profile = MigrationManager.MigratePlotProfile(player, plot_profile)
+		plot_profile = MigrationManager.MigratePlotProfile(player, plot_profile)
 	end
+
+	profile.Data.LastPlotIdUsed = plot_uuid
 
 	print("[DataService]: Loaded plot for player: " .. player.Name)
 
@@ -180,7 +196,7 @@ function DataService:LoadPlot(player: Player, plot_uuid: string)
 	---@type PlotService
 	local PlotService = LMEngine.GetService("PlotService")
 
-	PlotService:LoadPlotData(player, plot_profile.Data)
+	PlotService:LoadPlotData(player, plot_profile.Data, plot_uuid)
 
 	return plot_profile.Data
 end
@@ -189,7 +205,7 @@ function DataService.Client:LoadPlot(player: Player, plot_uuid: string)
 	return self.Server:LoadPlot(player, plot_uuid)
 end
 
-function DataService:UpdatePlotData(player: Player, plot_data: string)
+function DataService:UpdatePlotData(player: Player, plot_uuid: string, plot_data: string)
 	local profile = self._profiles[player]
 
 	if profile == nil then
@@ -202,35 +218,25 @@ function DataService:UpdatePlotData(player: Player, plot_data: string)
 		return
 	end
 
-	-- find if the player has a plot
-	for plot_uuid, plot_name in profile.Data.Plots do
-		local plot_profile = self._plots[plot_uuid]
+	local plot_profile = self._plots[plot_uuid]
 
-		if plot_profile == nil then
-			warn("[DataService]: Plot does not exist")
-			return
-		end
-
-		local user_id = plot_profile.Data.UserId
-
-		if user_id ~= player.UserId then
-			warn("[DataService]: Player does not own plot")
-			return
-		end
-
-		-- Update the plot data
-		plot_profile.Data.PlotData = plot_data
-
-		print("[DataService]: Updated plot for player: " .. player.Name)
+	if plot_profile == nil then
+		warn("[DataService]: Plot does not exist")
+		return
 	end
+
+	if plot_profile.Data.UserId ~= player.UserId then
+		warn("[DataService]: Player does not own this plot")
+		return
+	end
+
+	plot_profile.Data.PlotData = plot_data
+
+	print("[DataService]: Updated plot for player: " .. player.Name)
 end
 
 function DataService:GetProfile(player: Player)
 	return self._profiles[player]
-end
-
-function DataService:GetPlot(plot_uuid: string)
-	return self._plots[plot_uuid]
 end
 
 function DataService:GetPlayerPlots(player: Player)
@@ -248,28 +254,60 @@ function DataService.Client:GetPlayerPlots(player: Player)
 	return self.Server:GetPlayerPlots(player)
 end
 
-function DataService:CreatePlotProfile(player: Player, plot_uuid: string, plot_data: any)
-	assert(self._profiles[player] ~= nil, "[DataService]: Player does not have a profile")
-	assert(self._plots[plot_uuid] == nil, "[DataService]: Plot already exists")
+function DataService:CreatePlot(player: Player, name: string)
+	local profile = self._profiles[player]
 
-	local plot_profile = PlotStore:LoadProfileAsync(SETTINGS.PLOT_PROFILE_PREFIX .. plot_uuid)
+	if profile == nil then
+		warn("[DataService]: Player does not have a profile")
+		return
+	end
 
-	-- iterate over the plot data and set the values
-	if plot_data ~= nil then
-		for key, value in plot_data do
-			plot_profile.Data[key] = value
+	-- check if the player already has a plot
+	for uuid, plot in self._plots do
+		if plot.Data.UserId == player.UserId then
+			warn("[DataService]: Player already has a plot")
+			return
 		end
 	end
 
-	-- add UID and reconcile
-	plot_profile:AddUserId(player.UserId)
-	plot_profile:Reconcile()
+	-- check if the user is allowed to create a plot (gamepass, etc)
 
-	-- Add the plot to the player's profile
-	local profile = self._profiles[player]
-	profile.Data.Plots[plot_uuid] = plot_data.Name
+	-- Generate a UUID for the plot
+	local plot_uuid = HttpService:GenerateGUID(false)
+
+	local plot_profile = PlotStore:LoadProfileAsync(plot_uuid)
+
+	plot_profile:AddUserId(player.UserId)
+
+	plot_profile:ListenToRelease(function()
+		self._plots[plot_uuid] = nil
+	end)
+
+	if player:IsDescendantOf(Players) == false then
+		plot_profile:Release()
+		self._plots[plot_profile.Data.UserId] = nil
+	end
+
+	-- Migrate the plot profile
+	plot_profile = MigrationManager.MigratePlotProfile(player, plot_profile)
 
 	self._plots[plot_uuid] = plot_profile
+
+	-- Add the plot to the player's profile
+	profile.Data.Plots[plot_uuid] = name
+
+	print("[DataService]: Created plot for player: " .. player.Name .. " with UUID: " .. plot_uuid)
+
+	-- Load the plot
+	self:LoadPlot(player, plot_uuid)
+	return plot_profile.Data
+end
+
+function DataService.Client:CreatePlot(player: Player, name: string)
+	assert(CreatePlotRateLimiter:CheckRate(player) == true, "[DataService] CreatePlot: Rate limited")
+	assert(name ~= nil, "[DataService] CreatePlot: Name is nil")
+
+	return self.Server:CreatePlot(player, name)
 end
 
 return DataService

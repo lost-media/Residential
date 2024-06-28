@@ -197,13 +197,19 @@ function Plot.new(plot_model: Instance)
 	self._plot_model = plot_model
 	self._player = nil :: Player?
 	self._trove = Trove.new()
+	self._plot_uuid = nil
 
 	self._road_network = RoadNetwork.new(self)
 
 	return self
 end
 
-function Plot:Load(data: { [string]: { [string]: SerializedStructure } })
+function Plot:Load(data: { [string]: { [string]: SerializedStructure } }, plot_uuid: string)
+	assert(data ~= nil, "[Plot] Data is nil")
+	assert(plot_uuid ~= nil, "[Plot] Plot UUID is nil")
+
+	self._plot_uuid = plot_uuid
+
 	-- First, clear the plot
 	self._plot_model.Structures:ClearAllChildren()
 
@@ -239,6 +245,10 @@ function Plot:GetModel(): Instance
 	return self._plot_model
 end
 
+function Plot:GetUUID(): string?
+	return self._plot_uuid
+end
+
 function Plot:AssignPlayer(player: Player)
 	assert(player ~= nil, "Player cannot be nil")
 	assert(self._player == nil, "Plot is already assigned to a player")
@@ -248,6 +258,10 @@ end
 function Plot:UnassignPlayer()
 	assert(self._player ~= nil, "Plot is not assigned to a player")
 	self._player = nil
+
+	-- Clear the plot
+	self._plot_model.Structures:ClearAllChildren()
+	self._plot_uuid = nil
 end
 
 function Plot:SetAttribute(attribute: string, value: any)
