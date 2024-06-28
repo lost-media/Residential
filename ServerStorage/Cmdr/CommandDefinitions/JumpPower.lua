@@ -11,10 +11,10 @@ return {
 			Name = "player",
 			Description = "The player whose jump power you want to set",
 		},
-        {
-            Type = "number",
-            Name = "power",
-            Description = "The power of the jump",
-        },
+		{
+			Type = "number",
+			Name = "power",
+			Description = "The power of the jump",
+		},
 	},
 }

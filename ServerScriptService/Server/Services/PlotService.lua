@@ -132,13 +132,13 @@ function PlotService:Start()
 			local plot = GetRandomFreePlot(self._plots)
 			self:AssignPlot(player, plot)
 
-			local plot_data = DataService:GetPlot(player)
+			--[[local plot_data = DataService:GetPlot(player)
 
 			if plot_data == nil then
 				return
 			end
 
-			self:LoadPlotData(player, plot_data)
+			self:LoadPlotData(player, plot_data)]]
 		end, SETTINGS.MAX_RETRIES)
 
 		if not success then
@@ -159,7 +159,7 @@ function PlotService:Start()
 			-- Encode the plot data
 			local encoded_data = EncodePlot(plot)
 
-			DataService:UpdatePlot(player, encoded_data)
+			--ataService:UpdatePlot(player, encoded_data)
 
 			self:UnassignPlot(player)
 		end, SETTINGS.MAX_RETRIES)

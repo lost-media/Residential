@@ -1159,7 +1159,7 @@ local function TERMINATE_PLACEMENT(client: PlacementClient)
 
 	SetCurrentState(4, client)
 
-	-- Unbind 	
+	-- Unbind
 
 	-- Removes grid texture from plot
 	--if SETTINGS.DisplayGridTexture and not removePlotDependencies then
