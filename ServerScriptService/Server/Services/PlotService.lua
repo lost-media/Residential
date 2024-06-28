@@ -159,7 +159,7 @@ function PlotService:Start()
 			-- Encode the plot data
 			local encoded_data = EncodePlot(plot)
 
-			--ataService:UpdatePlot(player, encoded_data)
+			DataService:UpdatePlotData(player, "test", encoded_data)
 
 			self:UnassignPlot(player)
 		end, SETTINGS.MAX_RETRIES)

@@ -62,12 +62,18 @@ local MigrationManager = require(dir_Modules.MigrationManager)
 ---@class DataService
 local DataService = LMEngine.CreateService({
 	Name = "DataService",
+	Client = {
+		LoadPlot = LMEngine.CreateSignal(),
+		PlayerPlotsLoaded = LMEngine.CreateSignal(),
+	},
 
 	---@type table<Player, any>
 	_profiles = {},
 
 	---@type table<Player, any>
 	_plots = {},
+
+	-- Events
 })
 
 ----- Private functions -----
@@ -98,10 +104,10 @@ function DataService:Start()
 
 		if player:IsDescendantOf(Players) == true then
 			self._profiles[player] = profile
-			profile.Data.Version = 0 -- trigger migration
 
+			self.Client.PlayerPlotsLoaded:Fire(player, profile.Data.Plots)
 			-- Migrate the profile
-			profile = MigrationManager.MigratePlayerProfile(player, profile)
+			--profile = MigrationManager.MigratePlayerProfile(player, profile)
 		else
 			profile:Release()
 		end
@@ -130,20 +136,94 @@ function DataService:Start()
 	end, "LOW")
 end
 
-function DataService:UpdatePlot(player: Player, plot: string)
-	if plot == nil then
-		warn("[DataService]: Attempted to update plot with nil value")
+function DataService:LoadPlot(player: Player, plot_uuid: string)
+	local profile = self._profiles[player]
+
+	if profile == nil then
+		warn("[DataService]: Player does not have a profile")
+		return
+	end
+
+	local plot_exists = profile.Data.Plots[plot_uuid]
+
+	if plot_exists == nil then
+		warn("[DataService]: Player does not have plot with UUID: " .. plot_uuid)
+		return
+	end
+
+	local plot_profile = self._plots[plot_uuid]
+
+	if plot_profile == nil then
+		plot_profile = PlotStore:LoadProfileAsync(SETTINGS.PLOT_PROFILE_PREFIX .. plot_uuid)
+		self._plots[plot_uuid] = plot_profile
+
+		plot_profile:AddUserId(player.UserId)
+		plot_profile:Reconcile()
+
+		plot_profile:ListenToRelease(function()
+			self._plots[plot_uuid] = nil
+
+			player:Kick("[DataService]: Plot released")
+		end)
+
+		if player:IsDescendantOf(Players) == false then
+			plot_profile:Release()
+			self._plots[plot_uuid] = nil
+		end
+
+		-- Migrate the plot profile
+		--plot_profile = MigrationManager.MigratePlotProfile(player, plot_profile)
+	end
+
+	print("[DataService]: Loaded plot for player: " .. player.Name)
+
+	-- load the plot from PlotService
+	---@type PlotService
+	local PlotService = LMEngine.GetService("PlotService")
+
+	PlotService:LoadPlotData(player, plot_profile.Data.PlotData)
+
+	return plot_profile.Data
+end
+
+function DataService.Client:LoadPlot(player: Player, plot_uuid: string)
+	return self.Server:LoadPlot(player, plot_uuid)
+end
+
+function DataService:UpdatePlotData(player: Player, plot_uuid: string, plot_data: string)
+	if plot_uuid == nil then
+		warn("[DataService]: Plot UUID is nil")
+		return
+	end
+
+	if plot_data == nil then
+		warn("[DataService]: Plot data is nil")
+		return
+	end
+
+	local plot_profile = self._plots[plot_uuid]
+
+	if plot_profile == nil then
+		warn("[DataService]: Plot does not exist")
+		return
+	end
+
+	local user_id = plot_profile.Data.UserId
+
+	if user_id ~= player.UserId then
+		warn("[DataService]: Player does not own plot")
 		return
 	end
 
 	local profile = self._profiles[player]
 
 	if profile == nil then
-		profile = ProfileStore:LoadProfileAsync(SETTINGS.MAIN_PROFILE_PREFIX .. player.UserId)
-		self._profiles[player] = profile
+		warn("[DataService]: Player does not have a profile")
+		return
 	end
 
-	profile.Data.Plot = plot
+	-- Update the plot data
+	plot_profile.Data.PlotData = plot_data
 
 	print("[DataService]: Updated plot for player: " .. player.Name)
 end
@@ -156,15 +236,19 @@ function DataService:GetPlot(plot_uuid: string)
 	return self._plots[plot_uuid]
 end
 
-function DataService:LoadPlotIfNotLoaded(plot_uuid: string)
-	local plot_profile = self._plots[plot_uuid]
+function DataService:GetPlayerPlots(player: Player)
+	local profile = self._profiles[player]
 
-	if plot_profile == nil then
-		plot_profile = PlotStore:LoadProfileAsync(SETTINGS.PLOT_PROFILE_PREFIX .. plot_uuid)
-		self._plots[plot_uuid] = plot_profile
+	if profile == nil then
+		warn("[DataService]: Player does not have a profile")
+		return
 	end
 
-	return plot_profile.Data
+	return profile.Data.Plots
+end
+
+function DataService.Client:GetPlayerPlots(player: Player)
+	return self.Server:GetPlayerPlots(player)
 end
 
 function DataService:CreatePlotProfile(player: Player, plot_uuid: string, plot_data: any)
