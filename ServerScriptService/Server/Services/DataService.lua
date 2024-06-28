@@ -137,6 +137,7 @@ function DataService:Start()
 end
 
 function DataService:LoadPlot(player: Player, plot_uuid: string)
+	print(plot_uuid)
 	local profile = self._profiles[player]
 
 	if profile == nil then
@@ -162,8 +163,6 @@ function DataService:LoadPlot(player: Player, plot_uuid: string)
 
 		plot_profile:ListenToRelease(function()
 			self._plots[plot_uuid] = nil
-
-			player:Kick("[DataService]: Plot released")
 		end)
 
 		if player:IsDescendantOf(Players) == false then
@@ -181,7 +180,7 @@ function DataService:LoadPlot(player: Player, plot_uuid: string)
 	---@type PlotService
 	local PlotService = LMEngine.GetService("PlotService")
 
-	PlotService:LoadPlotData(player, plot_profile.Data.PlotData)
+	PlotService:LoadPlotData(player, plot_profile.Data)
 
 	return plot_profile.Data
 end
@@ -190,9 +189,11 @@ function DataService.Client:LoadPlot(player: Player, plot_uuid: string)
 	return self.Server:LoadPlot(player, plot_uuid)
 end
 
-function DataService:UpdatePlotData(player: Player, plot_uuid: string, plot_data: string)
-	if plot_uuid == nil then
-		warn("[DataService]: Plot UUID is nil")
+function DataService:UpdatePlotData(player: Player, plot_data: string)
+	local profile = self._profiles[player]
+
+	if profile == nil then
+		warn("[DataService]: Player does not have a profile")
 		return
 	end
 
@@ -201,31 +202,27 @@ function DataService:UpdatePlotData(player: Player, plot_uuid: string, plot_data
 		return
 	end
 
-	local plot_profile = self._plots[plot_uuid]
+	-- find if the player has a plot
+	for plot_uuid, plot_name in profile.Data.Plots do
+		local plot_profile = self._plots[plot_uuid]
 
-	if plot_profile == nil then
-		warn("[DataService]: Plot does not exist")
-		return
+		if plot_profile == nil then
+			warn("[DataService]: Plot does not exist")
+			return
+		end
+
+		local user_id = plot_profile.Data.UserId
+
+		if user_id ~= player.UserId then
+			warn("[DataService]: Player does not own plot")
+			return
+		end
+
+		-- Update the plot data
+		plot_profile.Data.PlotData = plot_data
+
+		print("[DataService]: Updated plot for player: " .. player.Name)
 	end
-
-	local user_id = plot_profile.Data.UserId
-
-	if user_id ~= player.UserId then
-		warn("[DataService]: Player does not own plot")
-		return
-	end
-
-	local profile = self._profiles[player]
-
-	if profile == nil then
-		warn("[DataService]: Player does not have a profile")
-		return
-	end
-
-	-- Update the plot data
-	plot_profile.Data.PlotData = plot_data
-
-	print("[DataService]: Updated plot for player: " .. player.Name)
 end
 
 function DataService:GetProfile(player: Player)

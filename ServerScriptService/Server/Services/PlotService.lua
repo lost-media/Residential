@@ -130,7 +130,7 @@ function PlotService:Start()
 	PlayerService:RegisterPlayerAdded(function(player)
 		local success, data = RetryAsync(function()
 			local plot = GetRandomFreePlot(self._plots)
-			self:AssignPlot(player, plot)
+			--self:AssignPlot(player, plot)
 
 			--[[local plot_data = DataService:GetPlot(player)
 
@@ -159,7 +159,7 @@ function PlotService:Start()
 			-- Encode the plot data
 			local encoded_data = EncodePlot(plot)
 
-			DataService:UpdatePlotData(player, "test", encoded_data)
+			DataService:UpdatePlotData(player, encoded_data)
 
 			self:UnassignPlot(player)
 		end, SETTINGS.MAX_RETRIES)
@@ -219,13 +219,6 @@ function PlotService:PlaceStructure(player: Player, structure_id: string, cframe
 		return false
 	end
 
-	if err == true then
-		---@type DataService
-		--local DataService = LMEngine.GetService("DataService");
-
-		--DataService:UpdatePlot(player, plot);
-	end
-
 	return err
 end
 
@@ -242,12 +235,20 @@ function PlotService:GetPlot(player: Player): Plot?
 	return self._players[player]
 end
 
-function PlotService:LoadPlotData(player: Player, data: string)
+function PlotService:LoadPlotData(player: Player, data: table)
 	local plot = self._players[player]
+
+	if plot == nil then
+		self:AssignPlot(player, GetRandomFreePlot(self._plots))
+	end
+
+	plot = self._players[player]
 	assert(plot, "[PlotService] LoadPlotData: Player does not have a plot assigned")
 
+	assert(data.PlotData, "[PlotService] LoadPlotData: Plot data is nil")
+
 	local success, err = pcall(function()
-		local decoded_data = Base64.FromBase64(data)
+		local decoded_data = Base64.FromBase64(data.PlotData)
 
 		local plot_data = HttpService:JSONDecode(decoded_data)
 
