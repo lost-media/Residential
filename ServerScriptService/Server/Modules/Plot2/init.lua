@@ -63,17 +63,14 @@ local SETTINGS = {
 	-- The size of a tile in studs in X and Z dimensions
 	TILE_SIZE = 8,
 }
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VFX: Folder = ReplicatedStorage.VFX
-local PlacementType = require(ReplicatedStorage.Game.Shared.Placement.Types)
-
----@type Trove
-local Trove = require(ReplicatedStorage.LMEngine.Shared.Trove)
-
----@type UniqueIdGenerator
-local UniqueIdGenerator = require(ReplicatedStorage.LMEngine.Shared.UniqueIdGenerator)
 
 ----- Private variables -----
+
+local RoadNetwork = require(script.RoadNetwork)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local VFX: Folder = ReplicatedStorage.VFX
 
 local NEIGHBORS = {
 	Vector3.new(0, 0, SETTINGS.TILE_SIZE),
@@ -84,6 +81,9 @@ local NEIGHBORS = {
 
 ---@type LMEngineServer
 local LMEngine = require(ReplicatedStorage.LMEngine)
+
+---@type Trove
+local Trove = require(LMEngine.SharedDir.Trove)
 
 local PlotTypes = require(script.Types)
 type IPlot = PlotTypes.IPlot
@@ -197,11 +197,22 @@ function Plot.new(plot_model: Instance)
 	self._plot_model = plot_model
 	self._player = nil :: Player?
 	self._trove = Trove.new()
+	self._plot_uuid = nil
+
+	self._road_network = RoadNetwork.new(self)
 
 	return self
 end
 
-function Plot:Load(data: { [string]: { [string]: SerializedStructure } })
+function Plot:Load(data: { [string]: { [string]: SerializedStructure } }, plot_uuid: string)
+	assert(data ~= nil, "[Plot] Data is nil")
+	assert(plot_uuid ~= nil, "[Plot] Plot UUID is nil")
+
+	self._plot_uuid = plot_uuid
+
+	-- First, clear the plot
+	self._plot_model.Structures:ClearAllChildren()
+
 	local platform: Part = self._plot_model:FindFirstChild("Platform")
 
 	for structure_id, v in data do
@@ -234,6 +245,10 @@ function Plot:GetModel(): Instance
 	return self._plot_model
 end
 
+function Plot:GetUUID(): string?
+	return self._plot_uuid
+end
+
 function Plot:AssignPlayer(player: Player)
 	assert(player ~= nil, "Player cannot be nil")
 	assert(self._player == nil, "Plot is already assigned to a player")
@@ -243,6 +258,10 @@ end
 function Plot:UnassignPlayer()
 	assert(self._player ~= nil, "Plot is not assigned to a player")
 	self._player = nil
+
+	-- Clear the plot
+	self._plot_model.Structures:ClearAllChildren()
+	self._plot_uuid = nil
 end
 
 function Plot:SetAttribute(attribute: string, value: any)
@@ -372,6 +391,16 @@ function Plot:Serialize(): { [string]: { SerializedStructure } }
 	end
 
 	return data
+end
+
+function Plot:DeleteStructure(structure: Model)
+	assert(structure ~= nil, "[PlotService] DeleteStructure: Structure is nil")
+	assert(
+		structure.Parent == self._plot_model.Structures,
+		"[PlotService] DeleteStructure: Structure is not a child of the plot"
+	)
+
+	structure:Destroy()
 end
 
 function Plot.__tostring(self: Plot): string

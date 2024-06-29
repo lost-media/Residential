@@ -232,6 +232,7 @@ type PlacementClientMembers = {
 	LevelChanged: Signal.Signal,
 	OutOfRange: Signal.Signal,
 	Initiated: Signal.Signal,
+	DeleteStructure: Signal.Signal,
 
 	PlacementConfirmed: Signal.Signal,
 }
@@ -857,8 +858,6 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 		target = platform
 	end
 
-	target = target
-
 	local pltCFrame: CFrame = platform.CFrame
 	local positionCFrame = CFrame.new(x, 0, z) * CFrame.new(offsetX, 0, offsetZ)
 
@@ -868,7 +867,7 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 	if
 		state._stackable
 		and target
-		and (target:IsDescendantOf(client._plot:FindFirstChild("Structures")) or target == platform)
+		and (target:IsDescendantOf(client._plot:FindFirstChild("Structures"))) --  or target == platform)
 	then
 		if ray and ray.Normal then
 			local normal =
@@ -967,7 +966,7 @@ local function RaiseFloor(
 		return
 	end
 
-	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == false or state._stackable == true then
+	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == false then --or state._stackable == true then
 		return
 	end
 
@@ -994,7 +993,7 @@ local function LowerFloor(
 		return
 	end
 
-	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == false or state._stackable == true then
+	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == false then --or state._stackable == true then
 		return
 	end
 
@@ -1119,13 +1118,14 @@ local function Reset(client: PlacementClient)
 	local state: State = client._state:getState()
 
 	local hitbox = state._hitbox
-	local current_model = state._current_model
 
 	client._trove:Destroy()
 
 	--if mobileUI ~= nil then
 	--	mobileUI.Parent = script
 	--end
+
+	UnbindInputs()
 
 	client._state:dispatch(CurrentModelChanged(nil))
 	client._state:dispatch(HitboxChanged(nil))
@@ -1158,6 +1158,8 @@ local function TERMINATE_PLACEMENT(client: PlacementClient)
 	end
 
 	SetCurrentState(4, client)
+
+	-- Unbind
 
 	-- Removes grid texture from plot
 	--if SETTINGS.DisplayGridTexture and not removePlotDependencies then
@@ -1207,7 +1209,7 @@ local function BindInputs(client: PlacementClient)
 		SETTINGS.CONTROLS.XboxTerminate
 	)
 
-	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == true and stackable ~= true then
+	if SETTINGS.PLACEMENT_CONFIGS.EnableFloors == true then --and stackable ~= true then
 		ContextActionService:BindAction(
 			"Raise",
 			function(actionName: string, inputState: Enum.UserInputState, inputObj: InputObject?)
@@ -1228,9 +1230,18 @@ local function BindInputs(client: PlacementClient)
 		)
 	end
 
-	client._trove:Add(UserInputService.InputBegan:Connect(function(input: InputObject)
+	client._trove:Add(UserInputService.InputBegan:Connect(function(input: InputObject, game_processed: boolean)
+		if game_processed then
+			return
+		end
+
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			client:ConfirmPlacement()
+		end
+
+		if input.KeyCode == Enum.KeyCode.X then
+			-- Delete the current model
+			client:Delete()
 		end
 	end))
 end
@@ -1357,6 +1368,23 @@ local function PLACEMENT(self: PlacementClient, Function: RemoteFunction, callba
 	PlacementFeedback(id, callback, self)
 end
 
+local function DELETE(self: PlacementClient, structure: Model)
+	if structure == nil then
+		return
+	end
+
+	if structure:IsA("Model") == false then
+		return
+	end
+
+	if structure:IsDescendantOf(self._plot:FindFirstChild("Structures")) == false then
+		return
+	end
+
+	-- fire the delete signal
+	self.DeleteStructure:Fire(structure)
+end
+
 local function CreateAudioFeedback()
 	local audio = Instance.new("Sound")
 	audio.Name = "PlacementFeedback"
@@ -1403,6 +1431,7 @@ function PlacementClient.new(plot: Model, grid_unit: number?)
 	self.OutOfRange = Signal.new()
 	self.Initiated = Signal.new()
 	self.PlacementConfirmed = Signal.new()
+	self.DeleteStructure = Signal.new()
 
 	self._ignored_items = {}
 
@@ -1578,6 +1607,46 @@ function PlacementClient:ConfirmPlacement()
 
 		task.wait(SETTINGS.PLACEMENT_CONFIGS.PlacementCooldown)
 	until (self._state:getState() :: State)._running == false
+end
+
+function PlacementClient:Delete()
+	local state: State = self._state:getState()
+
+	if state._current_state == 4 then
+		return
+	end
+
+	local current_model = state._current_model
+
+	if current_model == nil then
+		return
+	end
+
+	-- get the model that the mouse is hovering over
+	local mouse = self._mouse
+	local target = mouse:GetTarget()
+
+	if target == nil then
+		return
+	end
+
+	local model = target:FindFirstAncestorWhichIsA("Model")
+
+	if model == nil then
+		return
+	end
+
+	-- check if the model is a structure
+	if model:IsDescendantOf(self._plot:FindFirstChild("Structures")) == false then
+		return
+	end
+
+	-- check if the model is the current model
+	if model == current_model then
+		return
+	end
+
+	DELETE(self, model)
 end
 
 function PlacementClient:Destroy()

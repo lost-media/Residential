@@ -1,5 +1,6 @@
 local LMEngine = require(game:GetService("ReplicatedStorage").LMEngine)
 
+local RoadNetworkTypes = require(script.Parent.RoadNetwork.Types)
 local Trove = require(LMEngine.SharedDir.Trove)
 
 local PlotTypes = {}
@@ -16,6 +17,7 @@ export type IPlot = {
 	ModelIsPlot: (model: Instance) -> boolean,
 	new: (plotModel: Instance) -> Plot,
 
+	GetUUID: (self: Plot) -> string,
 	GetPlayer: (self: Plot) -> Player?,
 	GetModel: (self: Plot) -> Instance,
 	AssignPlayer: (self: Plot, player: Player) -> (),
@@ -27,12 +29,16 @@ export type IPlot = {
 	PlaceStructure: (self: Plot, structure: Model, cframe: CFrame) -> boolean,
 	GetPlaceable: (self: Plot, model: Model) -> Model?,
 	Serialize: (self: Plot) -> { [number]: SerializedStructure },
+
+	DeleteStructure: (self: Plot, structure: Model) -> (),
 }
 
 type PlotMembers = {
 	_plot_model: Instance,
 	_player: Player?,
 	_trove: Trove.Trove,
+	_road_network: RoadNetworkTypes.RoadNetwork,
+	_plot_uuid: string?,
 }
 
 export type Plot = typeof(setmetatable({} :: PlotMembers, {} :: IPlot))

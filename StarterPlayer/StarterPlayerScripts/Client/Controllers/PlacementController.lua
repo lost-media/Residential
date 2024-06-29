@@ -101,6 +101,10 @@ function PlacementController:Start()
 			end)
 		--self:StopPlacement();
 	end)
+
+	self._placement_client.DeleteStructure:Connect(function(structure: Model)
+		PlotService:DeleteStructure(structure)
+	end)
 end
 
 function PlacementController:StartPlacement(structureId: string)

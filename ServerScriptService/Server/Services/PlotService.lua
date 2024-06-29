@@ -58,6 +58,7 @@ type Plot = PlotTypes.Plot
 local PlotService = LMEngine.CreateService({
 	Name = "PlotService",
 	Client = {
+		DeleteStructure = LMEngine.CreateSignal(),
 		PlotAssigned = LMEngine.CreateSignal(),
 		Test = LMEngine.CreateSignal(),
 		PlaceStructure = LMEngine.CreateSignal(),
@@ -66,7 +67,7 @@ local PlotService = LMEngine.CreateService({
 	---@type Plot2[]
 	_plots = {},
 
-	---@type table<Player, Plot>
+	---@type table<Player, Plot2>
 	_players = {},
 })
 
@@ -80,7 +81,19 @@ local function GetRandomFreePlot(plots: { Plot }): Plot?
 	assert(plots, "[PlotService] GetRandomFreePlot: Free plots is nil")
 	assert(#plots > 0, "[PlotService] GetRandomFreePlot: No free plots available")
 
-	local random = plots[math.random(1, #plots)]
+	local free_plots = {}
+
+	for _, plot in plots do
+		if plot:GetPlayer() == nil then
+			table.insert(free_plots, plot)
+		end
+	end
+
+	if #free_plots == 0 then
+		return nil
+	end
+
+	local random = free_plots[math.random(1, #free_plots)]
 
 	return random
 end
@@ -129,22 +142,19 @@ function PlotService:Start()
 	PlayerService:RegisterPlayerAdded(function(player)
 		local success, data = RetryAsync(function()
 			local plot = GetRandomFreePlot(self._plots)
-			self:AssignPlot(player, plot)
 
-			local plot_data = DataService:GetPlot(player)
+			if plot == nil then
+				return
+			end
+			--self:AssignPlot(player, plot)
+
+			--[[local plot_data = DataService:GetPlot(player)
 
 			if plot_data == nil then
 				return
 			end
 
-			-- Decode the test data
-			local decoded_data = Base64.FromBase64(plot_data)
-
-			local success, err = pcall(function()
-				local data = HttpService:JSONDecode(decoded_data)
-
-				plot:Load(data)
-			end)
+			self:LoadPlotData(player, plot_data)]]
 		end, SETTINGS.MAX_RETRIES)
 
 		if not success then
@@ -160,12 +170,15 @@ function PlotService:Start()
 			-- Serialize the plot data
 
 			local plot = self._players[player]
-			assert(plot, "[PlotService]: Player does not have a plot assigned")
+
+			if plot == nil then
+				return
+			end
 
 			-- Encode the plot data
 			local encoded_data = EncodePlot(plot)
 
-			DataService:UpdatePlot(player, encoded_data)
+			DataService:UpdatePlotData(player, plot:GetUUID(), encoded_data)
 
 			self:UnassignPlot(player)
 		end, SETTINGS.MAX_RETRIES)
@@ -194,7 +207,7 @@ function PlotService:UnassignPlot(player: Player)
 	assert(player ~= nil, "[PlotService] UnassignPlot: Player is nil")
 	assert(self._players[player] ~= nil, "[PlotService] UnassignPlot: Player does not have a plot assigned")
 
-	---@type Plot
+	---@type Plot2
 	local plot: Plot = self._players[player]
 
 	plot:UnassignPlayer()
@@ -225,13 +238,6 @@ function PlotService:PlaceStructure(player: Player, structure_id: string, cframe
 		return false
 	end
 
-	if err == true then
-		---@type DataService
-		--local DataService = LMEngine.GetService("DataService");
-
-		--DataService:UpdatePlot(player, plot);
-	end
-
 	return err
 end
 
@@ -242,6 +248,54 @@ function PlotService.Client:PlaceStructure(player: Player, structure_id: string,
 	assert(cframe ~= nil, "[PlotService] PlaceStructure: CFrame is nil")
 
 	return self.Server:PlaceStructure(player, structure_id, cframe) :: boolean
+end
+
+function PlotService:GetPlot(player: Player): Plot?
+	return self._players[player]
+end
+
+function PlotService:LoadPlotData(player: Player, data: table, plot_uuid: string)
+	local plot = self._players[player]
+
+	if plot == nil then
+		self:AssignPlot(player, GetRandomFreePlot(self._plots))
+	end
+
+	plot = self._players[player]
+	assert(plot, "[PlotService] LoadPlotData: Player does not have a plot assigned")
+
+	if data.PlotData == nil then
+		data.PlotData = Base64.ToBase64(HttpService:JSONEncode({}))
+	end
+
+	local success, err = pcall(function()
+		local decoded_data = Base64.FromBase64(data.PlotData)
+
+		local plot_data = HttpService:JSONDecode(decoded_data)
+
+		plot:Load(plot_data, plot_uuid)
+	end)
+
+	if success == false then
+		warn("[PlotService] Failed to load plot data: " .. err)
+	end
+end
+
+function PlotService:DeleteStructure(player: Player, structure: Model)
+	assert(player, "[PlotService] DeleteStructure: Player is nil")
+	assert(structure, "[PlotService] DeleteStructure: Structure is nil")
+
+	local plot = self._players[player]
+	assert(plot, "[PlotService] DeleteStructure: Player does not have a plot assigned")
+
+	plot:DeleteStructure(structure)
+end
+
+function PlotService.Client:DeleteStructure(player: Player, structure: Model)
+	assert(player, "[PlotService] DeleteStructure: Player is nil")
+	assert(structure, "[PlotService] DeleteStructure: Structure is nil")
+
+	self.Server:DeleteStructure(player, structure)
 end
 
 return PlotService
