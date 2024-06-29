@@ -103,6 +103,15 @@ function DataService:Start()
 	local PlayerService = LMEngine.GetService("PlayerService")
 
 	PlayerService:RegisterPlayerAdded(function(player)
+		-- Create leaderstats
+		local leaderstats = Instance.new("Folder")
+		leaderstats.Name = "leaderstats"
+		leaderstats.Parent = player
+
+		local roadbucks = Instance.new("IntValue")
+		roadbucks.Name = "Roadbucks"
+		roadbucks.Parent = leaderstats
+
 		local profile = PlayerStore:LoadProfileAsync(tostring(player.UserId))
 
 		if profile == nil then
