@@ -22,7 +22,10 @@ local function packType(numbers: { number }, typeString: string): PubTypes.Anima
 	elseif typeString == "Color3" then
 		return Oklab.from(Vector3.new(numbers[1], numbers[2], numbers[3]), false)
 	elseif typeString == "ColorSequenceKeypoint" then
-		return ColorSequenceKeypoint.new(numbers[4], Oklab.from(Vector3.new(numbers[1], numbers[2], numbers[3]), false))
+		return ColorSequenceKeypoint.new(
+			numbers[4],
+			Oklab.from(Vector3.new(numbers[1], numbers[2], numbers[3]), false)
+		)
 	elseif typeString == "DateTime" then
 		return DateTime.fromUnixTimestampMillis(numbers[1])
 	elseif typeString == "NumberRange" then
@@ -32,7 +35,10 @@ local function packType(numbers: { number }, typeString: string): PubTypes.Anima
 	elseif typeString == "PhysicalProperties" then
 		return PhysicalProperties.new(numbers[1], numbers[2], numbers[3], numbers[4], numbers[5])
 	elseif typeString == "Ray" then
-		return Ray.new(Vector3.new(numbers[1], numbers[2], numbers[3]), Vector3.new(numbers[4], numbers[5], numbers[6]))
+		return Ray.new(
+			Vector3.new(numbers[1], numbers[2], numbers[3]),
+			Vector3.new(numbers[4], numbers[5], numbers[6])
+		)
 	elseif typeString == "Rect" then
 		return Rect.new(numbers[1], numbers[2], numbers[3], numbers[4])
 	elseif typeString == "Region3" then

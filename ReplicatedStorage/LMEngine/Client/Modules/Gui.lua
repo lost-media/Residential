@@ -316,7 +316,12 @@ function Screen:ActivateChild(child_name, props)
 	if screen ~= nil then
 		screen:Activate(props)
 	else
-		warn('[Gui]: Child screen "' .. tostring(child_name) .. '" was not defined; Traceback:\n' .. debug.traceback())
+		warn(
+			'[Gui]: Child screen "'
+				.. tostring(child_name)
+				.. '" was not defined; Traceback:\n'
+				.. debug.traceback()
+		)
 	end
 end
 
@@ -325,7 +330,12 @@ function Screen:DisableChild(child_name)
 	if screen ~= nil then
 		screen:Disable()
 	else
-		warn('[Gui]: Child screen "' .. tostring(child_name) .. '" was not defined; Traceback:\n' .. debug.traceback())
+		warn(
+			'[Gui]: Child screen "'
+				.. tostring(child_name)
+				.. '" was not defined; Traceback:\n'
+				.. debug.traceback()
+		)
 	end
 end
 
@@ -416,7 +426,8 @@ function Gui.AutoScale(auto_scale_params) --> [function] ()
 			local function scale_update()
 				local container_size = container.AbsoluteSize
 				local target_size_udim2 = target.Size
-				local target_size = Vector2.new(target_size_udim2.X.Offset, target_size_udim2.Y.Offset)
+				local target_size =
+					Vector2.new(target_size_udim2.X.Offset, target_size_udim2.Y.Offset)
 
 				if target_size_udim2.X.Scale ~= 0 or target_size_udim2.Y.Scale ~= 0 then
 					warn(
@@ -442,10 +453,13 @@ function Gui.AutoScale(auto_scale_params) --> [function] ()
 						desired_y = container_size.Y
 					end
 					if power_relationship ~= nil then
-						desired_y =
-							math.min(container_size.Y, desired_y + (container_size.Y - desired_y) ^ power_relationship)
+						desired_y = math.min(
+							container_size.Y,
+							desired_y + (container_size.Y - desired_y) ^ power_relationship
+						)
 					end
-					desired_scale = (desired_y / container_size.Y) / (target_size.Y / container_size.Y)
+					desired_scale = (desired_y / container_size.Y)
+						/ (target_size.Y / container_size.Y)
 				else
 					-- Scale by X relationship:
 					local desired_x
@@ -455,10 +469,13 @@ function Gui.AutoScale(auto_scale_params) --> [function] ()
 						desired_x = container_size.X
 					end
 					if power_relationship ~= nil then
-						desired_x =
-							math.min(container_size.X, desired_x + (container_size.X - desired_x) ^ power_relationship)
+						desired_x = math.min(
+							container_size.X,
+							desired_x + (container_size.X - desired_x) ^ power_relationship
+						)
 					end
-					desired_scale = (desired_x / container_size.X) / (target_size.X / container_size.X)
+					desired_scale = (desired_x / container_size.X)
+						/ (target_size.X / container_size.X)
 				end
 
 				ui_scale.Scale = desired_scale
@@ -475,7 +492,10 @@ function Gui.AutoScale(auto_scale_params) --> [function] ()
 			end
 
 			table.insert(connections, target:GetPropertyChangedSignal("Size"):Connect(scale_update))
-			table.insert(connections, container:GetPropertyChangedSignal("AbsoluteSize"):Connect(scale_update))
+			table.insert(
+				connections,
+				container:GetPropertyChangedSignal("AbsoluteSize"):Connect(scale_update)
+			)
 			scale_update()
 		end
 	end
@@ -533,7 +553,11 @@ function Gui.NewScreen(screen_params) --> [Screen]
 			recursive_active_check(child_screen, stack .. "." .. child_screen.Name)
 		end
 		if check_screen.IsActive == true then
-			error("[Gui]: Screens can't be active when being parented to another screen (\"" .. stack .. '")')
+			error(
+				"[Gui]: Screens can't be active when being parented to another screen (\""
+					.. stack
+					.. '")'
+			)
 		end
 	end
 	recursive_active_check(screen, screen.Name)

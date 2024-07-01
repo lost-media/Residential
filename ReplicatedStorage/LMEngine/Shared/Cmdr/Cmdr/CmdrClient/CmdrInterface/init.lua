@@ -83,7 +83,10 @@ return function(Cmdr)
 				end
 
 				return AutoComplete:Show(acItems, {
-					at = atEnd and #text - #typedText + (text:sub(#text, #text):match("%s") and -1 or 0),
+					at = atEnd
+						and #text
+							- #typedText
+							+ (text:sub(#text, #text):match("%s") and -1 or 0),
 					prefix = #lastArgument.RawSegments == 1 and lastArgument.Prefix or "",
 					isLast = #command.Arguments == #command.ArgumentDefinitions and #typedText > 0,
 					numArgs = #arguments,

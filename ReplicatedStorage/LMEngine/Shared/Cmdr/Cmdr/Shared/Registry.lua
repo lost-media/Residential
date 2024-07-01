@@ -283,7 +283,9 @@ Registry.RegisterHooksIn = Registry.RegisterTypesIn
 function Registry:RegisterCommandObject(commandObject)
 	for key in pairs(commandObject) do
 		if self.CommandMethods[key] == nil then
-			error(`[Cmdr] Unknown key/method in command "{commandObject.Name or "unknown command"}": {key}`)
+			error(
+				`[Cmdr] Unknown key/method in command "{commandObject.Name or "unknown command"}": {key}`
+			)
 		end
 	end
 
@@ -347,7 +349,10 @@ function Registry:RegisterCommand(
 	)
 
 	if commandServerScript then
-		assert(RunService:IsServer(), "[Cmdr] The commandServerScript parameter is not valid for client usage.")
+		assert(
+			RunService:IsServer(),
+			"[Cmdr] The commandServerScript parameter is not valid for client usage."
+		)
 		commandObject.Run = require(commandServerScript)
 	end
 
@@ -415,9 +420,14 @@ end
 	@within Registry
 ]=]
 function Registry:RegisterDefaultCommands(arrayOrFunc: { string } | (any) -> boolean | nil)
-	assert(RunService:IsServer(), "[Cmdr] RegisterDefaultCommands cannot be called from the client.")
+	assert(
+		RunService:IsServer(),
+		"[Cmdr] RegisterDefaultCommands cannot be called from the client."
+	)
 
-	local dictionary = if type(arrayOrFunc) == "table" then Util.MakeDictionary(arrayOrFunc) else nil
+	local dictionary = if type(arrayOrFunc) == "table"
+		then Util.MakeDictionary(arrayOrFunc)
+		else nil
 
 	self:RegisterCommandsIn(self.Cmdr.DefaultCommandsFolder, dictionary ~= nil and function(command)
 		return dictionary[command.Group] or false

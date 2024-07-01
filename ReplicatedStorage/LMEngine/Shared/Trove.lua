@@ -6,7 +6,11 @@ export type Trove = {
 	Extend: (self: Trove) -> Trove,
 	Clone: <T>(self: Trove, instance: T & Instance) -> T,
 	Construct: <T, A...>(self: Trove, class: Constructable<T, A...>, A...) -> T,
-	Connect: (self: Trove, signal: SignalLike | RBXScriptSignal, fn: (...any) -> ...any) -> ConnectionLike,
+	Connect: (
+		self: Trove,
+		signal: SignalLike | RBXScriptSignal,
+		fn: (...any) -> ...any
+	) -> ConnectionLike,
 	BindToRenderStep: (self: Trove, name: string, priority: number, fn: (dt: number) -> ()) -> (),
 	AddPromise: <T>(self: Trove, promise: T & PromiseLike) -> T,
 	Add: <T>(self: Trove, object: T & Trackable, cleanupMethod: string?) -> T,
@@ -119,7 +123,8 @@ type DisconnectableLowercase = {
 
 local FN_MARKER = newproxy()
 local THREAD_MARKER = newproxy()
-local GENERIC_OBJECT_CLEANUP_METHODS = table.freeze({ "Destroy", "Disconnect", "destroy", "disconnect" })
+local GENERIC_OBJECT_CLEANUP_METHODS =
+	table.freeze({ "Destroy", "Disconnect", "destroy", "disconnect" })
 
 local function GetObjectCleanupFunction(object: any, cleanupMethod: string?)
 	local t = typeof(object)
@@ -357,7 +362,12 @@ end
 	end)
 	```
 ]=]
-function Trove.BindToRenderStep(self: TroveInternal, name: string, priority: number, fn: (dt: number) -> ())
+function Trove.BindToRenderStep(
+	self: TroveInternal,
+	name: string,
+	priority: number,
+	fn: (dt: number) -> ()
+)
 	if self._cleaning then
 		error("cannot call trove:BindToRenderStep() while cleaning", 2)
 	end
@@ -523,7 +533,11 @@ function Trove.WrapClean(self: TroveInternal)
 	end
 end
 
-function Trove._findAndRemoveFromObjects(self: TroveInternal, object: any, cleanup: boolean): boolean
+function Trove._findAndRemoveFromObjects(
+	self: TroveInternal,
+	object: any,
+	cleanup: boolean
+): boolean
 	local objects = self._objects
 
 	for i, obj in objects do

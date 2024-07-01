@@ -34,7 +34,10 @@ return {
 			local command = context.Cmdr.Registry:GetCommand(commandName)
 			context:Reply(`Command: {command.Name}`, Color3.fromRGB(230, 126, 34))
 			if command.Aliases and #command.Aliases > 0 then
-				context:Reply(`Aliases: {table.concat(command.Aliases, ", ")}`, Color3.fromRGB(230, 230, 230))
+				context:Reply(
+					`Aliases: {table.concat(command.Aliases, ", ")}`,
+					Color3.fromRGB(230, 230, 230)
+				)
 			end
 			if command.Description then
 				context:Reply(`Description: {command.Description}`, Color3.fromRGB(230, 230, 230))
@@ -66,7 +69,11 @@ return {
 					context:Reply(`\n{group}\n{string.rep("-", #group)}`)
 					lastGroup = group
 				end
-				context:Reply(if command.Description then `{command.Name} - {command.Description}` else command.Name)
+				context:Reply(
+					if command.Description
+						then `{command.Name} - {command.Description}`
+						else command.Name
+				)
 			end
 		end
 		return ""

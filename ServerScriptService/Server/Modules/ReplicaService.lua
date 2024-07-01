@@ -177,7 +177,8 @@ do
 		RemoteEventContainer.Name = "ReplicaRemoteEvents"
 		RemoteEventContainer.Parent = game:GetService("ReplicatedStorage")
 	else
-		RemoteEventContainer = WaitForDescendant(game:GetService("ReplicatedStorage"), "ReplicaRemoteEvents", "folder")
+		RemoteEventContainer =
+			WaitForDescendant(game:GetService("ReplicatedStorage"), "ReplicaRemoteEvents", "folder")
 	end
 
 	Madwork = {
@@ -577,7 +578,10 @@ function Replica:ConnectOnServerEvent(listener) --> [ScriptConnection]
 end
 
 function Replica:FireClient(player, ...)
-	if (self._replication["All"] == true and ActivePlayers[player] == true) or self._replication[player] ~= nil then
+	if
+		(self._replication["All"] == true and ActivePlayers[player] == true)
+		or self._replication[player] ~= nil
+	then
 		rev_ReplicaSignal:FireClient(player, self.Id, ...)
 	end
 end
@@ -783,7 +787,9 @@ function Replica:DestroyFor(param)
 			end
 		end
 	elseif replication["All"] == true then -- Don't do this
-		error("[ReplicaService]: Don't selectively destroy for clients when replica is replicated to All")
+		error(
+			"[ReplicaService]: Don't selectively destroy for clients when replica is replicated to All"
+		)
 	elseif typeof(param) == "Instance" then
 		if param.ClassName ~= "Player" then
 			error("[ReplicaService]: Invalid param argument")
@@ -797,7 +803,11 @@ function Replica:Identify() --> [string]
 	local tag_string = ""
 	local first_tag = true
 	for tag_key, tag_val in pairs(self.Tags) do
-		tag_string = tag_string .. (first_tag and "" or ";") .. tostring(tag_key) .. "=" .. tostring(tag_val)
+		tag_string = tag_string
+			.. (first_tag and "" or ";")
+			.. tostring(tag_key)
+			.. "="
+			.. tostring(tag_val)
 	end
 	return "[Id:" .. tostring(self.Id) .. ";Class:" .. self.Class .. ";Tags:{" .. tag_string .. "}]"
 end
@@ -842,7 +852,9 @@ function ReplicaService.NewClassToken(class_name) --> [ReplicaClassToken]
 		error("[ReplicaService]: class_name must be a string")
 	end
 	if CreatedClassTokens[class_name] == true then
-		error('[ReplicaService]: Token for replica class "' .. class_name .. '" was already created')
+		error(
+			'[ReplicaService]: Token for replica class "' .. class_name .. '" was already created'
+		)
 	end
 	CreatedClassTokens[class_name] = true
 	return {
@@ -883,7 +895,9 @@ function ReplicaService.NewReplica(replica_params) --> [Replica]
 	end
 
 	if parent ~= nil and replication_settings ~= nil then
-		error("[ReplicaService]: Can't set replica_params.Replication for a replica that has a parent")
+		error(
+			"[ReplicaService]: Can't set replica_params.Replication for a replica that has a parent"
+		)
 	elseif replication_settings == nil then
 		replication = {}
 		pending_replication = {}
@@ -891,7 +905,9 @@ function ReplicaService.NewReplica(replica_params) --> [Replica]
 		-- Parsing replica_params.Replication:
 		if type(replication_settings) == "table" then -- Must be a player list {player = true, ...} OR an empty table {}
 			if replication_settings["All"] ~= nil then
-				error('[ReplicaService]: To replicate replica to all, do replica_params.Replication = "All"')
+				error(
+					'[ReplicaService]: To replicate replica to all, do replica_params.Replication = "All"'
+				)
 			end
 			replication = {}
 			pending_replication = {}
@@ -944,8 +960,13 @@ function ReplicaService.NewReplica(replica_params) --> [Replica]
 		creation_data = {}
 	end
 
-	local creation_data_of_one =
-		{ replica_class, replica_tags, data_table, (parent ~= nil) and parent.Id or 0, replica_params.WriteLib }
+	local creation_data_of_one = {
+		replica_class,
+		replica_tags,
+		data_table,
+		(parent ~= nil) and parent.Id or 0,
+		replica_params.WriteLib,
+	}
 	creation_data[tostring(ReplicaIndex)] = creation_data_of_one
 
 	-- New Replica object table:

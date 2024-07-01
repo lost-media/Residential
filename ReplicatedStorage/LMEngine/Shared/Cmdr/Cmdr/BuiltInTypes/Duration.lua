@@ -47,7 +47,8 @@ local function stringToSecondDuration(stringDuration)
 		end
 		-- While it was already defaulting to use minutes when using just "m", this does it without worrying
 		-- about any consistency between list ordering.
-		seconds = seconds + (rawUnit:lower() == "m" and 60 or unitTable[unitNames[1]]) * tonumber(rawNum)
+		seconds = seconds
+			+ (rawUnit:lower() == "m" and 60 or unitTable[unitNames[1]]) * tonumber(rawNum)
 	end
 	-- If no durations were provided, return nil.
 	if seconds == nil then

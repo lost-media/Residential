@@ -52,7 +52,10 @@ type UniqueIdGeneratorMembers = {
 	_max_id: number,
 }
 
-export type UniqueIdGenerator = typeof(setmetatable({} :: UniqueIdGeneratorMembers, {} :: IUniqueIdGenerator))
+export type UniqueIdGenerator = typeof(setmetatable(
+	{} :: UniqueIdGeneratorMembers,
+	{} :: IUniqueIdGenerator
+))
 
 ----- Private variables -----
 

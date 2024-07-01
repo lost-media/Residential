@@ -97,7 +97,13 @@ function ClientComm:GetFunction(
 	inboundMiddleware: Types.ClientMiddleware?,
 	outboundMiddleware: Types.ClientMiddleware?
 )
-	return Comm.GetFunction(self._instancesFolder, name, self._usePromise, inboundMiddleware, outboundMiddleware)
+	return Comm.GetFunction(
+		self._instancesFolder,
+		name,
+		self._usePromise,
+		inboundMiddleware,
+		outboundMiddleware
+	)
 end
 
 --[=[
@@ -189,7 +195,10 @@ end
 	obj.MyProperty:Observe(function(value) end)
 	```
 ]=]
-function ClientComm:BuildObject(inboundMiddleware: Types.ClientMiddleware?, outboundMiddleware: Types.ClientMiddleware?)
+function ClientComm:BuildObject(
+	inboundMiddleware: Types.ClientMiddleware?,
+	outboundMiddleware: Types.ClientMiddleware?
+)
 	local obj = {}
 	local rfFolder = self._instancesFolder:FindFirstChild("RF")
 	local reFolder = self._instancesFolder:FindFirstChild("RE")

@@ -131,7 +131,10 @@ function TestSession:getContext()
 end
 
 function TestSession:getExpectationContext()
-	assert(#self.expectationContextStack > 0, "Tried to get expectationContext from an empty stack!")
+	assert(
+		#self.expectationContextStack > 0,
+		"Tried to get expectationContext from an empty stack!"
+	)
 	return self.expectationContextStack[#self.expectationContextStack]
 end
 

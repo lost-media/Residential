@@ -195,7 +195,10 @@ end
 function PlotService:AssignPlot(player: Player, plot: Plot)
 	assert(player, "[PlotService] AssignPlot: Player is nil")
 	assert(plot, "[PlotService] AssignPlot: Plot is nil")
-	assert(plot:GetAttribute("Occupied") ~= true, "[PlotService] AssignPlot: Plot is already occupied")
+	assert(
+		plot:GetAttribute("Occupied") ~= true,
+		"[PlotService] AssignPlot: Plot is already occupied"
+	)
 
 	plot:AssignPlayer(player)
 
@@ -205,7 +208,10 @@ end
 
 function PlotService:UnassignPlot(player: Player)
 	assert(player ~= nil, "[PlotService] UnassignPlot: Player is nil")
-	assert(self._players[player] ~= nil, "[PlotService] UnassignPlot: Player does not have a plot assigned")
+	assert(
+		self._players[player] ~= nil,
+		"[PlotService] UnassignPlot: Player does not have a plot assigned"
+	)
 
 	---@type Plot2
 	local plot: Plot = self._players[player]
@@ -241,9 +247,16 @@ function PlotService:PlaceStructure(player: Player, structure_id: string, cframe
 	return err
 end
 
-function PlotService.Client:PlaceStructure(player: Player, structure_id: string, cframe: CFrame): boolean
+function PlotService.Client:PlaceStructure(
+	player: Player,
+	structure_id: string,
+	cframe: CFrame
+): boolean
 	-- Rate limit the function
-	assert(PlotServiceRateLimiter:CheckRate(player) == true, "[PlotService] PlaceStructure: Rate limited")
+	assert(
+		PlotServiceRateLimiter:CheckRate(player) == true,
+		"[PlotService] PlaceStructure: Rate limited"
+	)
 	assert(structure_id ~= nil, "[PlotService] PlaceStructure: Structure ID is nil")
 	assert(cframe ~= nil, "[PlotService] PlaceStructure: CFrame is nil")
 

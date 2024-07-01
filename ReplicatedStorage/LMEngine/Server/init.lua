@@ -211,7 +211,10 @@ end
 ]=]
 function KnitServer.CreateService(serviceDef: ServiceDef): Service
 	assert(type(serviceDef) == "table", `Service must be a table; got {type(serviceDef)}`)
-	assert(type(serviceDef.Name) == "string", `Service.Name must be a string; got {type(serviceDef.Name)}`)
+	assert(
+		type(serviceDef.Name) == "string",
+		`Service.Name must be a string; got {type(serviceDef.Name)}`
+	)
 	assert(#serviceDef.Name > 0, "Service.Name must be a non-empty string")
 	assert(not DoesServiceExist(serviceDef.Name), `Service "{serviceDef.Name}" already exists`)
 	assert(not started, `Services cannot be created after calling "Knit.Start()"`)
@@ -424,7 +427,10 @@ function KnitServer.Start(options: KnitOptions?)
 	if options == nil then
 		selectedOptions = defaultOptions
 	else
-		assert(typeof(options) == "table", `KnitOptions should be a table or nil; got {typeof(options)}`)
+		assert(
+			typeof(options) == "table",
+			`KnitOptions should be a table or nil; got {typeof(options)}`
+		)
 		selectedOptions = options
 		for k, v in defaultOptions do
 			if selectedOptions[k] == nil then
@@ -434,13 +440,19 @@ function KnitServer.Start(options: KnitOptions?)
 	end
 
 	return Promise.new(function(resolve)
-		local knitMiddleware = if selectedOptions.Middleware ~= nil then selectedOptions.Middleware else {}
+		local knitMiddleware = if selectedOptions.Middleware ~= nil
+			then selectedOptions.Middleware
+			else {}
 
 		-- Bind remotes:
 		for _, service in services do
 			local middleware = if service.Middleware ~= nil then service.Middleware else {}
-			local inbound = if middleware.Inbound ~= nil then middleware.Inbound else knitMiddleware.Inbound
-			local outbound = if middleware.Outbound ~= nil then middleware.Outbound else knitMiddleware.Outbound
+			local inbound = if middleware.Inbound ~= nil
+				then middleware.Inbound
+				else knitMiddleware.Inbound
+			local outbound = if middleware.Outbound ~= nil
+				then middleware.Outbound
+				else knitMiddleware.Outbound
 
 			service.Middleware = nil
 

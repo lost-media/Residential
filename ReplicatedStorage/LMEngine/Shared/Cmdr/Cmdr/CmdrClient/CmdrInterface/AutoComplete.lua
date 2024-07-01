@@ -39,7 +39,10 @@ return function(Cmdr)
 			0,
 			math.max(Title.Field.TextBounds.X + Title.Field.Type.TextBounds.X, Gui.Size.X.Offset),
 			0,
-			math.min(Gui.UIListLayout.AbsoluteContentSize.Y, Gui.Parent.AbsoluteSize.Y - Gui.AbsolutePosition.Y - 10)
+			math.min(
+				Gui.UIListLayout.AbsoluteContentSize.Y,
+				Gui.Parent.AbsoluteSize.Y - Gui.AbsolutePosition.Y - 10
+			)
 		)
 	end
 
@@ -54,7 +57,8 @@ return function(Cmdr)
 		)
 		SetText(Description, Description.Label, options.description)
 
-		Description.Label.TextColor3 = options.invalid and Color3.fromRGB(255, 73, 73) or Color3.fromRGB(255, 255, 255)
+		Description.Label.TextColor3 = options.invalid and Color3.fromRGB(255, 73, 73)
+			or Color3.fromRGB(255, 255, 255)
 		Description.Size = UDim2.new(1, 0, 0, 40)
 
 		-- Flow description text
@@ -151,8 +155,12 @@ return function(Cmdr)
 		local extra = (options.at and options.at or (#table.concat(words, " ") + 1)) * 7
 
 		-- Update the auto complete container
-		Gui.Position =
-			UDim2.new(0, Entry.TextBox.AbsolutePosition.X - 10 + extra, 0, Entry.TextBox.AbsolutePosition.Y + 30)
+		Gui.Position = UDim2.new(
+			0,
+			Entry.TextBox.AbsolutePosition.X - 10 + extra,
+			0,
+			Entry.TextBox.AbsolutePosition.Y + 30
+		)
 		Gui.Size = UDim2.new(0, autocompleteWidth, 0, Gui.UIListLayout.AbsoluteContentSize.Y)
 		Gui.Visible = true
 

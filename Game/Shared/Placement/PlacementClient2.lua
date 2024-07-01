@@ -237,7 +237,10 @@ type PlacementClientMembers = {
 	PlacementConfirmed: Signal.Signal,
 }
 
-export type PlacementClient = typeof(setmetatable({} :: PlacementClientMembers, {} :: IPlacementClient))
+export type PlacementClient = typeof(setmetatable(
+	{} :: PlacementClientMembers,
+	{} :: IPlacementClient
+))
 
 type ModelSettings = {
 	can_stack: boolean,
@@ -670,7 +673,10 @@ local function CheckHitbox(client: PlacementClient)
 	local current_model = state._current_model
 	local plot = client._plot
 
-	if hitbox:IsDescendantOf(workspace) == false and SETTINGS.PLACEMENT_CONFIGS.Collisions == false then
+	if
+		hitbox:IsDescendantOf(workspace) == false
+		and SETTINGS.PLACEMENT_CONFIGS.Collisions == false
+	then
 		return
 	end
 
@@ -700,7 +706,10 @@ local function CheckHitbox(client: PlacementClient)
 			continue
 		end
 
-		if collisionPoints[i]:IsDescendantOf(current_model) == true or collisionPoints[i] == plot then
+		if
+			collisionPoints[i]:IsDescendantOf(current_model) == true
+			or collisionPoints[i] == plot
+		then
 			continue
 		end
 
@@ -790,11 +799,10 @@ local function CalculateAngle(last: CFrame, current: CFrame, client: PlacementCl
 	local preCalc = (rotation + platform.Orientation.Y) * math.pi / 180
 
 	-- Returns the proper angle based on rotation
-	return (CFrame.fromEulerAnglesXYZ(dir_Z * tiltZ, 0, dir_X * tiltX):Inverse() * CFrame.fromEulerAnglesXYZ(
-		0,
-		preCalc,
-		0
-	)):Inverse() * CFrame.fromEulerAnglesXYZ(0, preCalc, 0)
+	return (
+		CFrame.fromEulerAnglesXYZ(dir_Z * tiltZ, 0, dir_X * tiltX):Inverse()
+		* CFrame.fromEulerAnglesXYZ(0, preCalc, 0)
+	):Inverse() * CFrame.fromEulerAnglesXYZ(0, preCalc, 0)
 end
 
 -- Calculates the position of the object
@@ -842,7 +850,8 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 		local unit: Ray = cam:ScreenPointToRay(player_mouse.X, player_mouse.Y, 1)
 		ray = workspace:Raycast(unit.Origin, unit.Direction * range_of_ray, raycastParams)
 		nilRay = unit.Origin
-			+ unit.Direction * (SETTINGS.PLACEMENT_CONFIGS.MaxRange + platform.Size.X * 0.5 + platform.Size.Z * 0.5)
+			+ unit.Direction
+				* (SETTINGS.PLACEMENT_CONFIGS.MaxRange + platform.Size.X * 0.5 + platform.Size.Z * 0.5)
 	end
 
 	if ray then
@@ -870,8 +879,9 @@ local function CalculateItemLocation(last, final: boolean, client: PlacementClie
 		and (target:IsDescendantOf(client._plot:FindFirstChild("Structures"))) --  or target == platform)
 	then
 		if ray and ray.Normal then
-			local normal =
-				CFrame.new(ray.Normal):VectorToWorldSpace(Vector3.FromNormalId(Enum.NormalId.Top)):Dot(ray.Normal)
+			local normal = CFrame.new(ray.Normal)
+				:VectorToWorldSpace(Vector3.FromNormalId(Enum.NormalId.Top))
+				:Dot(ray.Normal)
 			y = CalculateYPosition(target.Position.Y, target.Size.Y, primary.Size.Y, normal)
 		end
 	end
@@ -1043,7 +1053,9 @@ local function SetupInitialization(client: PlacementClient)
 	hitbox.Parent = current_model
 
 	client._state:dispatch(RotationChanged(0))
-	client._state:dispatch(AmplitudeChanged(math.clamp(SETTINGS.PLACEMENT_CONFIGS.AngleTiltAmplitude, 0, 10)))
+	client._state:dispatch(
+		AmplitudeChanged(math.clamp(SETTINGS.PLACEMENT_CONFIGS.AngleTiltAmplitude, 0, 10))
+	)
 	client._state:dispatch(CurrentRotChanged(true))
 
 	dirX = -1
@@ -1067,7 +1079,11 @@ local function ROTATE(
 )
 	local state: State = client._state:getState()
 
-	if state._current_state == 4 or state._current_state == 2 or inputState ~= Enum.UserInputState.Begin then
+	if
+		state._current_state == 4
+		or state._current_state == 2
+		or inputState ~= Enum.UserInputState.Begin
+	then
 		return
 	end
 
@@ -1230,20 +1246,22 @@ local function BindInputs(client: PlacementClient)
 		)
 	end
 
-	client._trove:Add(UserInputService.InputBegan:Connect(function(input: InputObject, game_processed: boolean)
-		if game_processed then
-			return
-		end
+	client._trove:Add(
+		UserInputService.InputBegan:Connect(function(input: InputObject, game_processed: boolean)
+			if game_processed then
+				return
+			end
 
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			client:ConfirmPlacement()
-		end
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				client:ConfirmPlacement()
+			end
 
-		if input.KeyCode == Enum.KeyCode.X then
-			-- Delete the current model
-			client:Delete()
-		end
-	end))
+			if input.KeyCode == Enum.KeyCode.X then
+				-- Delete the current model
+				client:Delete()
+			end
+		end)
+	)
 end
 
 -- Used for sending a final CFrame to the server when using interpolation.
@@ -1260,7 +1278,8 @@ local function CreateHapticFeedback()
 		if not isVibrationSupported then
 			return
 		end
-		largeSupported = HapticService:IsMotorSupported(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Large)
+		largeSupported =
+			HapticService:IsMotorSupported(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Large)
 
 		if largeSupported then
 			HapticService:SetMotor(
@@ -1516,7 +1535,8 @@ function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings
 
 	local platform = self._plot:FindFirstChild("Platform")
 
-	initial_Y = CalculateYPosition(platform.Position.Y, platform.Size.Y, model.PrimaryPart.Size.Y, 1)
+	initial_Y =
+		CalculateYPosition(platform.Position.Y, platform.Size.Y, model.PrimaryPart.Size.Y, 1)
 
 	local pre_speed = 1
 
@@ -1535,7 +1555,11 @@ function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings
 	BindInputs(self)
 
 	if SETTINGS.PLACEMENT_CONFIGS.Interpolation == true then
-		pre_speed = math.clamp(math.abs(tonumber(1 - SETTINGS.PLACEMENT_CONFIGS.LerpSpeed) :: number), 0, 0.9)
+		pre_speed = math.clamp(
+			math.abs(tonumber(1 - SETTINGS.PLACEMENT_CONFIGS.LerpSpeed) :: number),
+			0,
+			0.9
+		)
 		speed = pre_speed
 
 		if SETTINGS.InstantActivation == true then

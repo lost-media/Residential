@@ -46,16 +46,34 @@ function InputController:Init()
 	end)
 end
 
-function InputController:RegisterInputBegan(key: string, callback: (input: InputObject, game_processed: boolean?) -> ())
-	assert(self.InputBeganCallbacks[key] == nil, "[InputController] RegisterInputBegan: Key already exists")
+function InputController:RegisterInputBegan(
+	key: string,
+	callback: (
+		input: InputObject,
+		game_processed: boolean?
+	) -> ()
+)
+	assert(
+		self.InputBeganCallbacks[key] == nil,
+		"[InputController] RegisterInputBegan: Key already exists"
+	)
 	assert(callback ~= nil, "[InputController] RegisterInputBegan: Callback is nil")
 	self.InputBeganCallbacks[key] = callback
 
 	-- Return the index of the callback
 end
 
-function InputController:RegisterInputEnded(key: string, callback: (input: InputObject, game_processed: boolean?) -> ())
-	assert(self.InputEndedCallbacks[key] == nil, "[InputController] RegisterInputEnded: Key already exists")
+function InputController:RegisterInputEnded(
+	key: string,
+	callback: (
+		input: InputObject,
+		game_processed: boolean?
+	) -> ()
+)
+	assert(
+		self.InputEndedCallbacks[key] == nil,
+		"[InputController] RegisterInputEnded: Key already exists"
+	)
 	assert(callback ~= nil, "[InputController] RegisterInputEnded: Callback is nil")
 
 	self.InputEndedCallbacks[key] = callback
@@ -65,12 +83,18 @@ function InputController:RegisterInputEnded(key: string, callback: (input: Input
 end
 
 function InputController:UnregisterInputBegan(key: string)
-	assert(self.InputBeganCallbacks[key] ~= nil, "[InputController] UnregisterInputBegan: Key does not exist")
+	assert(
+		self.InputBeganCallbacks[key] ~= nil,
+		"[InputController] UnregisterInputBegan: Key does not exist"
+	)
 	self.InputBeganCallbacks[key] = nil
 end
 
 function InputController:UnregisterInputEnded(key: string)
-	assert(self.InputEndedCallbacks[key] ~= nil, "[InputController] UnregisterInputEnded: Key does not exist")
+	assert(
+		self.InputEndedCallbacks[key] ~= nil,
+		"[InputController] UnregisterInputEnded: Key does not exist"
+	)
 	self.InputEndedCallbacks[key] = nil
 end
 

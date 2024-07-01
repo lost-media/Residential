@@ -1,11 +1,29 @@
 --!strict
 
 --[[
-{Lost Media}
+*{Residential} -[MusicController]- v1.0.0 -----------------------------------
+Controls the client-side music for the game.
 
--[MusicController] Controller
-    A controller that plays music from a folder in ReplicatedStorage.
-    The music is played at random and loops when it ends.
+Author: brandon-kong (ijmod)
+Last Modified: 2024-07-01
+
+Dependencies:
+	- Deque
+	- TableUtil
+	- Trove
+
+Usage:
+	local MusicController = LMEngine.GetController("MusicController")
+	MusicController:PlayMusic()
+
+Members [MusicController]:
+	- _queue: Deque.Deque (A queue of music to play)
+
+Methods [MusicController]:
+	- PlayMusic(): void (Plays music from the queue)
+
+Changelog:
+	v1.0.0 - Initial implementation
 --]]
 
 local SETTINGS = {
@@ -37,13 +55,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
----@type Deque
-local Deque = require(ReplicatedStorage.LMEngine.Shared.DS.Deque)
-
-local TableUtil = require(LMEngine.SharedDir.TableUtil)
-
----@type Trove
-local Trove = LMEngine.GetShared("Trove")
+local dirShared = LMEngine.SharedDir
+local Deque = require(dirShared.DS.Deque)
+local TableUtil = require(dirShared.TableUtil)
+local Trove = require(dirShared.Trove)
 
 ---@class MusicController
 local MusicController = LMEngine.CreateController({
@@ -52,7 +67,7 @@ local MusicController = LMEngine.CreateController({
 	_queue = Deque.new(),
 })
 
-local TroveObject = Trove.new()
+local troveObject = Trove.new()
 
 ----- Private functions -----
 
@@ -83,15 +98,15 @@ local function PlayMusicFromQueue(queue: Deque.Deque)
 		sound = queue:PopLeft()
 	end
 
-	local cloned_sound = TroveObject:Add(MakeSound(sound))
+	local clonedSound = troveObject:Add(MakeSound(sound))
 
-	cloned_sound.Parent = SETTINGS.SoundParent
-	cloned_sound.Volume = SETTINGS.Volume
+	clonedSound.Parent = SETTINGS.SoundParent
+	clonedSound.Volume = SETTINGS.Volume
 
-	cloned_sound:Play()
+	clonedSound:Play()
 
-	cloned_sound.Ended:Connect(function()
-		TroveObject:Clean()
+	clonedSound.Ended:Connect(function()
+		troveObject:Clean()
 		PlayMusicFromQueue(queue)
 	end)
 end

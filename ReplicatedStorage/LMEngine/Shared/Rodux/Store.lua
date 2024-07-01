@@ -7,10 +7,14 @@ local ACTION_LOG_LENGTH = 3
 
 local rethrowErrorReporter = {
 	reportReducerError = function(prevState, action, errorResult)
-		error(string.format("Received error: %s\n\n%s", errorResult.message, errorResult.thrownValue))
+		error(
+			string.format("Received error: %s\n\n%s", errorResult.message, errorResult.thrownValue)
+		)
 	end,
 	reportUpdateError = function(prevState, currentState, lastActions, errorResult)
-		error(string.format("Received error: %s\n\n%s", errorResult.message, errorResult.thrownValue))
+		error(
+			string.format("Received error: %s\n\n%s", errorResult.message, errorResult.thrownValue)
+		)
 	end,
 }
 
@@ -40,7 +44,10 @@ Store.__index = Store
 ]]
 function Store.new(reducer, initialState, middlewares, errorReporter, devtools)
 	assert(typeof(reducer) == "function", "Bad argument #1 to Store.new, expected function.")
-	assert(middlewares == nil or typeof(middlewares) == "table", "Bad argument #3 to Store.new, expected nil or table.")
+	assert(
+		middlewares == nil or typeof(middlewares) == "table",
+		"Bad argument #3 to Store.new, expected nil or table."
+	)
 	assert(
 		devtools == nil or (typeof(devtools) == "table" and devtools.__className == "Devtools"),
 		"Bad argument #5 to Store.new, expected nil or Devtools object."
@@ -50,7 +57,10 @@ function Store.new(reducer, initialState, middlewares, errorReporter, devtools)
 		for i = 1, #middlewares, 1 do
 			assert(
 				typeof(middlewares[i]) == "function",
-				("Expected the middleware ('%s') at index %d to be a function."):format(tostring(middlewares[i]), i)
+				("Expected the middleware ('%s') at index %d to be a function."):format(
+					tostring(middlewares[i]),
+					i
+				)
 			)
 		end
 	end
@@ -146,7 +156,12 @@ end
 ]]
 function Store:dispatch(action)
 	if typeof(action) ~= "table" then
-		error(("Actions must be tables. " .. "Use custom middleware for %q actions."):format(typeof(action)), 2)
+		error(
+			("Actions must be tables. " .. "Use custom middleware for %q actions."):format(
+				typeof(action)
+			),
+			2
+		)
 	end
 
 	if action.type == nil then

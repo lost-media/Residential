@@ -113,14 +113,18 @@ function class:update(): boolean
 
 		-- recalculate the output key if necessary
 		if shouldRecalculate then
-			keyData.oldDependencySet, keyData.dependencySet = keyData.dependencySet, keyData.oldDependencySet
+			keyData.oldDependencySet, keyData.dependencySet =
+				keyData.dependencySet, keyData.oldDependencySet
 			table.clear(keyData.dependencySet)
 
 			local processOK, newOutKey, newMetaValue =
 				captureDependencies(keyData.dependencySet, self._processor, newInKey)
 
 			if processOK then
-				if self._destructor == nil and (needsDestruction(newOutKey) or needsDestruction(newMetaValue)) then
+				if
+					self._destructor == nil
+					and (needsDestruction(newOutKey) or needsDestruction(newMetaValue))
+				then
 					logWarn("destructorNeededForKeys")
 				end
 
@@ -129,7 +133,13 @@ function class:update(): boolean
 
 				-- check for key collision
 				if oldInKey ~= newInKey and newInputTable[oldInKey] ~= nil then
-					logError("forKeysKeyCollision", nil, tostring(newOutKey), tostring(oldInKey), tostring(newOutKey))
+					logError(
+						"forKeysKeyCollision",
+						nil,
+						tostring(newOutKey),
+						tostring(oldInKey),
+						tostring(newOutKey)
+					)
 				end
 
 				-- check for a changed output key
@@ -137,7 +147,8 @@ function class:update(): boolean
 					-- clean up the old calculated value
 					local oldMetaValue = meta[oldOutKey]
 
-					local destructOK, err = xpcall(self._destructor or cleanup, parseError, oldOutKey, oldMetaValue)
+					local destructOK, err =
+						xpcall(self._destructor or cleanup, parseError, oldOutKey, oldMetaValue)
 					if not destructOK then
 						logErrorNonFatal("forKeysDestructorError", err)
 					end
@@ -158,7 +169,8 @@ function class:update(): boolean
 				didChange = true
 			else
 				-- restore old dependencies, because the new dependencies may be corrupt
-				keyData.oldDependencySet, keyData.dependencySet = keyData.dependencySet, keyData.oldDependencySet
+				keyData.oldDependencySet, keyData.dependencySet =
+					keyData.dependencySet, keyData.oldDependencySet
 
 				logErrorNonFatal("forKeysProcessorError", newOutKey)
 			end
@@ -179,7 +191,8 @@ function class:update(): boolean
 			-- clean up the old calculated value
 			local oldMetaValue = meta[outputKey]
 
-			local destructOK, err = xpcall(self._destructor or cleanup, parseError, outputKey, oldMetaValue)
+			local destructOK, err =
+				xpcall(self._destructor or cleanup, parseError, outputKey, oldMetaValue)
 			if not destructOK then
 				logErrorNonFatal("forKeysDestructorError", err)
 			end

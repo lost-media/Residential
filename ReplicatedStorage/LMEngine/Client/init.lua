@@ -157,7 +157,9 @@ local function GetServicesFolder()
 end
 
 local function GetMiddlewareForService(serviceName: string)
-	local knitMiddleware = if selectedOptions.Middleware ~= nil then selectedOptions.Middleware else {}
+	local knitMiddleware = if selectedOptions.Middleware ~= nil
+		then selectedOptions.Middleware
+		else {}
 	local serviceMiddleware = selectedOptions.PerServiceMiddleware[serviceName]
 
 	return if serviceMiddleware ~= nil then serviceMiddleware else knitMiddleware
@@ -208,9 +210,15 @@ end
 ]=]
 function KnitClient.CreateController(controllerDef: ControllerDef): Controller
 	assert(type(controllerDef) == "table", `Controller must be a table; got {type(controllerDef)}`)
-	assert(type(controllerDef.Name) == "string", `Controller.Name must be a string; got {type(controllerDef.Name)}`)
+	assert(
+		type(controllerDef.Name) == "string",
+		`Controller.Name must be a string; got {type(controllerDef.Name)}`
+	)
 	assert(#controllerDef.Name > 0, "Controller.Name must be a non-empty string")
-	assert(not DoesControllerExist(controllerDef.Name), `Controller {controllerDef.Name} already exists`)
+	assert(
+		not DoesControllerExist(controllerDef.Name),
+		`Controller {controllerDef.Name} already exists`
+	)
 	assert(not started, `Controllers cannot be created after calling "Knit.Start()"`)
 
 	local controller = controllerDef :: Controller
@@ -334,8 +342,14 @@ function KnitClient.GetController(controllerName: string): Controller
 	end
 
 	assert(started, "Cannot call GetController until Knit has been started")
-	assert(type(controllerName) == "string", `ControllerName must be a string; got {type(controllerName)}`)
-	error(`Could not find controller "{controllerName}". Check to verify a controller with this name exists.`, 2)
+	assert(
+		type(controllerName) == "string",
+		`ControllerName must be a string; got {type(controllerName)}`
+	)
+	error(
+		`Could not find controller "{controllerName}". Check to verify a controller with this name exists.`,
+		2
+	)
 end
 
 --[=[
@@ -382,7 +396,10 @@ function KnitClient.Start(options: KnitOptions?)
 	if options == nil then
 		selectedOptions = defaultOptions
 	else
-		assert(typeof(options) == "table", `KnitOptions should be a table or nil; got {typeof(options)}`)
+		assert(
+			typeof(options) == "table",
+			`KnitOptions should be a table or nil; got {typeof(options)}`
+		)
 		selectedOptions = options
 		for k, v in defaultOptions do
 			if selectedOptions[k] == nil then

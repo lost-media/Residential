@@ -38,7 +38,13 @@ local function unpackType(value: any, typeString: string): { number }
 	elseif typeString == "NumberSequenceKeypoint" then
 		return { value.Value, value.Time, value.Envelope }
 	elseif typeString == "PhysicalProperties" then
-		return { value.Density, value.Friction, value.Elasticity, value.FrictionWeight, value.ElasticityWeight }
+		return {
+			value.Density,
+			value.Friction,
+			value.Elasticity,
+			value.FrictionWeight,
+			value.ElasticityWeight,
+		}
 	elseif typeString == "Ray" then
 		return {
 			value.Origin.X,

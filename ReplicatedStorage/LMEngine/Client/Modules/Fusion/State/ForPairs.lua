@@ -119,7 +119,8 @@ function class:update(): boolean
 
 		-- recalculate the output pair if necessary
 		if shouldRecalculate then
-			keyData.oldDependencySet, keyData.dependencySet = keyData.dependencySet, keyData.oldDependencySet
+			keyData.oldDependencySet, keyData.dependencySet =
+				keyData.dependencySet, keyData.oldDependencySet
 			table.clear(keyData.dependencySet)
 
 			local processOK, newOutKey, newOutValue, newMetaValue =
@@ -128,7 +129,11 @@ function class:update(): boolean
 			if processOK then
 				if
 					self._destructor == nil
-					and (needsDestruction(newOutKey) or needsDestruction(newOutValue) or needsDestruction(newMetaValue))
+					and (
+						needsDestruction(newOutKey)
+						or needsDestruction(newOutValue)
+						or needsDestruction(newMetaValue)
+					)
 				then
 					logWarn("destructorNeededForPairs")
 				end
@@ -165,8 +170,13 @@ function class:update(): boolean
 				if oldOutValue ~= newOutValue then
 					local oldMetaValue = meta[newOutKey]
 					if oldOutValue ~= nil then
-						local destructOK, err =
-							xpcall(self._destructor or cleanup, parseError, newOutKey, oldOutValue, oldMetaValue)
+						local destructOK, err = xpcall(
+							self._destructor or cleanup,
+							parseError,
+							newOutKey,
+							oldOutValue,
+							oldMetaValue
+						)
 						if not destructOK then
 							logErrorNonFatal("forPairsDestructorError", err)
 						end
@@ -185,7 +195,8 @@ function class:update(): boolean
 				didChange = true
 			else
 				-- restore old dependencies, because the new dependencies may be corrupt
-				keyData.oldDependencySet, keyData.dependencySet = keyData.dependencySet, keyData.oldDependencySet
+				keyData.oldDependencySet, keyData.dependencySet =
+					keyData.dependencySet, keyData.oldDependencySet
 
 				logErrorNonFatal("forPairsProcessorError", newOutKey)
 			end
@@ -240,8 +251,13 @@ function class:update(): boolean
 			-- clean up the old output pair
 			local oldMetaValue = meta[oldOutKey]
 			if oldOutValue ~= nil then
-				local destructOK, err =
-					xpcall(self._destructor or cleanup, parseError, oldOutKey, oldOutValue, oldMetaValue)
+				local destructOK, err = xpcall(
+					self._destructor or cleanup,
+					parseError,
+					oldOutKey,
+					oldOutValue,
+					oldMetaValue
+				)
 				if not destructOK then
 					logErrorNonFatal("forPairsDestructorError", err)
 				end

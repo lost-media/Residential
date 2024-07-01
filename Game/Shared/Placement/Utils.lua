@@ -62,7 +62,10 @@ end
 
 ----- Public functions -----
 
-function PlacementUtils.GetSnappedTileCFrame(tile: BasePart, state: { _level: number, _rotation: number })
+function PlacementUtils.GetSnappedTileCFrame(
+	tile: BasePart,
+	state: { _level: number, _rotation: number }
+)
 	local tileHeight = tile.Size.Y
 
 	local pos = tile.Position + Vector3.new(0, tileHeight / 2 + 0.5, 0)
@@ -124,17 +127,23 @@ end
 function PlacementUtils.MoveModelToCFrame(model: Model, cframe: CFrame, instant: boolean)
 	assert(model, "[PlacementUtils] MoveModelToCFrame : Model is nil")
 	assert(cframe, "[PlacementUtils] MoveModelToCFrame : CFrame is nil")
-	assert(model.PrimaryPart ~= nil, "[PlacementUtils] MoveModelToCFrame : Model.PrimaryPart is nil")
+	assert(
+		model.PrimaryPart ~= nil,
+		"[PlacementUtils] MoveModelToCFrame : Model.PrimaryPart is nil"
+	)
 
 	if instant then
 		model:PivotTo(cframe)
 	else
-		local tween = TweenService:Create(model.PrimaryPart, SETTINGS.TWEEN_INFO, { CFrame = cframe })
+		local tween =
+			TweenService:Create(model.PrimaryPart, SETTINGS.TWEEN_INFO, { CFrame = cframe })
 		tween:Play()
 	end
 end
 
-function PlacementUtils.StripClientState(state: PlacementType.ClientState): PlacementType.ServerState
+function PlacementUtils.StripClientState(
+	state: PlacementType.ClientState
+): PlacementType.ServerState
 	return {
 		_tile = state._tile,
 		_structure_id = state._ghost_structure:GetAttribute("Id"),

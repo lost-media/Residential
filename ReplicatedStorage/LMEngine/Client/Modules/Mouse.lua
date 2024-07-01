@@ -63,9 +63,13 @@ function Mouse.new()
 	self.previousPosition = Vector2.new(0, 0)
 	self.ticks = 1
 
-	RunService:BindToRenderStep("MeasureMouseMovement", Enum.RenderPriority.Input.Value, function(step)
-		onRenderStep(self)
-	end)
+	RunService:BindToRenderStep(
+		"MeasureMouseMovement",
+		Enum.RenderPriority.Input.Value,
+		function(step)
+			onRenderStep(self)
+		end
+	)
 
 	return self
 end
@@ -100,7 +104,11 @@ end
 
 function Mouse:CastRay()
 	local parameters = self:ScreenPointToRay()
-	return workspace:Raycast(self:GetOrigin(), self:GetUnitRay().Direction * self.rayLength, parameters)
+	return workspace:Raycast(
+		self:GetOrigin(),
+		self:GetUnitRay().Direction * self.rayLength,
+		parameters
+	)
 end
 
 function Mouse:GetHit()

@@ -43,7 +43,14 @@ local function setProperty(instance: Instance, property: string, value: any)
 			-- this typically implies the wrong type was received
 			local givenType = typeof(value)
 			local expectedType = typeof((instance :: any)[property])
-			logError("invalidPropertyType", nil, instance.ClassName, property, expectedType, givenType)
+			logError(
+				"invalidPropertyType",
+				nil,
+				instance.ClassName,
+				property,
+				expectedType,
+				givenType
+			)
 		end
 	end
 end

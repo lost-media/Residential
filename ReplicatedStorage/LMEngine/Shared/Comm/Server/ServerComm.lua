@@ -48,7 +48,10 @@ function ServerComm.new(parent: Instance, namespace: string?)
 	if namespace then
 		ns = namespace
 	end
-	assert(not parent:FindFirstChild(ns), "Parent already has another ServerComm bound to namespace " .. ns)
+	assert(
+		not parent:FindFirstChild(ns),
+		"Parent already has another ServerComm bound to namespace " .. ns
+	)
 	local self = setmetatable({}, ServerComm)
 	self._instancesFolder = Instance.new("Folder")
 	self._instancesFolder.Name = ns
@@ -149,7 +152,13 @@ function ServerComm:CreateSignal(
 	inboundMiddleware: Types.ServerMiddleware?,
 	outboundMiddleware: Types.ServerMiddleware?
 )
-	return Comm.CreateSignal(self._instancesFolder, name, unreliable, inboundMiddleware, outboundMiddleware)
+	return Comm.CreateSignal(
+		self._instancesFolder,
+		name,
+		unreliable,
+		inboundMiddleware,
+		outboundMiddleware
+	)
 end
 
 --[=[
@@ -198,7 +207,13 @@ function ServerComm:CreateProperty(
 	inboundMiddleware: Types.ServerMiddleware?,
 	outboundMiddleware: Types.ServerMiddleware?
 )
-	return Comm.CreateProperty(self._instancesFolder, name, initialValue, inboundMiddleware, outboundMiddleware)
+	return Comm.CreateProperty(
+		self._instancesFolder,
+		name,
+		initialValue,
+		inboundMiddleware,
+		outboundMiddleware
+	)
 end
 
 --[=[

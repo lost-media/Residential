@@ -21,7 +21,10 @@ local start_time = os.clock()
 
 LMEngine.Start()
 	:andThen(function()
-		print("[LM Engine] Client Engine started in", string.format("%.2fms", (os.clock() - start_time) * 100))
+		print(
+			"[LM Engine] Client Engine started in",
+			string.format("%.2fms", (os.clock() - start_time) * 100)
+		)
 	end)
 	:catch(function(err)
 		warn("[LM Engine] Engine failed to start", err)

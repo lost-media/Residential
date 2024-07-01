@@ -127,7 +127,10 @@ type PlacementType = "Place" | "Move" | "Remove" | "None"
 
 type State = PlacementType.ClientState
 
-export type PlacementClient = typeof(setmetatable({} :: PlacementClientMembers, {} :: IPlacementClient))
+export type PlacementClient = typeof(setmetatable(
+	{} :: PlacementClientMembers,
+	{} :: IPlacementClient
+))
 
 ----- Private variables -----
 
@@ -258,7 +261,8 @@ local function DimModel(model: Model)
 	for _, instance in ipairs(model:GetDescendants()) do
 		if instance:IsA("BasePart") then
 			instance:SetAttribute("OriginalTransparency", instance.Transparency)
-			instance.Transparency = 1 - (1 - instance.Transparency) / SETTINGS.TRANSPARENCY_DIM_FACTOR
+			instance.Transparency = 1
+				- (1 - instance.Transparency) / SETTINGS.TRANSPARENCY_DIM_FACTOR
 		end
 	end
 
@@ -499,7 +503,10 @@ local function UpdatePosition(client: PlacementClient)
 	end
 end
 
-function GetAttachmentsFromStringList(client: PlacementClient, attachments: { string }?): { Attachment }
+function GetAttachmentsFromStringList(
+	client: PlacementClient,
+	attachments: { string }?
+): { Attachment }
 	if attachments == nil then
 		return {}
 	end
@@ -724,11 +731,14 @@ function AttemptToSnapToAttachment(client: PlacementClient, closestInstance: Bas
 			})
 
 			-- get the attachments of the structure
-			local whitelistedSnapPoints =
-				StructuresUtils.GetStackingWhitelistedSnapPointsWith(structureId, client_structure_id)
+			local whitelistedSnapPoints = StructuresUtils.GetStackingWhitelistedSnapPointsWith(
+				structureId,
+				client_structure_id
+			)
 
 			if whitelistedSnapPoints ~= nil then
-				local attachmentInstances = GetAttachmentsFromStringList(client, whitelistedSnapPoints)
+				local attachmentInstances =
+					GetAttachmentsFromStringList(client, whitelistedSnapPoints)
 				whitelistedSnapPoints = attachmentInstances
 			else
 				whitelistedSnapPoints = {}
@@ -771,7 +781,10 @@ function AttemptToSnapToAttachment(client: PlacementClient, closestInstance: Bas
 				return
 			end
 
-			if state._mounted_attachment == nil or state._mounted_attachment ~= attachmentPointToSnapTo then
+			if
+				state._mounted_attachment == nil
+				or state._mounted_attachment ~= attachmentPointToSnapTo
+			then
 				--self.signals.OnStackedAttachmentChanged:Fire(attachmentPointToSnapTo, self.state.mountedAttachment)
 			end
 
@@ -790,7 +803,8 @@ function AttemptToSnapToAttachment(client: PlacementClient, closestInstance: Bas
 				_attachments = attachments,
 			})
 
-			local orientationStrict = StructuresUtils.IsOrientationStrict(structureId, client_structure_id)
+			local orientationStrict =
+				StructuresUtils.IsOrientationStrict(structureId, client_structure_id)
 
 			client._state:dispatch({
 				type = "ORIENTATION_STRICT_CHANGED",

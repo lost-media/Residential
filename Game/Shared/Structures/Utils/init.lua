@@ -98,7 +98,10 @@ function StructuresUtils.IsStructureStackable(structureId: string): boolean
 	return structure.Stacking ~= nil
 end
 
-function StructuresUtils.CanStackStructureWith(structureId: string, otherStructureId: string): boolean
+function StructuresUtils.CanStackStructureWith(
+	structureId: string,
+	otherStructureId: string
+): boolean
 	local structure = StructuresUtils.GetStructureFromId(structureId)
 
 	if structure == nil then
@@ -120,7 +123,10 @@ function StructuresUtils.CanStackStructureWith(structureId: string, otherStructu
 	return structure.Stacking.AllowedModels[otherStructureId] ~= nil
 end
 
-function StructuresUtils.GetStackingRequiredSnapPointsWith(structureId: string, otherStructureId: string): { string }?
+function StructuresUtils.GetStackingRequiredSnapPointsWith(
+	structureId: string,
+	otherStructureId: string
+): { string }?
 	local canStack = StructuresUtils.CanStackStructureWith(structureId, otherStructureId)
 
 	if canStack == false then
@@ -149,7 +155,10 @@ function StructuresUtils.GetStackingWhitelistedSnapPointsWith(
 	return stackingData.WhitelistedSnapPoints
 end
 
-function StructuresUtils.GetStackingOccupiedSnapPointsWith(structureId: string, otherStructureId: string): { string }?
+function StructuresUtils.GetStackingOccupiedSnapPointsWith(
+	structureId: string,
+	otherStructureId: string
+): { string }?
 	local canStack = StructuresUtils.CanStackStructureWith(structureId, otherStructureId)
 
 	if canStack == false then
@@ -182,7 +191,8 @@ function StructuresUtils.GetMountedAttachmentPointFromStructures(
 		return
 	end
 
-	local occupiedSnapPoints = StructuresUtils.GetStackingOccupiedSnapPointsWith(structureId, otherStructureId)
+	local occupiedSnapPoints =
+		StructuresUtils.GetStackingOccupiedSnapPointsWith(structureId, otherStructureId)
 
 	if occupiedSnapPoints == nil then
 		return

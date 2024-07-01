@@ -45,7 +45,10 @@ function MigrationManager.MigratePlayerProfile(player: Player, profile)
 			profile.Data.Version = version
 
 			print(
-				"[MigrationManager]: Migrated player profile for player: " .. player.Name .. " to version: " .. version
+				"[MigrationManager]: Migrated player profile for player: "
+					.. player.Name
+					.. " to version: "
+					.. version
 			)
 		end
 	end
@@ -60,7 +63,12 @@ function MigrationManager.MigratePlotProfile(player: Player, profile)
 			profile.Data = migration.Migrate(player, profile.Data)
 			profile.Data.Version = version
 
-			print("[MigrationManager]: Migrated plot profile for player: " .. player.Name .. " to version: " .. version)
+			print(
+				"[MigrationManager]: Migrated plot profile for player: "
+					.. player.Name
+					.. " to version: "
+					.. version
+			)
 		end
 	end
 

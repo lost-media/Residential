@@ -56,7 +56,11 @@ function StateMachine:SetState(state_name: string)
 end
 
 function StateMachine:Handle(event: string)
-	if self.current_state and self.current_state.Transitions and self.current_state.Transitions[event] then
+	if
+		self.current_state
+		and self.current_state.Transitions
+		and self.current_state.Transitions[event]
+	then
 		self:SetState(self.current_state.Transitions[event])
 	end
 end

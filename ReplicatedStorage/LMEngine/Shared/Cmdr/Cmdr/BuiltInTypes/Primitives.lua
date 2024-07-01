@@ -44,7 +44,8 @@ local positiveIntType = {
 	end,
 
 	Validate = function(value)
-		return value ~= nil and value == math.floor(value) and value > 0, "Only positive whole numbers are valid."
+		return value ~= nil and value == math.floor(value) and value > 0,
+			"Only positive whole numbers are valid."
 	end,
 
 	Parse = function(value)
@@ -58,7 +59,8 @@ local nonNegativeIntType = {
 	end,
 
 	Validate = function(value)
-		return value ~= nil and value == math.floor(value) and value >= 0, "Only non-negative whole numbers are valid."
+		return value ~= nil and value == math.floor(value) and value >= 0,
+			"Only non-negative whole numbers are valid."
 	end,
 
 	Parse = function(value)
@@ -72,7 +74,8 @@ local byteType = {
 	end,
 
 	Validate = function(value)
-		return value ~= nil and value == math.floor(value) and value >= 0 and value <= 255, "Only bytes are valid."
+		return value ~= nil and value == math.floor(value) and value >= 0 and value <= 255,
+			"Only bytes are valid."
 	end,
 
 	Parse = function(value)
@@ -86,7 +89,8 @@ local digitType = {
 	end,
 
 	Validate = function(value)
-		return value ~= nil and value == math.floor(value) and value >= 0 and value <= 9, "Only digits are valid."
+		return value ~= nil and value == math.floor(value) and value >= 0 and value <= 9,
+			"Only digits are valid."
 	end,
 
 	Parse = function(value)
@@ -96,8 +100,10 @@ local digitType = {
 
 local boolType
 do
-	local truthy = Util.MakeDictionary({ "true", "t", "yes", "y", "on", "enable", "enabled", "1", "+" })
-	local falsy = Util.MakeDictionary({ "false", "f", "no", "n", "off", "disable", "disabled", "0", "-" })
+	local truthy =
+		Util.MakeDictionary({ "true", "t", "yes", "y", "on", "enable", "enabled", "1", "+" })
+	local falsy =
+		Util.MakeDictionary({ "false", "f", "no", "n", "off", "disable", "disabled", "0", "-" })
 
 	boolType = {
 		Transform = function(text)
@@ -105,7 +111,8 @@ do
 		end,
 
 		Validate = function(value)
-			return truthy[value] ~= nil or falsy[value] ~= nil, "Please use true/yes/on or false/no/off."
+			return truthy[value] ~= nil or falsy[value] ~= nil,
+				"Please use true/yes/on or false/no/off."
 		end,
 
 		Parse = function(value)

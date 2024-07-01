@@ -11,7 +11,10 @@ return {
 		},
 		function(context)
 			return {
-				Type = context.Cmdr.Util.MakeEnumType("PlaceInstance Format", { "PlaceIdJobId", "PlaceId", "JobId" }),
+				Type = context.Cmdr.Util.MakeEnumType(
+					"PlaceInstance Format",
+					{ "PlaceIdJobId", "PlaceId", "JobId" }
+				),
 				Name = "Format",
 				Description = "What data to return. PlaceIdJobId returns both separated by a space.",
 				Default = "PlaceIdJobId",

@@ -66,7 +66,10 @@ function RemoteProperty.new(
 	end)
 	self._rs:Connect(function(player)
 		local playerValue = self._perPlayer[player]
-		local value = if playerValue == nil then self._value elseif playerValue == None then nil else playerValue
+		local value = if playerValue == nil
+			then self._value
+			elseif playerValue == None then nil
+			else playerValue
 		self._rs:Fire(player, value)
 	end)
 	return self
@@ -280,7 +283,10 @@ end
 ]=]
 function RemoteProperty:GetFor(player: Player): any
 	local playerValue = self._perPlayer[player]
-	local value = if playerValue == nil then self._value elseif playerValue == None then nil else playerValue
+	local value = if playerValue == nil
+		then self._value
+		elseif playerValue == None then nil
+		else playerValue
 	return value
 end
 

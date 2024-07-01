@@ -13,7 +13,12 @@ local function newEnvironment(currentNode, extraEnvironment)
 
 	if extraEnvironment then
 		if type(extraEnvironment) ~= "table" then
-			error(("Bad argument #2 to newEnvironment. Expected table, got %s"):format(typeof(extraEnvironment)), 2)
+			error(
+				("Bad argument #2 to newEnvironment. Expected table, got %s"):format(
+					typeof(extraEnvironment)
+				),
+				2
+			)
 		end
 
 		for key, value in pairs(extraEnvironment) do
@@ -71,7 +76,12 @@ local function newEnvironment(currentNode, extraEnvironment)
 
 	for nodeType, name in pairs(lifecycleHooks) do
 		env[name] = function(callback)
-			addChild(name .. "_" .. tostring(lifecyclePhaseId), callback, nodeType, TestEnum.NodeModifier.None)
+			addChild(
+				name .. "_" .. tostring(lifecyclePhaseId),
+				callback,
+				nodeType,
+				TestEnum.NodeModifier.None
+			)
 			lifecyclePhaseId = lifecyclePhaseId + 1
 		end
 	end

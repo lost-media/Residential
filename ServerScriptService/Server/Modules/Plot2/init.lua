@@ -133,16 +133,25 @@ end
 -- Checks if the object exceeds the boundries given by the plot
 local function CheckBoundaries(plot: BasePart, primary: BasePart): boolean
 	local pos: CFrame = plot.CFrame
-	local size: Vector3 = CFrame.fromOrientation(0, primary.Orientation.Y * math.pi / 180, 0) * primary.Size
+	local size: Vector3 = CFrame.fromOrientation(0, primary.Orientation.Y * math.pi / 180, 0)
+		* primary.Size
 	local currentPos: CFrame = pos:Inverse() * primary.CFrame
 
 	local xBound: number = (plot.Size.X - size.X)
 	local zBound: number = (plot.Size.Z - size.Z)
 
-	return currentPos.X > xBound or currentPos.X < -xBound or currentPos.Z > zBound or currentPos.Z < -zBound
+	return currentPos.X > xBound
+		or currentPos.X < -xBound
+		or currentPos.Z > zBound
+		or currentPos.Z < -zBound
 end
 
-local function HandleCollisions(character: Model, structure: Model, collisions: boolean, plot: Plot): boolean
+local function HandleCollisions(
+	character: Model,
+	structure: Model,
+	collisions: boolean,
+	plot: Plot
+): boolean
 	if collisions ~= true then
 		structure.PrimaryPart.Transparency = 1
 		return true

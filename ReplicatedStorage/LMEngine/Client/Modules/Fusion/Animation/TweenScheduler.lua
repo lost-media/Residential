@@ -65,6 +65,10 @@ local function updateAllTweens()
 	end
 end
 
-RunService:BindToRenderStep("__FusionTweenScheduler", Enum.RenderPriority.First.Value, updateAllTweens)
+RunService:BindToRenderStep(
+	"__FusionTweenScheduler",
+	Enum.RenderPriority.First.Value,
+	updateAllTweens
+)
 
 return TweenScheduler
