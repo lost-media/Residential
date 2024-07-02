@@ -16,6 +16,7 @@ local SharedProperties = {
 	Category = "Road",
 	BuildTime = 0,
 	FullArea = true,
+	IsABuilding = false,
 	Stacking = {
 		Allowed = false,
 	},

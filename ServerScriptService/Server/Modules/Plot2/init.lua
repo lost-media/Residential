@@ -210,6 +210,8 @@ function Plot.new(plot_model: Instance)
 	self._trove = Trove.new()
 	self._plot_uuid = nil
 
+	self._cityHall = nil
+
 	self._road_network = RoadNetwork.new(self)
 
 	return self
@@ -271,6 +273,7 @@ function Plot:UnassignPlayer()
 
 	-- Clear the plot
 	self:Clear()
+	self._cityHall = nil
 	self._plot_uuid = nil
 end
 
@@ -287,7 +290,27 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 
 	local structure_id: string? = structure:GetAttribute("Id")
 
-	local structureCategory = StructureUtils.ParseStructureId(structure_id)
+	local structureContent = StructureUtils.GetStructureFromId(structure_id)
+	if structureContent == nil then
+		warn("[PlotService] PlaceStructure: Structure content is nil")
+		return false
+	end
+
+	local structureCategory = structureContent.Category
+
+	if structureCategory == nil then
+		warn("[PlotService] PlaceStructure: Structure category is nil")
+		return false
+	end
+
+	if structureCategory == "City Hall" then
+		if self._cityHall ~= nil then
+			warn("[PlotService] PlaceStructure: City Hall already exists")
+			return false
+		end
+
+		self._cityHall = structure
+	end
 
 	assert(structureCategory ~= nil, "[PlotService] PlaceStructure: Structure category is nil")
 	assert(structure_id ~= nil, "[PlotService] PlaceStructure: Structure ID is nil")
@@ -343,6 +366,8 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 
 	if structureCategory == "Road" then
 		self._road_network:AddRoad(structure)
+	elseif structureContent.IsABuilding == true then
+		self._road_network:AddBuilding(structure)
 	end
 
 	return true
@@ -417,7 +442,13 @@ function Plot:DeleteStructure(structure: Model)
 		"[PlotService] DeleteStructure: Structure is not a child of the plot"
 	)
 
+	if structure == self._cityHall then
+		self._cityHall = nil
+	end
+
 	structure:Destroy()
+
+	self._road_network:UpdateConnectivity()
 end
 
 function Plot:GetStructureAtPosition(position: Vector3): Model?
@@ -452,7 +483,14 @@ function Plot:GetRoads()
 		if structure:IsA("Model") then
 			local structure_id = structure:GetAttribute("Id")
 
-			local type = StructureUtils.ParseStructureId(structure_id)
+			local structure_content = StructureUtils.GetStructureFromId(structure_id)
+
+			if structure_content == nil then
+				warn("[Plot] Failed to get structure content for ID: " .. structure_id)
+				continue
+			end
+
+			local type = structure_content.Category
 
 			if type == "Road" then
 				table.insert(roads, structure)
@@ -463,8 +501,36 @@ function Plot:GetRoads()
 	return roads
 end
 
+function Plot:GetBuildings()
+	local buildings = {}
+
+	for _, structure in ipairs(self._plot_model.Structures:GetChildren()) do
+		if structure:IsA("Model") then
+			local structure_id = structure:GetAttribute("Id")
+
+			local structure_content = StructureUtils.GetStructureFromId(structure_id)
+
+			if structure_content == nil then
+				warn("[Plot] Failed to get structure content for ID: " .. structure_id)
+				continue
+			end
+
+			if structure_content.IsABuilding == true then
+				table.insert(buildings, structure)
+			end
+		end
+	end
+
+	return buildings
+end
+
+function Plot:GetCityHall(): Model?
+	return self._cityHall
+end
+
 function Plot:Clear()
 	self._plot_model.Structures:ClearAllChildren()
+	self._cityHall = nil
 end
 
 function Plot.__tostring(self: Plot): string

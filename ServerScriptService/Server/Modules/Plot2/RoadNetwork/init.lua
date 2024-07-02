@@ -29,6 +29,11 @@ local SETTINGS = {
 		Vector3.new(8, 0, 0),
 		Vector3.new(-8, 0, 0),
 	},
+
+	RoadConnectionTag = "RoadConnection",
+	BuildingConnectionTag = "BuildingConnection",
+
+	NotConnectedToCityHallBillboardGuiName = "NotConnectedToCityHall",
 }
 
 ----- Types -----
@@ -39,7 +44,11 @@ type RoadNetwork = RoadNetworkTypes.RoadNetwork
 
 ----- Private variables -----
 
+local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local settRoadConnectionTag = SETTINGS.RoadConnectionTag
+local settBuildingConnectionTag = SETTINGS.BuildingConnectionTag
 
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
@@ -69,67 +78,236 @@ function RoadNetwork.new(plot): RoadNetwork
 
 	self._plot = plot
 	self._graph = Graph.new()
+	self._buildings = {}
+	self._buildingRoadPairs = {}
 
 	return self
 end
 
 function RoadNetwork:AddRoad(road)
-	local node = Graph.Node(road, road);
+	-- update connectivity
+	self:UpdateConnectivity()
+end
 
-	(self._graph :: Graph):AddNode(node)
+function RoadNetwork:AddBuilding(structure: Model)
+	table.insert(self._buildings, structure)
 
-	local adjacentPositions = GetAdjacentPositions(road.PrimaryPart.Position)
+	-- update connectivity
+	self:UpdateBuildingConnectivity()
 
-	for _, neighbor_position in ipairs(adjacentPositions) do
-		local primaryPart = road.PrimaryPart
-		local neighbor_road = self._plot:GetStructureAtPosition(neighbor_position)
+	-- check if buildings are connected to city hall
+	self:UpdateBuildingCityHallConnectivity()
+end
 
-		local foundRoad = (self._graph :: Graph):GetNodeWithVal(neighbor_road)
+function RoadNetwork:UpdateRoadConnectivity()
+	-- first, update road connectivity
+	local roadGraph = Graph.new()
+	local roads = self:GetRoads()
 
-		if foundRoad ~= nil then
-			-- check if any attachments line up
-			local neighborPrimaryPart = neighbor_road.PrimaryPart
-			local neighborAttachments = neighborPrimaryPart:GetChildren()
-			local roadAttachments = primaryPart:GetChildren()
+	for _, road in ipairs(roads) do
+		local node = Graph.Node(road, road)
+		roadGraph:AddNode(node)
 
-			local matchFound = false
+		local adjacentPositions = GetAdjacentPositions(road.PrimaryPart.Position)
 
-			for _, neighborAttachment: Attachment in ipairs(neighborAttachments) do
-				if matchFound == true then
-					break
-				end
+		for _, neighbor_position in ipairs(adjacentPositions) do
+			local primaryPart = road.PrimaryPart
+			local neighbor_road = self._plot:GetStructureAtPosition(neighbor_position)
 
-				if neighborAttachment:IsA("Attachment") == false then
-					continue
-				end
+			local foundRoad = roadGraph:GetNodeWithVal(neighbor_road)
 
-				if neighborAttachment.Name ~= "RoadConnection" then
-					continue
-				end
+			if foundRoad ~= nil then
+				-- check if any attachments line up
+				local neighborPrimaryPart = neighbor_road.PrimaryPart
+				local neighborAttachments = neighborPrimaryPart:GetChildren()
+				local roadAttachments = primaryPart:GetChildren()
 
-				for _, roadAttachment: Attachment in ipairs(roadAttachments) do
-					if roadAttachment:IsA("Attachment") == false then
-						continue
+				local matchFound = false
+
+				for _, neighborAttachment: Attachment in ipairs(neighborAttachments) do
+					if matchFound == true then
+						break
 					end
 
-					if roadAttachment.Name ~= "RoadConnection" then
+					if neighborAttachment:IsA("Attachment") == false then
 						continue
 					end
 
 					if
-						neighborAttachment.WorldCFrame.Position
-						== roadAttachment.WorldCFrame.Position
+						CollectionService:HasTag(neighborAttachment, settRoadConnectionTag) == false
 					then
-						(self._graph :: Graph):AddEdge(node, foundRoad)
-						matchFound = true
-						break
+						continue
+					end
+
+					for _, roadAttachment: Attachment in ipairs(roadAttachments) do
+						if roadAttachment:IsA("Attachment") == false then
+							continue
+						end
+
+						if
+							CollectionService:HasTag(roadAttachment, settRoadConnectionTag) == false
+						then
+							continue
+						end
+
+						if
+							neighborAttachment.WorldCFrame.Position
+							== roadAttachment.WorldCFrame.Position
+						then
+							roadGraph:AddEdge(node, foundRoad)
+							matchFound = true
+							break
+						end
 					end
 				end
 			end
 		end
 	end
 
-	print(self._graph:GetNumComponents())
+	self._graph = roadGraph
+end
+
+function RoadNetwork:UpdateBuildingConnectivity()
+	local buildingRoadPairs = {}
+
+	local buildings = self:GetBuildings()
+
+	for _, building in ipairs(buildings) do
+		local primaryPart = building.PrimaryPart
+		local attachments = primaryPart:GetChildren()
+
+		for _, attachment: Attachment in ipairs(attachments) do
+			if attachment:IsA("Attachment") == false then
+				continue
+			end
+
+			if CollectionService:HasTag(attachment, settBuildingConnectionTag) == false then
+				continue
+			end
+
+			local roadBuildingConnections = self:GetRoadBuildingConnectionAttachments()
+
+			for _, roadBuildingConnection: Attachment in ipairs(roadBuildingConnections) do
+				if
+					attachment.WorldCFrame.Position
+					== roadBuildingConnection.WorldCFrame.Position
+				then
+					local road = self._graph:GetNodeWithVal(
+						roadBuildingConnection:FindFirstAncestorWhichIsA("Model")
+					)
+
+					if road ~= nil then
+						buildingRoadPairs[building] = road
+
+						print("Building connected to road")
+					end
+				end
+			end
+		end
+	end
+
+	self._buildingRoadPairs = buildingRoadPairs
+end
+
+function RoadNetwork:UpdateBuildingCityHallConnectivity()
+	-- check if buildings are connected to city hall
+	local buildings = self:GetBuildings()
+
+	for _, building in ipairs(buildings) do
+		local connectedToCityHall = self:BuildingIsConnectedToCityHall(building)
+
+		if connectedToCityHall == false then
+			local primaryPart = building.PrimaryPart
+			local gui = primaryPart:FindFirstChild(SETTINGS.NotConnectedToCityHallBillboardGuiName)
+
+			if gui == nil then
+				gui = Instance.new("BillboardGui")
+				gui.Name = SETTINGS.NotConnectedToCityHallBillboardGuiName
+				gui.Size = UDim2.new(1, 0, 1, 0)
+				gui.StudsOffset = Vector3.new(0, 5, 0)
+				gui.AlwaysOnTop = true
+				gui.Parent = primaryPart
+
+				local textLabel = Instance.new("TextLabel")
+				textLabel.Size = UDim2.new(1, 0, 1, 0)
+				textLabel.Text = "Not connected to City Hall"
+				textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+				textLabel.Parent = gui
+			end
+		else
+			local primaryPart = building.PrimaryPart
+			local gui = primaryPart:FindFirstChild(SETTINGS.NotConnectedToCityHallBillboardGuiName)
+
+			if gui ~= nil then
+				gui:Destroy()
+			end
+		end
+	end
+end
+
+function RoadNetwork:UpdateConnectivity()
+	self:UpdateRoadConnectivity()
+	self:UpdateBuildingConnectivity()
+
+	-- check if buildings are connected to city hall
+	self:UpdateBuildingCityHallConnectivity()
+end
+
+function RoadNetwork:BuildingsAreConnected(building1: Model, building2: Model): boolean
+	local road1 = self._buildingRoadPairs[building1]
+	local road2 = self._buildingRoadPairs[building2]
+
+	if road1 == nil or road2 == nil then
+		return false
+	end
+
+	return self._graph:IsConnected(road1, road2)
+end
+
+function RoadNetwork:BuildingIsConnectedToCityHall(building: Model): boolean
+	local cityHall = self._plot:GetCityHall()
+
+	if cityHall == nil then
+		return false
+	end
+
+	if building == cityHall then
+		return true
+	end
+
+	local road = self._buildingRoadPairs[building]
+
+	if road == nil then
+		return false
+	end
+
+	return self:BuildingsAreConnected(building, cityHall)
+end
+
+function RoadNetwork:GetRoadBuildingConnectionAttachments()
+	local roadBuildingConnections = {}
+
+	-- get all roads
+	local roads = self:GetRoads()
+
+	for _, road in ipairs(roads) do
+		local primaryPart = road.PrimaryPart
+		local attachments = primaryPart:GetChildren()
+
+		for _, attachment: Attachment in ipairs(attachments) do
+			if attachment:IsA("Attachment") == false then
+				continue
+			end
+
+			if CollectionService:HasTag(attachment, settBuildingConnectionTag) == false then
+				continue
+			end
+
+			table.insert(roadBuildingConnections, attachment)
+		end
+	end
+
+	return roadBuildingConnections
 end
 
 function RoadNetwork:GetPlot()
@@ -141,6 +319,10 @@ function RoadNetwork:GetRoads()
 	local roads = plot:GetRoads()
 
 	return roads
+end
+
+function RoadNetwork:GetBuildings()
+	return self:GetPlot():GetBuildings()
 end
 
 return RoadNetwork

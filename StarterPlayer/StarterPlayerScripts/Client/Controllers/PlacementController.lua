@@ -40,6 +40,8 @@ local PlacementController = LMEngine.CreateController({
 
 local StructuresList = {
 	"Road/Ramp",
+	"City Hall",
+	"Residence/Medieval House",
 	"Industrial/Water Tower",
 	"Road/Streetlight",
 	"Road/T-Intersection",

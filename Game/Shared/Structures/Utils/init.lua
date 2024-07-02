@@ -1,6 +1,25 @@
 local StructuresUtils = {}
 
 local StructuresCollection = require(script.Parent)
+local StructuresTypes = require(script.Parent.Types)
+
+local StructuresCache = {}
+
+-- Initialize the cache
+for structureType, structureCategory in pairs(StructuresCollection) do
+	for structureName, structureData in pairs(structureCategory) do
+		if StructuresCache[structureData.Id] ~= nil then
+			warn(
+				string.format(
+					"[StructuresUtils]: Duplicate structureId found for %s",
+					structureData.Id
+				)
+			)
+			continue
+		end
+		StructuresCache[structureData.Id] = structureData
+	end
+end
 
 function StructuresUtils.ParseStructureId(structureId: string)
 	local split = string.split(structureId, "/")
@@ -13,21 +32,12 @@ function StructuresUtils.ParseStructureId(structureId: string)
 	return split[1], split[2]
 end
 
-function StructuresUtils.GetStructureFromId(structureId: string)
-	local structureType, structureName = StructuresUtils.ParseStructureId(structureId)
-	local structures_category = StructuresCollection[structureType]
-
-	if structures_category == nil then
+function StructuresUtils.GetStructureFromId(structureId: string): StructuresTypes.Structure?
+	if StructuresCache[structureId] == nil then
 		return nil
 	end
 
-	for _, structure in pairs(structures_category) do
-		if structure.Id == structureId then
-			return structure
-		end
-	end
-
-	return nil
+	return StructuresCache[structureId]
 end
 
 function StructuresUtils.IsARoad(structureId: string): boolean
@@ -71,25 +81,13 @@ function StructuresUtils.IsACommercial(structureId: string): boolean
 end
 
 function StructuresUtils.GetStructureModelFromId(structureId: string): Model?
-	local structureType, structureName = StructuresUtils.ParseStructureId(structureId)
+	local structure = StructuresCache[structureId]
 
-	if structureType == nil or structureName == nil then
-		return
+	if structure == nil then
+		return nil
 	end
 
-	local structure_category = StructuresCollection[structureType]
-
-	if structure_category == nil then
-		return
-	end
-
-	for structureName, structure in pairs(structure_category) do
-		if structure.Id == structureId then
-			return structure.Model
-		end
-	end
-
-	return nil
+	return structure.Model
 end
 
 function StructuresUtils.GetIdFromStructure(structure: Model): string?

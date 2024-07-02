@@ -27,6 +27,9 @@ export type IPlot = {
 	SetAttribute: (self: Plot, attribute: string, value: any) -> (),
 	GetAttribute: (self: Plot, attribute: string) -> any,
 
+	GetBuildings: (self: Plot) -> { [number]: Model },
+	GetRoads: (self: Plot) -> { [number]: Model },
+
 	PlaceStructure: (self: Plot, structure: Model, cframe: CFrame) -> boolean,
 	GetPlaceable: (self: Plot, model: Model) -> Model?,
 	Serialize: (self: Plot) -> { [number]: SerializedStructure },
