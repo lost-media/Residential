@@ -232,9 +232,9 @@ type PlacementClientMembers = {
 	LevelChanged: Signal.Signal,
 	OutOfRange: Signal.Signal,
 	Initiated: Signal.Signal,
-	DeleteStructure: Signal.Signal,
+	DeleteStructure: Signal.Signal<Instance>,
 
-	PlacementConfirmed: Signal.Signal,
+	PlacementConfirmed: Signal.Signal<string, CFrame>,
 }
 
 export type PlacementClient = typeof(setmetatable(

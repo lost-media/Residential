@@ -15,14 +15,19 @@ end
 
 function StructuresUtils.GetStructureFromId(structureId: string)
 	local structureType, structureName = StructuresUtils.ParseStructureId(structureId)
-	local structure = StructuresCollection[structureType][structureName]
+	local structures_category = StructuresCollection[structureType]
 
-	if structure == nil then
-		warn("Structure not found")
-		return
+	if structures_category == nil then
+		return nil
 	end
 
-	return structure
+	for _, structure in pairs(structures_category) do
+		if structure.Id == structureId then
+			return structure
+		end
+	end
+
+	return nil
 end
 
 function StructuresUtils.IsARoad(structureId: string): boolean
@@ -72,12 +77,23 @@ function StructuresUtils.GetStructureModelFromId(structureId: string): Model?
 		return
 	end
 
-	return StructuresCollection[structureType][structureName].Model
+	local structure_category = StructuresCollection[structureType]
+
+	if structure_category == nil then
+		return
+	end
+
+	for structureName, structure in pairs(structure_category) do
+		if structure.Id == structureId then
+			return structure.Model
+		end
+	end
+
+	return nil
 end
 
 function StructuresUtils.GetIdFromStructure(structure: Model): string?
 	for structureType, structureCollection in pairs(StructuresCollection) do
-		print(structureCollection)
 		for structureName, structureData in pairs(structureCollection) do
 			if structureData.Model == structure then
 				return structureData.Id

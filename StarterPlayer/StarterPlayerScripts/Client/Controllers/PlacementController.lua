@@ -39,14 +39,14 @@ local PlacementController = LMEngine.CreateController({
 })
 
 local StructuresList = {
-	"Road/Ramp Road",
+	"Road/Ramp",
 	"Industrial/Water Tower",
 	"Road/Streetlight",
-	"Road/Highway Road",
-	"Road/Dead-End Road",
-	"Road/Curved Road",
-	"Road/Normal Road",
-	"Road/Intersection Road",
+	"Road/T-Intersection",
+	"Road/Dead End",
+	"Road/Curved",
+	"Road/Normal",
+	"Road/Intersection",
 }
 
 ----- Public functions -----
@@ -56,15 +56,45 @@ function PlacementController:Start()
 
 	---@type PlotController
 	local PlotController = LMEngine.GetController("PlotController")
-
-	local plot = PlotController:WaitForPlot()
-
-	self._placement_client = PlacementClient.new(plot)
-
 	---@type InputController
 	local InputController = LMEngine.GetController("InputController")
 
-	InputController:RegisterInputBegan("PlacementController", function(input)
+	local plotPromise = PlotController:GetPlotAsync()
+
+	plotPromise:andThen(function(plot)
+		self._placement_client = PlacementClient.new(plot)
+
+		self._placement_client.PlacementConfirmed:Connect(function(structure_id, cframe)
+			---@type Promise
+			local placement_promise = PlotService:PlaceStructure(structure_id, cframe)
+
+			placement_promise
+				:andThen(function(successful: boolean)
+					if successful == false then
+						-- Show toast message
+						print("[PlacementController] Structure placement failed")
+					end
+				end)
+				:catch(function(err)
+					warn("[PlacementController] Failed to place structure: " .. err)
+					-- TODO: Handle error, show toast message
+				end)
+		end)
+
+		self._placement_client.DeleteStructure:Connect(function(structure: Model)
+			PlotService:DeleteStructure(structure)
+		end)
+	end)
+
+	InputController:RegisterInputBegan("PlacementController", function(input, gameProcessed)
+		if gameProcessed == true then
+			return
+		end
+
+		if self._placement_client == nil then
+			return
+		end
+
 		if input.KeyCode == Enum.KeyCode.E then
 			self._structures_index = self._structures_index + 1
 			if self._structures_index > #StructuresList then
@@ -80,30 +110,6 @@ function PlacementController:Start()
 			self:StopPlacement()
 			self:StartPlacement(StructuresList[self._structures_index])
 		end
-	end)
-
-	self._placement_client.PlacementConfirmed:Connect(function(structure_id, cframe)
-		---@type Promise
-		local placement_promise = PlotService:PlaceStructure(structure_id, cframe)
-
-		placement_promise
-			:andThen(function(successful: boolean)
-				if successful == true then
-					--print("[PlacementController] Structure placed successfully")
-				else
-					-- Show toast message
-					print("[PlacementController] Structure placement failed")
-				end
-			end)
-			:catch(function(err)
-				warn("[PlacementController] Failed to place structure: " .. err)
-				-- TODO: Handle error, show toast message
-			end)
-		--self:StopPlacement();
-	end)
-
-	self._placement_client.DeleteStructure:Connect(function(structure: Model)
-		PlotService:DeleteStructure(structure)
 	end)
 end
 

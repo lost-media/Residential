@@ -139,4 +139,8 @@ function UIController:Start()
 	)
 end
 
+function UIController:RegisterFrame(name: string, openFunction: () -> (), closeFunction: () -> ())
+	-- Handle the logic
+end
+
 return UIController

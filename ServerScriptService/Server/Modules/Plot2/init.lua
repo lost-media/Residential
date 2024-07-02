@@ -92,6 +92,8 @@ type SerializedStructure = PlotTypes.SerializedStructure
 
 local StructureFactory = require(LMEngine.Game.Shared.Structures.StructureFactory)
 
+local StructureUtils = require(LMEngine.Game.Shared.Structures.Utils)
+
 ---@class Plot2
 local Plot: IPlot = {} :: IPlot
 Plot.__index = Plot
@@ -220,7 +222,7 @@ function Plot:Load(data: { [string]: { [string]: SerializedStructure } }, plot_u
 	self._plot_uuid = plot_uuid
 
 	-- First, clear the plot
-	self._plot_model.Structures:ClearAllChildren()
+	self:Clear()
 
 	local platform: Part = self._plot_model:FindFirstChild("Platform")
 
@@ -240,8 +242,7 @@ function Plot:Load(data: { [string]: { [string]: SerializedStructure } }, plot_u
 
 			local absolute_cframe = platform.CFrame * relative_cframe
 
-			structure:PivotTo(absolute_cframe)
-			structure.Parent = self._plot_model.Structures
+			self:PlaceStructure(structure, absolute_cframe)
 		end
 	end
 end
@@ -269,7 +270,7 @@ function Plot:UnassignPlayer()
 	self._player = nil
 
 	-- Clear the plot
-	self._plot_model.Structures:ClearAllChildren()
+	self:Clear()
 	self._plot_uuid = nil
 end
 
@@ -286,6 +287,9 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 
 	local structure_id: string? = structure:GetAttribute("Id")
 
+	local structureCategory = StructureUtils.ParseStructureId(structure_id)
+
+	assert(structureCategory ~= nil, "[PlotService] PlaceStructure: Structure category is nil")
 	assert(structure_id ~= nil, "[PlotService] PlaceStructure: Structure ID is nil")
 
 	local collisions = GetCollisions(structure_id)
@@ -336,6 +340,10 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 		task.wait(1.5)
 		PlacedDownVFX:Destroy()
 	end)()
+
+	if structureCategory == "Road" then
+		self._road_network:AddRoad(structure)
+	end
 
 	return true
 end
@@ -410,6 +418,53 @@ function Plot:DeleteStructure(structure: Model)
 	)
 
 	structure:Destroy()
+end
+
+function Plot:GetStructureAtPosition(position: Vector3): Model?
+	local structures = self._plot_model.Structures:GetChildren()
+
+	for i = 1, #structures do
+		local structure: Model = structures[i]
+
+		if structure.PrimaryPart == nil then
+			warn("[Plot] Structure does not have a primary part")
+			continue
+		end
+
+		local primary_part = structure.PrimaryPart
+
+		local primary_position = primary_part.Position
+
+		local distance = (primary_position - position).Magnitude
+
+		if distance < 0.5 then
+			return structure
+		end
+	end
+
+	return nil
+end
+
+function Plot:GetRoads()
+	local roads = {}
+
+	for _, structure in ipairs(self._plot_model.Structures:GetChildren()) do
+		if structure:IsA("Model") then
+			local structure_id = structure:GetAttribute("Id")
+
+			local type = StructureUtils.ParseStructureId(structure_id)
+
+			if type == "Road" then
+				table.insert(roads, structure)
+			end
+		end
+	end
+
+	return roads
+end
+
+function Plot:Clear()
+	self._plot_model.Structures:ClearAllChildren()
 end
 
 function Plot.__tostring(self: Plot): string

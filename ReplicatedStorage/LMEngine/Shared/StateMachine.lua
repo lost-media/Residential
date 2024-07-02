@@ -1,13 +1,33 @@
 --!strict
 
 --[[
-{Lost Media}
+*{LM Engine} -[StateMachine]- v1.0.0 -----------------------------------
+A simple state machine implementation.
 
--[StateMachine] Module
-    A simple state machine module that can be used to manage states
-    in a game. This module is used to manage the state of the game
-    and transition between different states.
-   
+Author: brandon-kong (ijmod)
+Last Modified: 2024-07-01
+
+Dependencies:
+	- None
+
+Usage:
+	local stateMachine = StateMachine.new(states)
+	stateMachine:SetState("state_name")
+	stateMachine:Update()
+
+Functions:
+	- StateMachine.new(states: States): StateMachine (Creates a new state machine)
+
+Members [StateMachine]:
+	- _states: States (A table that holds all states)
+	- current_state: State? (The current state)
+
+Methods [StateMachine]:
+	- SetState(state_name: string): void (Sets the current state)
+	- Handle(event: string): void (Handles an event)
+
+Changelog:
+	v1.0.0 - Initial implementation
 --]]
 
 type State = {
@@ -21,38 +41,31 @@ type States = {
 	[string]: State,
 }
 
-type IStateMachine = {
-	__index: IStateMachine,
-	new: (States) -> StateMachine,
-	SetState: (self: StateMachine, string) -> (),
-	Update: (self: StateMachine, any) -> (),
-	Handle: (self: StateMachine, string) -> (),
-}
-
 type StateMachineMembers = {
-	states: States,
+	_states: States,
 	current_state: State?,
 }
 
-export type StateMachine = typeof(setmetatable({} :: StateMachineMembers, {} :: IStateMachine))
-
 ----- Private variables -----
+
 ---@class StateMachine
-local StateMachine: IStateMachine = {} :: IStateMachine
+local StateMachine = {}
 StateMachine.__index = StateMachine
+
+export type StateMachine = typeof(setmetatable({} :: StateMachineMembers, StateMachine))
 
 ----- Public functions -----
 
-function StateMachine.new(states)
+function StateMachine.new(states): StateMachine
 	local self = setmetatable({}, StateMachine)
-	self.states = states or {} -- a table that holds all states
+	self._states = states or {} -- a table that holds all states
 	self.current_state = nil
 	return self
 end
 
 function StateMachine:SetState(state_name: string)
-	assert(self.states[state_name], "Invalid state: " .. state_name)
-	self.current_state = self.states[state_name]
+	assert(self._states[state_name], "Invalid state: " .. state_name)
+	self.current_state = self._states[state_name]
 end
 
 function StateMachine:Handle(event: string)

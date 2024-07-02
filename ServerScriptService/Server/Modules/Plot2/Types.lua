@@ -22,6 +22,7 @@ export type IPlot = {
 	GetModel: (self: Plot) -> Instance,
 	AssignPlayer: (self: Plot, player: Player) -> (),
 	UnassignPlayer: (self: Plot) -> (),
+	Clear: (self: Plot) -> (),
 
 	SetAttribute: (self: Plot, attribute: string, value: any) -> (),
 	GetAttribute: (self: Plot, attribute: string) -> any,

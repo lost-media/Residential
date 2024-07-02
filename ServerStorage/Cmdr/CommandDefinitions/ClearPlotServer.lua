@@ -15,9 +15,13 @@ return function(context, player: Player)
 	---@type PlotService
 	local PlotService = LMEngine.GetService("PlotService")
 
-	DataService:UpdatePlot(player, "")
+	local plot = PlotService:GetPlot(player)
 
-	PlotService:LoadPlotData(player, Base64.ToBase64("{}"))
+	if plot ~= nil then
+		-- Clear the plot
+		plot:Clear()
+		return "Cleared plot for " .. player.Name
+	end
 
-	return "Cleared plot for " .. player.Name
+	return "No plot found for " .. player.Name
 end
