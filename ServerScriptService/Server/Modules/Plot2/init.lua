@@ -529,7 +529,11 @@ function Plot:GetCityHall(): Model?
 end
 
 function Plot:Clear()
-	self._plot_model.Structures:ClearAllChildren()
+	for _, structure in ipairs(self._plot_model.Structures:GetChildren()) do
+		if structure:IsA("Model") then
+			self:DeleteStructure(structure)
+		end
+	end
 	self._cityHall = nil
 end
 

@@ -104,59 +104,42 @@ function RoadNetwork:UpdateRoadConnectivity()
 	local roadGraph = Graph.new()
 	local roads = self:GetRoads()
 
+	local allRoadConnections = self:GetRoadConnectionAttachments()
+
 	for _, road in ipairs(roads) do
 		local node = Graph.Node(road, road)
 		roadGraph:AddNode(node)
 
-		local adjacentPositions = GetAdjacentPositions(road.PrimaryPart.Position)
+		local primaryPart = road.PrimaryPart
 
-		for _, neighbor_position in ipairs(adjacentPositions) do
-			local primaryPart = road.PrimaryPart
-			local neighbor_road = self._plot:GetStructureAtPosition(neighbor_position)
+		for _, roadConnection: Attachment in ipairs(allRoadConnections) do
+			if roadConnection:IsA("Attachment") == false then
+				continue
+			end
 
-			local foundRoad = roadGraph:GetNodeWithVal(neighbor_road)
+			local structure = roadConnection:FindFirstAncestorWhichIsA("Model")
 
-			if foundRoad ~= nil then
-				-- check if any attachments line up
-				local neighborPrimaryPart = neighbor_road.PrimaryPart
-				local neighborAttachments = neighborPrimaryPart:GetChildren()
-				local roadAttachments = primaryPart:GetChildren()
+			if structure == nil then
+				continue
+			end
 
-				local matchFound = false
+			for _, roadAttachment: Attachment in ipairs(primaryPart:GetChildren()) do
+				if roadAttachment:IsA("Attachment") == false then
+					continue
+				end
 
-				for _, neighborAttachment: Attachment in ipairs(neighborAttachments) do
-					if matchFound == true then
-						break
-					end
+				if CollectionService:HasTag(roadAttachment, settRoadConnectionTag) == false then
+					continue
+				end
 
-					if neighborAttachment:IsA("Attachment") == false then
-						continue
-					end
+				if roadAttachment.WorldCFrame.Position == roadConnection.WorldCFrame.Position then
+					local neighborRoad = structure
 
-					if
-						CollectionService:HasTag(neighborAttachment, settRoadConnectionTag) == false
-					then
-						continue
-					end
+					if neighborRoad ~= nil then
+						local neighborNode = roadGraph:GetNodeWithVal(neighborRoad)
 
-					for _, roadAttachment: Attachment in ipairs(roadAttachments) do
-						if roadAttachment:IsA("Attachment") == false then
-							continue
-						end
-
-						if
-							CollectionService:HasTag(roadAttachment, settRoadConnectionTag) == false
-						then
-							continue
-						end
-
-						if
-							neighborAttachment.WorldCFrame.Position
-							== roadAttachment.WorldCFrame.Position
-						then
-							roadGraph:AddEdge(node, foundRoad)
-							matchFound = true
-							break
+						if neighborNode ~= nil then
+							roadGraph:AddEdge(node, neighborNode)
 						end
 					end
 				end
@@ -199,7 +182,7 @@ function RoadNetwork:UpdateBuildingConnectivity()
 					if road ~= nil then
 						buildingRoadPairs[building] = road
 
-						print("Building connected to road")
+						--print("Building connected to road")
 					end
 				end
 			end
@@ -300,6 +283,32 @@ function RoadNetwork:GetRoadBuildingConnectionAttachments()
 			end
 
 			if CollectionService:HasTag(attachment, settBuildingConnectionTag) == false then
+				continue
+			end
+
+			table.insert(roadBuildingConnections, attachment)
+		end
+	end
+
+	return roadBuildingConnections
+end
+
+function RoadNetwork:GetRoadConnectionAttachments()
+	local roadBuildingConnections = {}
+
+	-- get all roads
+	local roads = self:GetRoads()
+
+	for _, road in ipairs(roads) do
+		local primaryPart = road.PrimaryPart
+		local attachments = primaryPart:GetChildren()
+
+		for _, attachment: Attachment in ipairs(attachments) do
+			if attachment:IsA("Attachment") == false then
+				continue
+			end
+
+			if CollectionService:HasTag(attachment, settRoadConnectionTag) == false then
 				continue
 			end
 
