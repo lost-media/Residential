@@ -61,6 +61,16 @@
         Graph:Size() number
             Returns the number of nodes in the graph
 
+		Graph:IsConnected(node1: Node, node2: Node) boolean
+			Returns true if the two nodes are connected
+
+		Graph:GetNumComponents() number
+			Returns the number of connected components in the graph
+
+	Changelog:
+
+		v1.0.0 - Initial implementation
+
 --]]
 
 local SETTINGS = {}
@@ -100,6 +110,8 @@ type IGraph = {
 	Clear: (self: Graph) -> (),
 	Size: (self: Graph) -> number,
 	GetRandomNode: (self: Graph) -> Node?,
+	IsConnected: (self: Graph, node1: Node, node2: Node) -> boolean,
+	GetNumComponents: (self: Graph) -> number,
 }
 
 type GraphMembers = {
@@ -253,6 +265,58 @@ function Graph:GetRandomNode(): Node?
 	end
 
 	return nodes[math.random(1, #nodes)]
+end
+
+function Graph:IsConnected(node1: Node, node2: Node): boolean
+	local visited = {}
+	local stack = { node1 }
+
+	while #stack > 0 do
+		local current = table.remove(stack)
+
+		if current == node2 then
+			return true
+		end
+
+		visited[current] = true
+
+		local neighbors = self:GetNeighbors(current)
+
+		for _, neighbor in ipairs(neighbors) do
+			if not visited[neighbor] then
+				table.insert(stack, neighbor)
+			end
+		end
+	end
+
+	return false
+end
+
+function Graph:GetNumComponents(): number
+	local visited = {}
+	local components = 0
+
+	for _, node in pairs(self._nodes) do
+		if not visited[node] then
+			components += 1
+			local stack = { node }
+
+			while #stack > 0 do
+				local current = table.remove(stack)
+				visited[current] = true
+
+				local neighbors = self:GetNeighbors(current)
+
+				for _, neighbor in ipairs(neighbors) do
+					if not visited[neighbor] then
+						table.insert(stack, neighbor)
+					end
+				end
+			end
+		end
+	end
+
+	return components
 end
 
 return Graph

@@ -6,7 +6,8 @@ local color3Type = Util.MakeSequenceType({
 		if value == nil then
 			return false, ("Invalid or missing number at position %d in Color3 type."):format(i)
 		elseif value < 0 or value > 255 then
-			return false, ("Number out of acceptable range 0-255 at position %d in Color3 type."):format(i)
+			return false,
+				("Number out of acceptable range 0-255 at position %d in Color3 type."):format(i)
 		elseif value % 1 ~= 0 then
 			return false, ("Number is not an integer at position %d in Color3 type."):format(i)
 		end

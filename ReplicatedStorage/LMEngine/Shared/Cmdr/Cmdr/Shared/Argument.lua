@@ -129,15 +129,21 @@ function Argument.new(command, argumentDefinition, value)
 	if type(argumentDefinition.Type) == "table" then
 		self.Type = argumentDefinition.Type
 	else
-		local parsedType, parsedRawValue, prefix =
-			Util.ParsePrefixedUnionType(command.Cmdr.Registry:GetTypeName(argumentDefinition.Type), value)
+		local parsedType, parsedRawValue, prefix = Util.ParsePrefixedUnionType(
+			command.Cmdr.Registry:GetTypeName(argumentDefinition.Type),
+			value
+		)
 
 		self.Type = command.Dispatcher.Registry:GetType(parsedType)
 		self.RawValue = parsedRawValue
 		self.Prefix = prefix
 
 		if self.Type == nil then
-			error((`[Cmdr] {self.Name or "none"} has an unregistered type %q`):format(parsedType or "<none>"))
+			error(
+				(`[Cmdr] {self.Name or "none"} has an unregistered type %q`):format(
+					parsedType or "<none>"
+				)
+			)
 		end
 	end
 
@@ -205,7 +211,10 @@ function Argument:Transform()
 
 				if not options.IsPartial and #remainingItems > 0 then
 					for _ = 1, math.min(maxSize, #remainingItems) do
-						table.insert(items, table.remove(remainingItems, math.random(1, #remainingItems)))
+						table.insert(
+							items,
+							table.remove(remainingItems, math.random(1, #remainingItems))
+						)
 					end
 
 					rawValue = table.concat(items, ",")

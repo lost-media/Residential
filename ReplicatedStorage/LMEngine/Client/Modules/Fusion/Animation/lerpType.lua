@@ -40,11 +40,15 @@ local function lerpType(from: any, to: any, ratio: number): any
 		elseif typeString == "DateTime" then
 			local to, from = to :: DateTime, from :: DateTime
 			return DateTime.fromUnixTimestampMillis(
-				(to.UnixTimestampMillis - from.UnixTimestampMillis) * ratio + from.UnixTimestampMillis
+				(to.UnixTimestampMillis - from.UnixTimestampMillis) * ratio
+					+ from.UnixTimestampMillis
 			)
 		elseif typeString == "NumberRange" then
 			local to, from = to :: NumberRange, from :: NumberRange
-			return NumberRange.new((to.Min - from.Min) * ratio + from.Min, (to.Max - from.Max) * ratio + from.Max)
+			return NumberRange.new(
+				(to.Min - from.Min) * ratio + from.Min,
+				(to.Max - from.Max) * ratio + from.Max
+			)
 		elseif typeString == "NumberSequenceKeypoint" then
 			local to, from = to :: NumberSequenceKeypoint, from :: NumberSequenceKeypoint
 			return NumberSequenceKeypoint.new(
@@ -63,7 +67,10 @@ local function lerpType(from: any, to: any, ratio: number): any
 			)
 		elseif typeString == "Ray" then
 			local to, from = to :: Ray, from :: Ray
-			return Ray.new(from.Origin:Lerp(to.Origin, ratio), from.Direction:Lerp(to.Direction, ratio))
+			return Ray.new(
+				from.Origin:Lerp(to.Origin, ratio),
+				from.Direction:Lerp(to.Direction, ratio)
+			)
 		elseif typeString == "Rect" then
 			local to, from = to :: Rect, from :: Rect
 			return Rect.new(from.Min:Lerp(to.Min, ratio), from.Max:Lerp(to.Max, ratio))
@@ -101,7 +108,10 @@ local function lerpType(from: any, to: any, ratio: number): any
 			return from:Lerp(to, ratio)
 		elseif typeString == "Vector2int16" then
 			local to, from = to :: Vector2int16, from :: Vector2int16
-			return Vector2int16.new((to.X - from.X) * ratio + from.X, (to.Y - from.Y) * ratio + from.Y)
+			return Vector2int16.new(
+				(to.X - from.X) * ratio + from.X,
+				(to.Y - from.Y) * ratio + from.Y
+			)
 		elseif typeString == "Vector3" then
 			local to, from = to :: Vector3, from :: Vector3
 			return from:Lerp(to, ratio)

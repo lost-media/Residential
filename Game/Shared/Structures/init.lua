@@ -56,46 +56,16 @@ local Industrial: Folder = StructuresFolder.Industrial
 local Residence: Folder = StructuresFolder.Residence
 local Commercial: Folder = StructuresFolder.Commercial
 
+local CityHallCategory = require(StructureCategoryFolder.CityHall)
 local IndustrialCategory = require(StructureCategoryFolder.Industrial)
+local ResidenceCategory = require(StructureCategoryFolder.Residence)
 local RoadCategory = require(StructureCategoryFolder.Road)
 
 local Structures: StructureTypes.StructureCollection = {
-	Residence = {
-		["Starter House"] = {
-			Type = "Residence",
-			Name = "Starter House",
-			Id = "Residence/Starter House",
-			Description = "A small house for beginners",
-			Price = 1000,
-			Model = Residence["Starter House"],
-			BuildTime = 5,
-			FullArea = true,
-
-			Stacking = {
-				Allowed = true,
-				AllowedModels = {
-					["Residence/Starter House"] = {
-						IncreaseLevel = true,
-						MaxStack = 3,
-						Orientation = {
-							Strict = false,
-						},
-						RequiredSnapPoints = {
-							"Top1",
-						},
-						OccupiedSnapPoints = {
-							["Top1"] = "Top1",
-						},
-						WhitelistedSnapPoints = {
-							"Top1",
-						},
-					},
-				},
-			},
-		},
-	},
+	Residence = ResidenceCategory,
 	Road = RoadCategory,
 	Industrial = IndustrialCategory,
+	["City Hall"] = CityHallCategory,
 } :: StructureTypes.StructureCollection
 
 return Structures

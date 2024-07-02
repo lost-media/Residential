@@ -103,6 +103,15 @@ function DataService:Start()
 	local PlayerService = LMEngine.GetService("PlayerService")
 
 	PlayerService:RegisterPlayerAdded(function(player)
+		-- Create leaderstats
+		local leaderstats = Instance.new("Folder")
+		leaderstats.Name = "leaderstats"
+		leaderstats.Parent = player
+
+		local roadbucks = Instance.new("IntValue")
+		roadbucks.Name = "Roadbucks"
+		roadbucks.Parent = leaderstats
+
 		local profile = PlayerStore:LoadProfileAsync(tostring(player.UserId))
 
 		if profile == nil then
@@ -125,7 +134,11 @@ function DataService:Start()
 
 			self._profiles[player] = profile
 
-			self.Client.PlayerPlotsLoaded:Fire(player, profile.Data.Plots, profile.Data.LastPlotIdUsed)
+			self.Client.PlayerPlotsLoaded:Fire(
+				player,
+				profile.Data.Plots,
+				profile.Data.LastPlotIdUsed
+			)
 		else
 			profile:Release()
 		end
@@ -304,7 +317,10 @@ function DataService:CreatePlot(player: Player, name: string)
 end
 
 function DataService.Client:CreatePlot(player: Player, name: string)
-	assert(CreatePlotRateLimiter:CheckRate(player) == true, "[DataService] CreatePlot: Rate limited")
+	assert(
+		CreatePlotRateLimiter:CheckRate(player) == true,
+		"[DataService] CreatePlot: Rate limited"
+	)
 	assert(name ~= nil, "[DataService] CreatePlot: Name is nil")
 
 	return self.Server:CreatePlot(player, name)

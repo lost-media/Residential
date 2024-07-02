@@ -187,7 +187,10 @@ end
 	the `option:Serialize()` method.
 ]=]
 function Option.Deserialize(data) -- type data = {ClassName: string, Value: any}
-	assert(type(data) == "table" and data.ClassName == CLASSNAME, "Invalid data for deserializing Option")
+	assert(
+		type(data) == "table" and data.ClassName == CLASSNAME,
+		"Invalid data for deserializing Option"
+	)
 	return data.Value == nil and Option.None or Option.Some(data.Value)
 end
 

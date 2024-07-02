@@ -105,7 +105,10 @@ function Server.WrapMethod(
 ): RemoteFunction
 	assert(Util.IsServer, "WrapMethod must be called from the server")
 	local fn = tbl[name]
-	assert(type(fn) == "function", "Value at index " .. name .. " must be a function; got " .. type(fn))
+	assert(
+		type(fn) == "function",
+		"Value at index " .. name .. " must be a function; got " .. type(fn)
+	)
 	return Server.BindFunction(parent, name, function(...)
 		return fn(tbl, ...)
 	end, inboundMiddleware, outboundMiddleware)

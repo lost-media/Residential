@@ -165,7 +165,11 @@ function Expectation:a(typeName)
 
 	local message = formatMessage(
 		self.successCondition,
-		("Expected value of type %q, got value %q of type %s"):format(typeName, tostring(self.value), type(self.value)),
+		("Expected value of type %q, got value %q of type %s"):format(
+			typeName,
+			tostring(self.value),
+			type(self.value)
+		),
 		("Expected value not of type %q, got value %q of type %s"):format(
 			typeName,
 			tostring(self.value),
@@ -238,8 +242,16 @@ function Expectation:near(otherValue, limit)
 
 	local message = formatMessage(
 		self.successCondition,
-		("Expected value to be near %f (within %f) but got %f instead"):format(otherValue, limit, self.value),
-		("Expected value to not be near %f (within %f) but got %f instead"):format(otherValue, limit, self.value)
+		("Expected value to be near %f (within %f) but got %f instead"):format(
+			otherValue,
+			limit,
+			self.value
+		),
+		("Expected value to not be near %f (within %f) but got %f instead"):format(
+			otherValue,
+			limit,
+			self.value
+		)
 	)
 
 	assertLevel(result, message, 3)

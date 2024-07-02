@@ -45,8 +45,11 @@ local function updateAllSprings()
 	lastUpdateTime = os.clock()
 
 	for spring in pairs(activeSprings) do
-		local posPos, posVel, velPos, velVel =
-			springCoefficients(lastUpdateTime - spring._lastSchedule, spring._currentDamping, spring._currentSpeed)
+		local posPos, posVel, velPos, velVel = springCoefficients(
+			lastUpdateTime - spring._lastSchedule,
+			spring._currentDamping,
+			spring._currentSpeed
+		)
 
 		local positions = spring._springPositions
 		local velocities = spring._springVelocities
@@ -83,6 +86,10 @@ local function updateAllSprings()
 	end
 end
 
-RunService:BindToRenderStep("__FusionSpringScheduler", Enum.RenderPriority.First.Value, updateAllSprings)
+RunService:BindToRenderStep(
+	"__FusionSpringScheduler",
+	Enum.RenderPriority.First.Value,
+	updateAllSprings
+)
 
 return SpringScheduler

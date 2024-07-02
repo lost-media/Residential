@@ -92,6 +92,8 @@ type SerializedStructure = PlotTypes.SerializedStructure
 
 local StructureFactory = require(LMEngine.Game.Shared.Structures.StructureFactory)
 
+local StructureUtils = require(LMEngine.Game.Shared.Structures.Utils)
+
 ---@class Plot2
 local Plot: IPlot = {} :: IPlot
 Plot.__index = Plot
@@ -133,16 +135,25 @@ end
 -- Checks if the object exceeds the boundries given by the plot
 local function CheckBoundaries(plot: BasePart, primary: BasePart): boolean
 	local pos: CFrame = plot.CFrame
-	local size: Vector3 = CFrame.fromOrientation(0, primary.Orientation.Y * math.pi / 180, 0) * primary.Size
+	local size: Vector3 = CFrame.fromOrientation(0, primary.Orientation.Y * math.pi / 180, 0)
+		* primary.Size
 	local currentPos: CFrame = pos:Inverse() * primary.CFrame
 
 	local xBound: number = (plot.Size.X - size.X)
 	local zBound: number = (plot.Size.Z - size.Z)
 
-	return currentPos.X > xBound or currentPos.X < -xBound or currentPos.Z > zBound or currentPos.Z < -zBound
+	return currentPos.X > xBound
+		or currentPos.X < -xBound
+		or currentPos.Z > zBound
+		or currentPos.Z < -zBound
 end
 
-local function HandleCollisions(character: Model, structure: Model, collisions: boolean, plot: Plot): boolean
+local function HandleCollisions(
+	character: Model,
+	structure: Model,
+	collisions: boolean,
+	plot: Plot
+): boolean
 	if collisions ~= true then
 		structure.PrimaryPart.Transparency = 1
 		return true
@@ -199,6 +210,8 @@ function Plot.new(plot_model: Instance)
 	self._trove = Trove.new()
 	self._plot_uuid = nil
 
+	self._cityHall = nil
+
 	self._road_network = RoadNetwork.new(self)
 
 	return self
@@ -211,7 +224,7 @@ function Plot:Load(data: { [string]: { [string]: SerializedStructure } }, plot_u
 	self._plot_uuid = plot_uuid
 
 	-- First, clear the plot
-	self._plot_model.Structures:ClearAllChildren()
+	self:Clear()
 
 	local platform: Part = self._plot_model:FindFirstChild("Platform")
 
@@ -231,8 +244,7 @@ function Plot:Load(data: { [string]: { [string]: SerializedStructure } }, plot_u
 
 			local absolute_cframe = platform.CFrame * relative_cframe
 
-			structure:PivotTo(absolute_cframe)
-			structure.Parent = self._plot_model.Structures
+			self:PlaceStructure(structure, absolute_cframe)
 		end
 	end
 end
@@ -260,7 +272,8 @@ function Plot:UnassignPlayer()
 	self._player = nil
 
 	-- Clear the plot
-	self._plot_model.Structures:ClearAllChildren()
+	self:Clear()
+	self._cityHall = nil
 	self._plot_uuid = nil
 end
 
@@ -277,6 +290,29 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 
 	local structure_id: string? = structure:GetAttribute("Id")
 
+	local structureContent = StructureUtils.GetStructureFromId(structure_id)
+	if structureContent == nil then
+		warn("[PlotService] PlaceStructure: Structure content is nil")
+		return false
+	end
+
+	local structureCategory = structureContent.Category
+
+	if structureCategory == nil then
+		warn("[PlotService] PlaceStructure: Structure category is nil")
+		return false
+	end
+
+	if structureCategory == "City Hall" then
+		if self._cityHall ~= nil then
+			warn("[PlotService] PlaceStructure: City Hall already exists")
+			return false
+		end
+
+		self._cityHall = structure
+	end
+
+	assert(structureCategory ~= nil, "[PlotService] PlaceStructure: Structure category is nil")
 	assert(structure_id ~= nil, "[PlotService] PlaceStructure: Structure ID is nil")
 
 	local collisions = GetCollisions(structure_id)
@@ -327,6 +363,12 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 		task.wait(1.5)
 		PlacedDownVFX:Destroy()
 	end)()
+
+	if structureCategory == "Road" then
+		self._road_network:AddRoad(structure)
+	elseif structureContent.IsABuilding == true then
+		self._road_network:AddBuilding(structure)
+	end
 
 	return true
 end
@@ -400,7 +442,99 @@ function Plot:DeleteStructure(structure: Model)
 		"[PlotService] DeleteStructure: Structure is not a child of the plot"
 	)
 
+	if structure == self._cityHall then
+		self._cityHall = nil
+	end
+
 	structure:Destroy()
+
+	self._road_network:UpdateConnectivity()
+end
+
+function Plot:GetStructureAtPosition(position: Vector3): Model?
+	local structures = self._plot_model.Structures:GetChildren()
+
+	for i = 1, #structures do
+		local structure: Model = structures[i]
+
+		if structure.PrimaryPart == nil then
+			warn("[Plot] Structure does not have a primary part")
+			continue
+		end
+
+		local primary_part = structure.PrimaryPart
+
+		local primary_position = primary_part.Position
+
+		local distance = (primary_position - position).Magnitude
+
+		if distance < 0.5 then
+			return structure
+		end
+	end
+
+	return nil
+end
+
+function Plot:GetRoads()
+	local roads = {}
+
+	for _, structure in ipairs(self._plot_model.Structures:GetChildren()) do
+		if structure:IsA("Model") then
+			local structure_id = structure:GetAttribute("Id")
+
+			local structure_content = StructureUtils.GetStructureFromId(structure_id)
+
+			if structure_content == nil then
+				warn("[Plot] Failed to get structure content for ID: " .. structure_id)
+				continue
+			end
+
+			local type = structure_content.Category
+
+			if type == "Road" then
+				table.insert(roads, structure)
+			end
+		end
+	end
+
+	return roads
+end
+
+function Plot:GetBuildings()
+	local buildings = {}
+
+	for _, structure in ipairs(self._plot_model.Structures:GetChildren()) do
+		if structure:IsA("Model") then
+			local structure_id = structure:GetAttribute("Id")
+
+			local structure_content = StructureUtils.GetStructureFromId(structure_id)
+
+			if structure_content == nil then
+				warn("[Plot] Failed to get structure content for ID: " .. structure_id)
+				continue
+			end
+
+			if structure_content.IsABuilding == true then
+				table.insert(buildings, structure)
+			end
+		end
+	end
+
+	return buildings
+end
+
+function Plot:GetCityHall(): Model?
+	return self._cityHall
+end
+
+function Plot:Clear()
+	for _, structure in ipairs(self._plot_model.Structures:GetChildren()) do
+		if structure:IsA("Model") then
+			self:DeleteStructure(structure)
+		end
+	end
+	self._cityHall = nil
 end
 
 function Plot.__tostring(self: Plot): string

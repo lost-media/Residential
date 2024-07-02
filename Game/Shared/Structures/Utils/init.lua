@@ -1,6 +1,25 @@
 local StructuresUtils = {}
 
 local StructuresCollection = require(script.Parent)
+local StructuresTypes = require(script.Parent.Types)
+
+local StructuresCache = {}
+
+-- Initialize the cache
+for structureType, structureCategory in pairs(StructuresCollection) do
+	for structureName, structureData in pairs(structureCategory) do
+		if StructuresCache[structureData.Id] ~= nil then
+			warn(
+				string.format(
+					"[StructuresUtils]: Duplicate structureId found for %s",
+					structureData.Id
+				)
+			)
+			continue
+		end
+		StructuresCache[structureData.Id] = structureData
+	end
+end
 
 function StructuresUtils.ParseStructureId(structureId: string)
 	local split = string.split(structureId, "/")
@@ -13,16 +32,12 @@ function StructuresUtils.ParseStructureId(structureId: string)
 	return split[1], split[2]
 end
 
-function StructuresUtils.GetStructureFromId(structureId: string)
-	local structureType, structureName = StructuresUtils.ParseStructureId(structureId)
-	local structure = StructuresCollection[structureType][structureName]
-
-	if structure == nil then
-		warn("Structure not found")
-		return
+function StructuresUtils.GetStructureFromId(structureId: string): StructuresTypes.Structure?
+	if StructuresCache[structureId] == nil then
+		return nil
 	end
 
-	return structure
+	return StructuresCache[structureId]
 end
 
 function StructuresUtils.IsARoad(structureId: string): boolean
@@ -66,18 +81,17 @@ function StructuresUtils.IsACommercial(structureId: string): boolean
 end
 
 function StructuresUtils.GetStructureModelFromId(structureId: string): Model?
-	local structureType, structureName = StructuresUtils.ParseStructureId(structureId)
+	local structure = StructuresCache[structureId]
 
-	if structureType == nil or structureName == nil then
-		return
+	if structure == nil then
+		return nil
 	end
 
-	return StructuresCollection[structureType][structureName].Model
+	return structure.Model
 end
 
 function StructuresUtils.GetIdFromStructure(structure: Model): string?
 	for structureType, structureCollection in pairs(StructuresCollection) do
-		print(structureCollection)
 		for structureName, structureData in pairs(structureCollection) do
 			if structureData.Model == structure then
 				return structureData.Id
@@ -98,7 +112,10 @@ function StructuresUtils.IsStructureStackable(structureId: string): boolean
 	return structure.Stacking ~= nil
 end
 
-function StructuresUtils.CanStackStructureWith(structureId: string, otherStructureId: string): boolean
+function StructuresUtils.CanStackStructureWith(
+	structureId: string,
+	otherStructureId: string
+): boolean
 	local structure = StructuresUtils.GetStructureFromId(structureId)
 
 	if structure == nil then
@@ -120,7 +137,10 @@ function StructuresUtils.CanStackStructureWith(structureId: string, otherStructu
 	return structure.Stacking.AllowedModels[otherStructureId] ~= nil
 end
 
-function StructuresUtils.GetStackingRequiredSnapPointsWith(structureId: string, otherStructureId: string): { string }?
+function StructuresUtils.GetStackingRequiredSnapPointsWith(
+	structureId: string,
+	otherStructureId: string
+): { string }?
 	local canStack = StructuresUtils.CanStackStructureWith(structureId, otherStructureId)
 
 	if canStack == false then
@@ -149,7 +169,10 @@ function StructuresUtils.GetStackingWhitelistedSnapPointsWith(
 	return stackingData.WhitelistedSnapPoints
 end
 
-function StructuresUtils.GetStackingOccupiedSnapPointsWith(structureId: string, otherStructureId: string): { string }?
+function StructuresUtils.GetStackingOccupiedSnapPointsWith(
+	structureId: string,
+	otherStructureId: string
+): { string }?
 	local canStack = StructuresUtils.CanStackStructureWith(structureId, otherStructureId)
 
 	if canStack == false then
@@ -182,7 +205,8 @@ function StructuresUtils.GetMountedAttachmentPointFromStructures(
 		return
 	end
 
-	local occupiedSnapPoints = StructuresUtils.GetStackingOccupiedSnapPointsWith(structureId, otherStructureId)
+	local occupiedSnapPoints =
+		StructuresUtils.GetStackingOccupiedSnapPointsWith(structureId, otherStructureId)
 
 	if occupiedSnapPoints == nil then
 		return

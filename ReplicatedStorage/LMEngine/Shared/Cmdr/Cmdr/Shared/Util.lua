@@ -200,7 +200,11 @@ local function encodeControlChars(text)
 end
 
 local function decodeControlChars(text)
-	return (text:gsub("___!CMDR_ESCAPE!___", "\\"):gsub("___!CMDR_QUOTE!___", '"'):gsub("___!CMDR_NL!___", "\n"))
+	return (
+		text:gsub("___!CMDR_ESCAPE!___", "\\")
+			:gsub("___!CMDR_QUOTE!___", '"')
+			:gsub("___!CMDR_NL!___", "\n")
+	)
 end
 
 --[=[
@@ -264,7 +268,12 @@ end
 	Returns the text bounds size based on given text, label (from which properties will be pulled), and optional Vector2 container size.
 ]=]
 function Util.GetTextSize(text: string, label: TextLabel, size: Vector2?): Vector2
-	return TextService:GetTextSize(text, label.TextSize, label.Font, size or Vector2.new(label.AbsoluteSize.X, 0))
+	return TextService:GetTextSize(
+		text,
+		label.TextSize,
+		label.Font,
+		size or Vector2.new(label.AbsoluteSize.X, 0)
+	)
 end
 
 --[=[
@@ -290,7 +299,10 @@ end
 --[=[
 	Parses a prefixed union type argument (such as %Team)
 ]=]
-function Util.ParsePrefixedUnionType(typeValue: string, rawValue: string): (string?, string?, string?)
+function Util.ParsePrefixedUnionType(
+	typeValue: string,
+	rawValue: string
+): (string?, string?, string?)
 	local split = Util.SplitStringSimple(typeValue)
 
 	-- Check prefixes in order from longest to shortest
@@ -367,9 +379,11 @@ function Util.RunCommandString(dispatcher, commandString: string): string?
 	local output = ""
 	for i, command in ipairs(commands) do
 		local outputEncoded = output:gsub("%$", "\\x24"):gsub("%%", "%%%%")
-		command = command:gsub("||", output:find("%s") and ("%q"):format(outputEncoded) or outputEncoded)
+		command =
+			command:gsub("||", output:find("%s") and ("%q"):format(outputEncoded) or outputEncoded)
 
-		output = tostring(dispatcher:EvaluateAndRun((Util.RunEmbeddedCommands(dispatcher, command))))
+		output =
+			tostring(dispatcher:EvaluateAndRun((Util.RunEmbeddedCommands(dispatcher, command))))
 
 		if i == #commands then
 			return output
@@ -474,7 +488,10 @@ function Util.MakeAliasCommand(name: string, commandString: string)
 		Group = "UserAlias",
 		Args = args,
 		ClientRun = function(context)
-			return Util.RunCommandString(context.Dispatcher, Util.SubstituteArgs(commandString, context.RawArguments))
+			return Util.RunCommandString(
+				context.Dispatcher,
+				Util.SubstituteArgs(commandString, context.RawArguments)
+			)
 		end,
 	}
 end

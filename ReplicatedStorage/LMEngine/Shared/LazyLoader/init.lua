@@ -11,20 +11,6 @@
 
 type ModuleType = typeof(table) | () -> any
 
-export type ILazyLoader = {
-	__index: ILazyLoader,
-	new: () -> LazyLoader,
-	AddModule: (self: LazyLoader, key: string, module: ModuleScript) -> (),
-	GetModule: (self: LazyLoader, module_name: string) -> ModuleType,
-	LoadModulesFromParent: (self: LazyLoader, parent: Instance, deep: boolean?) -> (),
-}
-
-export type LazyLoaderMembers = {
-	_modules: { [string]: ModuleType },
-}
-
-export type LazyLoader = typeof(setmetatable({} :: LazyLoaderMembers, {} :: ILazyLoader))
-
 local SETTINGS = {
 	_VERSION = "1.0.0",
 	_RESERVED_NAMES = {
@@ -39,8 +25,13 @@ local SETTINGS = {
 ----- Private variables -----
 
 ---@class LazyLoader
-local LazyLoader: ILazyLoader = {} :: ILazyLoader
+local LazyLoader = {}
 LazyLoader.__index = LazyLoader
+
+type LazyLoaderMembers = {
+	_modules: { [string]: ModuleType },
+}
+export type LazyLoader = typeof(setmetatable({} :: LazyLoaderMembers, LazyLoader))
 
 ----- Private functions -----
 
@@ -163,16 +154,4 @@ function LazyLoader:LoadModulesFromParent(parent: Instance, deep: boolean?)
 	end
 end
 
------ Initialize the lazy loader -----
-
 return setmetatable(LazyLoader, LazyLoader)
-
---[[
-
-Use the LazyLoader module to load modules lazily. For example:
-
-local LazyLoader = require(script:FindFirstChild("LazyLoader"));
-
-local MyModule = LazyLoader.MyModule;
-
---]]

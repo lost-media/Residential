@@ -70,7 +70,11 @@ function TextReporter.report(results)
 	local resultBuffer = {
 		"Test results:",
 		report(results),
-		("%d passed, %d failed, %d skipped"):format(results.successCount, results.failureCount, results.skippedCount),
+		("%d passed, %d failed, %d skipped"):format(
+			results.successCount,
+			results.failureCount,
+			results.skippedCount
+		),
 	}
 
 	print(table.concat(resultBuffer, "\n"))

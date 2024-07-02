@@ -22,7 +22,11 @@ type Set<T> = { [T]: any }
 local initialisedStack = sharedState.initialisedStack
 local initialisedStackCapacity = 0
 
-local function captureDependencies(saveToSet: Set<PubTypes.Dependency>, callback: (...any) -> any, ...): (boolean, any)
+local function captureDependencies(
+	saveToSet: Set<PubTypes.Dependency>,
+	callback: (...any) -> any,
+	...
+): (boolean, any)
 	local prevDependencySet = sharedState.dependencySet
 	sharedState.dependencySet = saveToSet
 

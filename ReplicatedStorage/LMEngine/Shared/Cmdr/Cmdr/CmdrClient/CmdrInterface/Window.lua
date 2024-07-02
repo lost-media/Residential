@@ -6,7 +6,8 @@ local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
 
 local WINDOW_MAX_HEIGHT = 300
-local MOUSE_TOUCH_ENUM = { Enum.UserInputType.MouseButton1, Enum.UserInputType.MouseButton2, Enum.UserInputType.Touch }
+local MOUSE_TOUCH_ENUM =
+	{ Enum.UserInputType.MouseButton1, Enum.UserInputType.MouseButton2, Enum.UserInputType.Touch }
 
 -- Window handles the command bar GUI
 local Window = {
@@ -39,7 +40,12 @@ function Window:UpdateWindowHeight()
 	local windowHeight = Gui.UIListLayout.AbsoluteContentSize.Y
 		+ Gui.UIPadding.PaddingTop.Offset
 		+ Gui.UIPadding.PaddingBottom.Offset
-	Gui.Size = UDim2.new(Gui.Size.X.Scale, Gui.Size.X.Offset, 0, math.clamp(windowHeight, 0, WINDOW_MAX_HEIGHT))
+	Gui.Size = UDim2.new(
+		Gui.Size.X.Scale,
+		Gui.Size.X.Offset,
+		0,
+		math.clamp(windowHeight, 0, WINDOW_MAX_HEIGHT)
+	)
 	Gui.CanvasPosition = Vector2.new(0, windowHeight)
 end
 
@@ -76,8 +82,10 @@ function Window:SetVisible(visible)
 	Gui.Visible = visible
 
 	if visible then
-		self.PreviousChatWindowConfigurationEnabled = TextChatService.ChatWindowConfiguration.Enabled
-		self.PreviousChatInputBarConfigurationEnabled = TextChatService.ChatInputBarConfiguration.Enabled
+		self.PreviousChatWindowConfigurationEnabled =
+			TextChatService.ChatWindowConfiguration.Enabled
+		self.PreviousChatInputBarConfigurationEnabled =
+			TextChatService.ChatInputBarConfiguration.Enabled
 		TextChatService.ChatWindowConfiguration.Enabled = false
 		TextChatService.ChatInputBarConfiguration.Enabled = false
 
@@ -89,7 +97,8 @@ function Window:SetVisible(visible)
 			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 		end
 	else
-		TextChatService.ChatWindowConfiguration.Enabled = if self.PreviousChatWindowConfigurationEnabled ~= nil
+		TextChatService.ChatWindowConfiguration.Enabled = if self.PreviousChatWindowConfigurationEnabled
+				~= nil
 			then self.PreviousChatWindowConfigurationEnabled
 			else true
 		TextChatService.ChatInputBarConfiguration.Enabled = if self.PreviousChatInputBarConfigurationEnabled
@@ -136,7 +145,8 @@ end
 -- Sets whether the command is in a valid state or not.
 -- Cannot submit if in invalid state.
 function Window:SetIsValidInput(isValid, errorText)
-	Entry.TextBox.TextColor3 = isValid and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 73, 73)
+	Entry.TextBox.TextColor3 = isValid and Color3.fromRGB(255, 255, 255)
+		or Color3.fromRGB(255, 73, 73)
 	self.Valid = isValid
 	self._errorText = errorText
 end

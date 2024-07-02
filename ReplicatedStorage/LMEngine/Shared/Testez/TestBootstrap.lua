@@ -105,7 +105,10 @@ function TestBootstrap:run(roots, reporter, otherOptions)
 	local extraEnvironment = otherOptions["extraEnvironment"] or {}
 
 	if type(roots) ~= "table" then
-		error(("Bad argument #1 to TestBootstrap:run. Expected table, got %s"):format(typeof(roots)), 2)
+		error(
+			("Bad argument #1 to TestBootstrap:run. Expected table, got %s"):format(typeof(roots)),
+			2
+		)
 	end
 
 	local startTime = tick()

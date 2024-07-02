@@ -27,6 +27,7 @@ local SETTINGS = {
 
 	PlotProfileMigrations = {
 		[1] = require(script.Migrations.PlotProfile.Migration_001),
+		[2] = require(script.Migrations.PlotProfile.Migration_002),
 	},
 }
 
@@ -44,7 +45,10 @@ function MigrationManager.MigratePlayerProfile(player: Player, profile)
 			profile.Data.Version = version
 
 			print(
-				"[MigrationManager]: Migrated player profile for player: " .. player.Name .. " to version: " .. version
+				"[MigrationManager]: Migrated player profile for player: "
+					.. player.Name
+					.. " to version: "
+					.. version
 			)
 		end
 	end
@@ -58,6 +62,13 @@ function MigrationManager.MigratePlotProfile(player: Player, profile)
 		if version > currentVersion then
 			profile.Data = migration.Migrate(player, profile.Data)
 			profile.Data.Version = version
+
+			print(
+				"[MigrationManager]: Migrated plot profile for player: "
+					.. player.Name
+					.. " to version: "
+					.. version
+			)
 		end
 	end
 

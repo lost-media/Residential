@@ -71,8 +71,13 @@ function UIController:Start()
 		}
 		local city_loader = title_screen:FindFirstChild("CityLoader")
 		if city_loader then
-			for _, child: Instance in city_loader:FindFirstChildWhichIsA("ScrollingFrame"):GetChildren() do
-				if child:IsA("GuiObject") == true and table.find(safe_buttons, child.Name) == nil then
+			for _, child: Instance in
+				city_loader:FindFirstChildWhichIsA("ScrollingFrame"):GetChildren()
+			do
+				if
+					child:IsA("GuiObject") == true
+					and table.find(safe_buttons, child.Name) == nil
+				then
 					child:Destroy()
 				end
 			end
@@ -81,53 +86,61 @@ function UIController:Start()
 
 	local PlotsLoadedConnection
 
-	PlotsLoadedConnection = DataService.PlayerPlotsLoaded:Connect(function(plots, last_loaded_plot_id)
-		ClearCityLoader()
+	PlotsLoadedConnection = DataService.PlayerPlotsLoaded:Connect(
+		function(plots, last_loaded_plot_id)
+			ClearCityLoader()
 
-		if plots == nil then
-			return
-		end
-
-		-- render the plots
-		for plot_id, plot_name in plots do
-			local plot_button = ui_Extras.CityLoadButton:Clone()
-			plot_button.Name = plot_id
-			plot_button.Label.Text = plot_name
-			plot_button.Parent = title_screen.CityLoader.ScrollingFrame
-
-			if last_loaded_plot_id ~= plot_id then
-				plot_button:FindFirstChild("LLI_Indicator").Visible = false
+			if plots == nil then
+				return
 			end
 
-			local click_connection
+			-- render the plots
+			for plot_id, plot_name in plots do
+				local plot_button = ui_Extras.CityLoadButton:Clone()
+				plot_button.Name = plot_id
+				plot_button.Label.Text = plot_name
+				plot_button.Parent = title_screen.CityLoader.ScrollingFrame
 
-			click_connection = plot_button.MouseButton1Click:Connect(function()
-				click_connection:Disconnect()
-				PlotsLoadedConnection:Disconnect()
+				if last_loaded_plot_id ~= plot_id then
+					plot_button:FindFirstChild("LLI_Indicator").Visible = false
+				end
 
-				-- disable the Title Screen UI
-				title_screen.Enabled = false
+				local click_connection
 
-				-- load the plot
-				DataService:LoadPlot(plot_id)
-			end)
+				click_connection = plot_button.MouseButton1Click:Connect(function()
+					click_connection:Disconnect()
+					PlotsLoadedConnection:Disconnect()
+
+					-- disable the Title Screen UI
+					title_screen.Enabled = false
+
+					-- load the plot
+					DataService:LoadPlot(plot_id)
+				end)
+			end
+
+			local create_plot_connection
+
+			-- set up connections to the buttons
+			create_plot_connection = title_screen.CityLoader.ScrollingFrame.CreatePlot.MouseButton1Click:Connect(
+				function()
+					create_plot_connection:Disconnect()
+
+					-- disable the Title Screen UI
+					title_screen.Enabled = false
+
+					-- create a new plot
+					DataService:CreatePlot(GenerateRandom3LetterString())
+				end
+			)
+
+			PlotsLoadedConnection:Disconnect()
 		end
+	)
+end
 
-		local create_plot_connection
-
-		-- set up connections to the buttons
-		create_plot_connection = title_screen.CityLoader.ScrollingFrame.CreatePlot.MouseButton1Click:Connect(function()
-			create_plot_connection:Disconnect()
-
-			-- disable the Title Screen UI
-			title_screen.Enabled = false
-
-			-- create a new plot
-			DataService:CreatePlot(GenerateRandom3LetterString())
-		end)
-
-		PlotsLoadedConnection:Disconnect()
-	end)
+function UIController:RegisterFrame(name: string, openFunction: () -> (), closeFunction: () -> ())
+	-- Handle the logic
 end
 
 return UIController

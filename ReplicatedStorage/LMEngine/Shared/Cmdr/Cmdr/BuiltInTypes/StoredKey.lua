@@ -24,7 +24,8 @@ return function(registry)
 				end
 			end
 
-			return false, "Key names must start with an optional modifier: . $ or $. and must begin with a letter."
+			return false,
+				"Key names must start with an optional modifier: . $ or $. and must begin with a letter."
 		end,
 
 		Parse = function(text)

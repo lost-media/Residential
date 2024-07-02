@@ -42,7 +42,12 @@ local Dispatcher = {
 
 	@return (command) | (false, string) -- if unsuccessful, returns false and the error text
 ]=]
-function Dispatcher:Evaluate(text: string, executor: Player, allowIncompleteArguments: boolean?, data: any?)
+function Dispatcher:Evaluate(
+	text: string,
+	executor: Player,
+	allowIncompleteArguments: boolean?,
+	data: any?
+)
 	if RunService:IsClient() == true and executor ~= Players.LocalPlayer then
 		error("[Cmdr] Can't evaluate a command that isn't sent by the local player.")
 	end
@@ -125,10 +130,15 @@ function Dispatcher:EvaluateAndRun(
 	end)
 
 	if not ok then
-		warn((`[Cmdr] Error occurred while evaluating command string %q\n{tostring(out)}`):format(text))
+		warn(
+			(`[Cmdr] Error occurred while evaluating command string %q\n{tostring(out)}`):format(
+				text
+			)
+		)
 	end
 
-	return ok and out or "An error occurred while running this command. Check the console for more information."
+	return ok and out
+		or "An error occurred while running this command. Check the console for more information."
 end
 
 --[=[
@@ -204,7 +214,10 @@ function Dispatcher:RunGuards(commandContext, ...)
 	end
 
 	local typeofGuardMethods = typeof(guardMethods)
-	assert(typeofGuardMethods == "table", `expected a table for Command.Guards, got {typeofGuardMethods}`)
+	assert(
+		typeofGuardMethods == "table",
+		`expected a table for Command.Guards, got {typeofGuardMethods}`
+	)
 
 	for _, guardMethod in pairs(guardMethods) do
 		local typeofGuardMethod = typeof(guardMethod)

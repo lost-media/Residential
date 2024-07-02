@@ -60,7 +60,11 @@ return {
 					context.Cmdr.Util.SubstituteArgs(command, args)
 				)
 				context:Reply(
-					("%s $ %s : %s"):format(bind.Name, chatCommand, context.Dispatcher:EvaluateAndRun(chatCommand)),
+					("%s $ %s : %s"):format(
+						bind.Name,
+						chatCommand,
+						context.Dispatcher:EvaluateAndRun(chatCommand)
+					),
 					Color3.fromRGB(244, 92, 66)
 				)
 			end

@@ -61,7 +61,10 @@ end
 ----- Public functions -----
 
 function DisplayButton.new(instance: Instance)
-	assert(InstanceIsDisplayButton(instance) == true, "[DisplayButton]: Instance is not a display button")
+	assert(
+		InstanceIsDisplayButton(instance) == true,
+		"[DisplayButton]: Instance is not a display button"
+	)
 	local self = setmetatable(UIElement.new(instance), DisplayButton)
 
 	self.Button1Down = Signal.new()

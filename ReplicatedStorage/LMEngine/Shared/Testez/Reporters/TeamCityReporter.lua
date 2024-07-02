@@ -50,7 +50,10 @@ local function reportNode(node, buffer, level)
 	else
 		table.insert(buffer, teamCityEnterCase(node.planNode.phrase))
 		if node.status == TestEnum.TestStatus.Failure then
-			table.insert(buffer, teamCityFailCase(node.planNode.phrase, table.concat(node.errors, "\n")))
+			table.insert(
+				buffer,
+				teamCityFailCase(node.planNode.phrase, table.concat(node.errors, "\n"))
+			)
 		end
 		table.insert(buffer, teamCityLeaveCase(node.planNode.phrase))
 	end
@@ -76,7 +79,11 @@ function TeamCityReporter.report(results)
 	local resultBuffer = {
 		"Test results:",
 		report(results),
-		("%d passed, %d failed, %d skipped"):format(results.successCount, results.failureCount, results.skippedCount),
+		("%d passed, %d failed, %d skipped"):format(
+			results.successCount,
+			results.failureCount,
+			results.skippedCount
+		),
 	}
 
 	print(table.concat(resultBuffer, "\n"))

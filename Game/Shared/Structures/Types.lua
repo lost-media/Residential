@@ -19,18 +19,24 @@ export type ResidenceCollection = {
 	[string]: Residence,
 }
 
+export type CityHallCollection = {
+	[string]: CityHall,
+}
+
 export type CommercialCollection = {
 	[string]: Commercial,
 }
 
 export type Structure = {
-	Category: "Road" | "Industrial" | "Residence" | "Commercial",
+	Category: "Road" | "Industrial" | "Residence" | "Commercial" | "City Hall",
 	Name: string,
+	UID: number,
 	Id: string,
 	Description: string,
 	Price: number,
 	Model: Model,
 	BuildTime: number,
+	IsABuilding: boolean,
 	FullArea: boolean, -- If the structure occupies the whole area of the tile
 
 	Stacking: Stacked?,
@@ -94,6 +100,8 @@ export type Residence = Structure & {
 		PopulationGrowthTime: number,
 	},
 }
+
+export type CityHall = Structure & {}
 
 export type Commercial = Structure & {}
 

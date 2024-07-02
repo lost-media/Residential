@@ -20,6 +20,10 @@ local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 ---@type Signal
 local Signal = LMEngine.GetShared("Signal")
 
+---@type Promise
+local Promise = require(LMEngine.SharedDir.Promise)
+type Promise = typeof(Promise.new())
+
 ---@class PlotController
 local PlotController = LMEngine.CreateController({
 	Name = "PlotController",
@@ -35,29 +39,29 @@ local PlotController = LMEngine.CreateController({
 function PlotController:Start()
 	local PlotService = LMEngine.GetService("PlotService")
 
-	local PlotAssigned: RBXScriptConnection
+	local plotAssigned: RBXScriptConnection
 
-	PlotAssigned = PlotService.PlotAssigned:Connect(function(plot)
+	plotAssigned = PlotService.PlotAssigned:Connect(function(plot)
 		print("[PlotController] Plot assigned")
 		self._plot = plot
 
 		self.OnPlotAssigned:Fire(plot)
 
 		-- Disconnect the event
-		PlotAssigned:Disconnect()
+		plotAssigned:Disconnect()
 	end)
 end
 
-function PlotController:GetPlot(): Model
-	return self._plot
-end
-
-function PlotController:WaitForPlot(): Model
-	if self.Plot ~= nil then
-		return self._plot
-	end
-
-	return self.OnPlotAssigned:Wait()
+function PlotController:GetPlotAsync(): Promise
+	return Promise.new(function(resolve)
+		if self._plot ~= nil then
+			resolve(self._plot)
+		else
+			self.OnPlotAssigned:Connect(function(plot)
+				resolve(plot)
+			end)
+		end
+	end)
 end
 
 return PlotController

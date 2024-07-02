@@ -10,7 +10,10 @@ local store = require(script.Parent.types.store)
 type AnyAction = actions.AnyAction
 
 export type Reducer<State = any, Action = AnyAction> = reducers.Reducer<State, Action>
-export type ReducersMapObject<State = any, Action = AnyAction> = reducers.ReducersMapObject<State, Action>
+export type ReducersMapObject<State = any, Action = AnyAction> = reducers.ReducersMapObject<
+	State,
+	Action
+>
 
 type CombinedState<State> = store.CombinedState<State>
 

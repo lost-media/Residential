@@ -1,22 +1,21 @@
--- Migrations/Migration_001.lua
+-- Changes the currency name from "Gems" to "Roadbucks"
 
 local SETTINGS = {
 	Schema = {
-		Plots = {},
 		UserId = -1,
-		CompletedTutorial = false,
-		LastPlotIdUsed = nil,
+		PlotData = nil,
+		Coins = 0,
+		Roadbucks = 0,
+		Inventory = {},
 	},
 
-	FieldsToAdd = {
-		Plots = {},
-		UserId = -1,
-		CompletedTutorial = false,
-		LastPlotIdUsed = nil,
-	},
+	FieldsToAdd = {},
 
 	FieldsToRemove = {},
-	FieldsToMove = {},
+
+	FieldsToMove = {
+		["Gems"] = "Roadbucks",
+	},
 }
 ----- Private variables -----
 
@@ -47,11 +46,11 @@ function Migration.Migrate(player: Player, profile_data: table)
 
 	-- Move fields to a new location
 	for key, newKey in SETTINGS.FieldsToMove do
-		profile_data[newKey] = profile_data[key]
+		profile_data[newKey] = profile_data[key] or SETTINGS.Schema[newKey]
 		profile_data[key] = nil
 	end
 
-	profile_data.UserId = player.UserId
+	print(profile_data)
 
 	return profile_data
 end

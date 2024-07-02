@@ -73,7 +73,11 @@ function RateLimiterObject:CheckRate(source) --> is_to_be_processed [bool] -- Wh
 		end
 	else
 		-- Preventing from remembering players that already left:
-		if typeof(source) == "Instance" and source:IsA("Player") and PlayerReference[source] == nil then
+		if
+			typeof(source) == "Instance"
+			and source:IsA("Player")
+			and PlayerReference[source] == nil
+		then
 			return false
 		end
 		sources[source] = os_clock + self._rate_period

@@ -62,7 +62,11 @@ function Command:Parse(allowIncompleteArguments)
 		local required = (definition.Default == nil and definition.Optional ~= true)
 
 		if required and hadOptional then
-			error(("[Cmdr] Command %q: Required arguments cannot occur after optional arguments."):format(self.Name))
+			error(
+				("[Cmdr] Command %q: Required arguments cannot occur after optional arguments."):format(
+					self.Name
+				)
+			)
 		elseif not required then
 			hadOptional = true
 		end
@@ -200,7 +204,10 @@ end
 
 -- Sends an event message to a player
 function Command:SendEvent(player, event, ...)
-	assert(typeof(player) == "Instance" and player:IsA("Player"), "[Cmdr] Argument #1 must be a Player")
+	assert(
+		typeof(player) == "Instance" and player:IsA("Player"),
+		"[Cmdr] Argument #1 must be a Player"
+	)
 	assert(type(event) == "string", "[Cmdr] Argument #2 must be a string")
 
 	if IsServer then

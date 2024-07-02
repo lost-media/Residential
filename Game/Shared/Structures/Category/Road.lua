@@ -5,7 +5,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local dir_Structures = ReplicatedStorage.Game.Shared.Structures
 local dir_Utils = dir_Structures.Utils
 
-local StackingUtils = require(dir_Utils.Stacking)
 local TableUtil = require(dir_Utils.TableUtil)
 
 local StructureTypes = require(script.Parent.Parent.Types)
@@ -17,6 +16,7 @@ local SharedProperties = {
 	Category = "Road",
 	BuildTime = 0,
 	FullArea = true,
+	IsABuilding = false,
 	Stacking = {
 		Allowed = false,
 	},
@@ -25,55 +25,60 @@ local SharedProperties = {
 }
 
 local Roads: StructureTypes.RoadCollection = {
-	["Normal Road"] = TableUtil.Reconcile({
-		Name = "Normal Road",
-		Id = "Road/Normal Road",
+	TableUtil.Reconcile({
+		Name = "Normal",
+		UID = 0,
+		Id = "Road/Normal",
 		Description = "A normal road",
-		Model = RoadFolder["Normal Road"],
+		Model = RoadFolder["Normal"],
 	}, SharedProperties),
 
-	["Curved Road"] = TableUtil.Reconcile({
-		Name = "Curved Road",
-		Id = "Road/Curved Road",
+	TableUtil.Reconcile({
+		Name = "Curved",
+		UID = 1,
+		Id = "Road/Curved",
 		Description = "A curved road",
-		Model = RoadFolder["Curved Road"],
+		Model = RoadFolder["Curved"],
 	}, SharedProperties),
 
-	["Intersection Road"] = TableUtil.Reconcile({
-		Name = "Intersection Road",
-		Id = "Road/Intersection Road",
-		Description = "A curved road",
-		Model = RoadFolder["Intersection Road"],
+	TableUtil.Reconcile({
+		Name = "Intersection",
+		UID = 2,
+		Id = "Road/Intersection",
+		Description = "A curved",
+		Model = RoadFolder["Intersection"],
 	}, SharedProperties),
 
-	["Highway Road"] = TableUtil.Reconcile({
-		Name = "Highway Road",
-		Id = "Road/Highway Road",
-		Description = "A curved road",
-		Model = RoadFolder["Highway Road"],
+	TableUtil.Reconcile({
+		Name = "T-Intersection",
+		UID = 3,
+		Id = "Road/T-Intersection",
+		Description = "A T-Intersection road",
+		Model = RoadFolder["T-Intersection"],
 	}, SharedProperties),
 
-	["Ramp Road"] = TableUtil.Reconcile({
-		Name = "Ramp Road",
-		Id = "Road/Ramp Road",
+	TableUtil.Reconcile({
+		Name = "Ramp",
+		UID = 4,
+		Id = "Road/Ramp",
 		Description = "A ramp road",
-		Model = RoadFolder["Ramp Road"],
+		Model = RoadFolder["Ramp"],
 	}, SharedProperties),
 
-	["Dead-End Road"] = TableUtil.Reconcile({
-		Name = "Elevated Normal Road",
-		Id = "Road/Dead-End Road",
+	TableUtil.Reconcile({
+		Name = "Dead End",
+		UID = 5,
+		Id = "Road/Dead End",
 		Description = "A curved road",
-		Model = RoadFolder["Dead End Road"],
+		Model = RoadFolder["Dead End"],
 	}, SharedProperties),
 
 	["Streetlight"] = TableUtil.Reconcile({
 		Name = "Streetlight",
+		UID = 6,
 		Id = "Road/Streetlight",
 		Description = "A normal streetlight",
-		Price = 500,
 		Model = RoadFolder["Streetlight"],
-		FullArea = false,
 		GridUnit = 0.25,
 
 		Stacking = {

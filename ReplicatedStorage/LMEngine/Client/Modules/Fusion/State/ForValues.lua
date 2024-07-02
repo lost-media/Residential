@@ -125,20 +125,25 @@ function class:update(): boolean
 
 		-- recalculate the output value if necessary
 		if shouldRecalculate then
-			valueData.oldDependencySet, valueData.dependencySet = valueData.dependencySet, valueData.oldDependencySet
+			valueData.oldDependencySet, valueData.dependencySet =
+				valueData.dependencySet, valueData.oldDependencySet
 			table.clear(valueData.dependencySet)
 
 			local processOK, newOutValue, newMetaValue =
 				captureDependencies(valueData.dependencySet, self._processor, inValue)
 
 			if processOK then
-				if self._destructor == nil and (needsDestruction(newOutValue) or needsDestruction(newMetaValue)) then
+				if
+					self._destructor == nil
+					and (needsDestruction(newOutValue) or needsDestruction(newMetaValue))
+				then
 					logWarn("destructorNeededForValues")
 				end
 
 				-- pass the old value to the destructor if it exists
 				if value ~= nil then
-					local destructOK, err = xpcall(self._destructor or cleanup, parseError, value, meta)
+					local destructOK, err =
+						xpcall(self._destructor or cleanup, parseError, value, meta)
 					if not destructOK then
 						logErrorNonFatal("forValuesDestructorError", err)
 					end
@@ -188,7 +193,8 @@ function class:update(): boolean
 			local oldValue = valueInfo.value
 			local oldMetaValue = valueInfo.meta
 
-			local destructOK, err = xpcall(self._destructor or cleanup, parseError, oldValue, oldMetaValue)
+			local destructOK, err =
+				xpcall(self._destructor or cleanup, parseError, oldValue, oldMetaValue)
 			if not destructOK then
 				logErrorNonFatal("forValuesDestructorError", err)
 			end
