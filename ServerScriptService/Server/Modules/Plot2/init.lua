@@ -443,7 +443,8 @@ function Plot:DeleteStructure(structure: Model)
 	)
 
 	if structure == self._cityHall then
-		self._cityHall = nil
+		-- City Hall cannot be deleted
+		return
 	end
 
 	structure:Destroy()

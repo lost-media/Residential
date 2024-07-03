@@ -53,23 +53,13 @@ local settBuildingConnectionTag = SETTINGS.BuildingConnectionTag
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
 local Graph = require(LMEngine.SharedDir.DS.Graph)
+local Signal = require(LMEngine.SharedDir.Signal)
 type Graph = Graph.Graph
 
 local RoadNetwork: IRoadNetwork = {} :: IRoadNetwork
 RoadNetwork.__index = RoadNetwork
 
 ----- Private functions -----
-
-local function GetAdjacentPositions(position: Vector3): { Vector3 }
-	local neighbors = SETTINGS.Neigbors
-	local adjacentPositions = {}
-
-	for _, neighbor in ipairs(neighbors) do
-		table.insert(adjacentPositions, position + neighbor)
-	end
-
-	return adjacentPositions
-end
 
 ----- Public functions -----
 
@@ -81,12 +71,41 @@ function RoadNetwork.new(plot): RoadNetwork
 	self._buildings = {}
 	self._buildingRoadPairs = {}
 
+	self.RoadConnected = Signal.new()
+	self.BuildingConnected = Signal.new()
+
 	return self
 end
 
 function RoadNetwork:AddRoad(road)
 	-- update connectivity
 	self:UpdateConnectivity()
+
+	-- see if the new road has connected to any other
+
+	local roadGraph = self._graph
+
+	-- get the roads neighbors
+
+	local node = roadGraph:GetNodeWithVal(road)
+
+	if node == nil then
+		return
+	end
+
+	-- neighbors
+	local neighbors = roadGraph:GetNeighbors(node)
+
+	if neighbors == nil then
+		return
+	end
+
+	if #neighbors == 0 then
+		return
+	end
+
+	-- fire event that the road has been connected to another road
+	self.RoadConnected:Fire(road, neighbors)
 end
 
 function RoadNetwork:AddBuilding(structure: Model)
@@ -97,6 +116,16 @@ function RoadNetwork:AddBuilding(structure: Model)
 
 	-- check if buildings are connected to city hall
 	self:UpdateBuildingCityHallConnectivity()
+
+	-- check if the newly placed building is connected to a road
+	local road = self._buildingRoadPairs[structure]
+
+	if road == nil then
+		return
+	end
+
+	-- fire event that the building has been connected to a road
+	self.BuildingConnected:Fire(structure, road)
 end
 
 function RoadNetwork:UpdateRoadConnectivity()

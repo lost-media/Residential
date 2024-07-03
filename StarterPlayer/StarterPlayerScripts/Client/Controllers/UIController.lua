@@ -8,29 +8,28 @@
 --]]
 
 local SETTINGS = {
-	GuisToWaitFor = {
-		"Title Screen",
-	},
+	FadeDuration = 0.1,
 }
 
 ----- Private variables -----
 
-local ContentProvider = game:GetService("ContentProvider")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local ui_Extras = ReplicatedStorage.Extras.UI
 
 ---@type LMEngineClient
+local UserInputService = game:GetService("UserInputService")
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 local Player = LMEngine.Player
 local PlayerGui = Player.PlayerGui
-
-local TableUtil = require(LMEngine.SharedDir.TableUtil)
 
 local Trove = require(LMEngine.SharedDir.Trove)
 
 ---@type Signal
 local Signal = LMEngine.GetShared("Signal")
+
+local settFadeDuration = SETTINGS.FadeDuration
 
 ---@class UIController
 local UIController = LMEngine.CreateController({
@@ -57,90 +56,256 @@ end
 
 function UIController:Start()
 	-- wait for the GUIs to load
-	for _, gui_name in SETTINGS.GuisToWaitFor do
-		PlayerGui:WaitForChild(gui_name)
-	end
+	LMEngine.GameLoaded():andThen(function()
+		-- inside this promise, we don't need WaitForChild
 
-	local title_screen = PlayerGui:FindFirstChild("Title Screen")
+		local title_screen = PlayerGui["Title Screen"]
+		local placementScreen = PlayerGui.Placement
 
-	local DataService = LMEngine.GetService("DataService")
+		local DataService = LMEngine.GetService("DataService")
 
-	-- get all the players plots
-	---@type Promise
+		-- get all the players plots
+		---@type Promise
 
-	local function ClearCityLoader()
-		local safe_buttons = {
-			"CreatePlot",
-			"UnlimitedPlotsGamepass",
-		}
-		local city_loader = title_screen:FindFirstChild("CityLoader")
-		if city_loader then
-			for _, child: Instance in
-				city_loader:FindFirstChildWhichIsA("ScrollingFrame"):GetChildren()
-			do
-				if
-					child:IsA("GuiObject") == true
-					and table.find(safe_buttons, child.Name) == nil
-				then
-					child:Destroy()
+		local function ClearCityLoader()
+			local safe_buttons = {
+				"CreatePlot",
+				"UnlimitedPlotsGamepass",
+			}
+			local city_loader = title_screen:FindFirstChild("CityLoader")
+			if city_loader then
+				for _, child: Instance in
+					city_loader:FindFirstChildWhichIsA("ScrollingFrame"):GetChildren()
+				do
+					if
+						child:IsA("GuiObject") == true
+						and table.find(safe_buttons, child.Name) == nil
+					then
+						child:Destroy()
+					end
 				end
 			end
 		end
-	end
 
-	local PlotsLoadedConnection
+		local PlotsLoadedConnection
 
-	PlotsLoadedConnection = DataService.PlayerPlotsLoaded:Connect(
-		function(plots, last_loaded_plot_id)
-			ClearCityLoader()
+		PlotsLoadedConnection = DataService.PlayerPlotsLoaded:Connect(
+			function(plots, last_loaded_plot_id)
+				ClearCityLoader()
 
-			if plots == nil then
-				return
-			end
-
-			-- render the plots
-			for plot_id, plot_name in plots do
-				local plot_button = ui_Extras.CityLoadButton:Clone()
-				plot_button.Name = plot_id
-				plot_button.Label.Text = plot_name
-				plot_button.Parent = title_screen.CityLoader.ScrollingFrame
-
-				if last_loaded_plot_id ~= plot_id then
-					plot_button:FindFirstChild("LLI_Indicator").Visible = false
+				if plots == nil then
+					return
 				end
 
-				local click_connection
+				-- render the plots
+				for plot_id, plot_name in plots do
+					local plot_button = ui_Extras.CityLoadButton:Clone()
+					plot_button.Name = plot_id
+					plot_button.Label.Text = plot_name
+					plot_button.Parent = title_screen.CityLoader.ScrollingFrame
 
-				click_connection = plot_button.MouseButton1Click:Connect(function()
-					click_connection:Disconnect()
-					PlotsLoadedConnection:Disconnect()
+					if last_loaded_plot_id ~= plot_id then
+						plot_button:FindFirstChild("LLI_Indicator").Visible = false
+					end
 
-					-- disable the Title Screen UI
-					title_screen.Enabled = false
+					local click_connection
 
-					-- load the plot
-					DataService:LoadPlot(plot_id)
-				end)
-			end
+					click_connection = plot_button.MouseButton1Click:Connect(function()
+						click_connection:Disconnect()
+						PlotsLoadedConnection:Disconnect()
 
-			local create_plot_connection
+						-- disable the Title Screen UI
+						title_screen.Enabled = false
 
-			-- set up connections to the buttons
-			create_plot_connection = title_screen.CityLoader.ScrollingFrame.CreatePlot.MouseButton1Click:Connect(
-				function()
-					create_plot_connection:Disconnect()
-
-					-- disable the Title Screen UI
-					title_screen.Enabled = false
-
-					-- create a new plot
-					DataService:CreatePlot(GenerateRandom3LetterString())
+						-- load the plot
+						DataService:LoadPlot(plot_id)
+					end)
 				end
-			)
 
-			PlotsLoadedConnection:Disconnect()
-		end
-	)
+				local create_plot_connection
+
+				-- set up connections to the buttons
+				create_plot_connection = title_screen.CityLoader.ScrollingFrame.CreatePlot.MouseButton1Click:Connect(
+					function()
+						create_plot_connection:Disconnect()
+
+						-- disable the Title Screen UI
+						title_screen.Enabled = false
+
+						-- create a new plot
+						DataService:CreatePlot(GenerateRandom3LetterString())
+					end
+				)
+
+				PlotsLoadedConnection:Disconnect()
+			end
+		)
+
+		-- Register all frames
+
+		-- Build Mode
+		local buildModeFrame: CanvasGroup = placementScreen.Frame.Modes
+		local buildModeUIScale = buildModeFrame.UIScale
+		local buildModeContainer = buildModeFrame.Container
+		local buildModeButtons = buildModeContainer.Buttons
+
+		self:RegisterFrame("BuildModeFrame", function(trove)
+			TweenService:Create(buildModeFrame, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 0,
+				Visible = true,
+			}):Play()
+
+			TweenService:Create(buildModeUIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 1,
+			}):Play()
+
+			TweenService:Create(buildModeFrame.UIStroke, TweenInfo.new(settFadeDuration), {
+				Transparency = 0,
+			}):Play()
+
+			-- set up connections
+			trove:Connect(buildModeButtons.Close.MouseButton1Click, function()
+				self:CloseFrame("PlacementScreen")
+				self:OpenFrame("MainHUDPrimaryButtons")
+			end)
+
+			trove:Connect(buildModeButtons.Delete.MouseButton1Click, function()
+				self:CloseFrame("PlacementScreen")
+				self:OpenFrame("DeleteStructureFrame")
+			end)
+		end, function(trove)
+			TweenService:Create(buildModeFrame, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 1,
+				Visible = false,
+			}):Play()
+
+			TweenService:Create(buildModeUIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 0.5,
+			}):Play()
+
+			TweenService:Create(buildModeFrame.UIStroke, TweenInfo.new(settFadeDuration), {
+				Transparency = 1,
+			}):Play()
+		end)
+
+		-- Delete Structure UI in Placement UI
+
+		local deleteStructureFrame: CanvasGroup = placementScreen.Frame.DeleteStructure
+
+		self:RegisterFrame("DeleteStructureFrame", function(trove)
+			TweenService:Create(deleteStructureFrame, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 0,
+				Visible = true,
+			}):Play()
+
+			TweenService:Create(deleteStructureFrame.UIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 1,
+			}):Play()
+
+			TweenService:Create(deleteStructureFrame.UIStroke, TweenInfo.new(settFadeDuration), {
+				Transparency = 0,
+			}):Play()
+
+			trove:Connect(deleteStructureFrame.Button.MouseButton1Click, function()
+				self:CloseFrame("DeleteStructureFrame")
+				self:OpenFrame("PlacementScreen")
+			end)
+
+			trove:Connect(UserInputService.InputBegan, function(input, gameProcessed)
+				if gameProcessed == true then
+					return
+				end
+
+				if input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.C then
+					self:CloseFrame("DeleteStructureFrame")
+					self:OpenFrame("PlacementScreen")
+				end
+			end)
+		end, function(trove)
+			TweenService:Create(deleteStructureFrame, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 1,
+				Visible = false,
+			}):Play()
+
+			TweenService:Create(deleteStructureFrame.UIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 0.5,
+			}):Play()
+
+			TweenService:Create(deleteStructureFrame.UIStroke, TweenInfo.new(settFadeDuration), {
+				Transparency = 1,
+			}):Play()
+		end)
+
+		-- Selection in Placement UI
+		local selectionFrame: CanvasGroup = placementScreen.Frame.Selections
+
+		self:RegisterFrame("SelectionFrame", function(trove)
+			TweenService:Create(selectionFrame, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 0,
+				Visible = true,
+			}):Play()
+
+			TweenService:Create(selectionFrame.UIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 1,
+			}):Play()
+		end, function(trove)
+			TweenService:Create(selectionFrame, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 1,
+				Visible = false,
+			}):Play()
+
+			TweenService:Create(selectionFrame.UIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 0.5,
+			}):Play()
+		end)
+
+		-- Group the Selection and Build Mode
+		self:RegisterFrame("PlacementScreen", function(trove)
+			self:OpenFrame("SelectionFrame")
+			self:OpenFrame("BuildModeFrame")
+			self:CloseFrame({
+				"MainHUDPrimaryButtons",
+			})
+		end, function(trove)
+			self:CloseFrame({ "SelectionFrame", "BuildModeFrame" })
+		end)
+
+		local mainHudScreen = PlayerGui.MainHUD
+		local mainHudPrimaryButtons = mainHudScreen.PrimaryButtons
+		local mainHudPrimaryButtonsContainer: CanvasGroup = mainHudPrimaryButtons.Container
+
+		self:RegisterFrame("MainHUDPrimaryButtons", function(trove)
+			TweenService:Create(mainHudPrimaryButtonsContainer, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 0,
+				Visible = true,
+			}):Play()
+
+			TweenService
+				:Create(mainHudPrimaryButtonsContainer.UIScale, TweenInfo.new(settFadeDuration), {
+					Scale = 1,
+				})
+				:Play()
+
+			-- set up connections
+			trove:Connect(mainHudPrimaryButtonsContainer.Build.MouseButton1Click, function()
+				self:OpenFrame("PlacementScreen")
+			end)
+		end, function(trove)
+			TweenService:Create(mainHudPrimaryButtonsContainer, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 1,
+				Visible = false,
+			}):Play()
+
+			TweenService
+				:Create(mainHudPrimaryButtonsContainer.UIScale, TweenInfo.new(settFadeDuration), {
+					Scale = 0.5,
+				})
+				:Play()
+		end)
+
+		-- Open the main HUD
+		self:OpenFrame("MainHUDPrimaryButtons")
+	end)
 end
 
 function UIController:RegisterFrame(
@@ -156,7 +321,10 @@ function UIController:RegisterFrame(
 		openFunction = openFunction,
 		closeFunction = closeFunction,
 		cleanupTrove = cleanupTrove,
+		isOpen = false,
 	}
+
+	self:CloseFrame(name)
 end
 
 function UIController:OpenFrame(name: string)
@@ -165,6 +333,12 @@ function UIController:OpenFrame(name: string)
 	if frame == nil then
 		return
 	end
+
+	if frame.isOpen == true then
+		--return
+	end
+
+	frame.isOpen = true
 
 	coroutine.wrap(function()
 		frame.openFunction(frame.cleanupTrove)
@@ -190,8 +364,16 @@ function UIController:CloseFrame(name: string | { string })
 		return
 	end
 
-	frame.closeFunction(frame.cleanupTrove)
-	frame.cleanupTrove:Destroy()
+	if frame.isOpen == false then
+		--return
+	end
+
+	frame.isOpen = false
+
+	coroutine.wrap(function()
+		frame.closeFunction(frame.cleanupTrove)
+		frame.cleanupTrove:Destroy()
+	end)()
 end
 
 return UIController
