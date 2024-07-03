@@ -1596,7 +1596,11 @@ function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings
 	end)
 end
 
-function PlacementClient:IsPlacing() end
+function PlacementClient:IsPlacing()
+	local state: State = self._state:getState()
+
+	return state._current_state ~= 4
+end
 
 function PlacementClient:IsActive() end
 

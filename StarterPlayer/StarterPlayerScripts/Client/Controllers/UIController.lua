@@ -62,6 +62,9 @@ function UIController:Start()
 		local title_screen = PlayerGui["Title Screen"]
 		local placementScreen = PlayerGui.Placement
 
+		---@type PlacementController
+		local PlacementController = LMEngine.GetController("PlacementController")
+
 		local DataService = LMEngine.GetService("DataService")
 
 		-- get all the players plots
@@ -206,10 +209,15 @@ function UIController:Start()
 				Transparency = 0,
 			}):Play()
 
-			trove:Connect(deleteStructureFrame.Button.MouseButton1Click, function()
+			local function closeDeleteStructureFrame()
 				self:CloseFrame("DeleteStructureFrame")
 				self:OpenFrame("PlacementScreen")
-			end)
+				PlacementController:DisableDeleteMode()
+			end
+
+			trove:Connect(deleteStructureFrame.Button.MouseButton1Click, closeDeleteStructureFrame)
+
+			trove:Connect(PlacementController.OnStructureDeleteDisabled, closeDeleteStructureFrame)
 
 			trove:Connect(UserInputService.InputBegan, function(input, gameProcessed)
 				if gameProcessed == true then
@@ -217,10 +225,11 @@ function UIController:Start()
 				end
 
 				if input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.C then
-					self:CloseFrame("DeleteStructureFrame")
-					self:OpenFrame("PlacementScreen")
+					closeDeleteStructureFrame()
 				end
 			end)
+
+			PlacementController:EnableDeleteMode()
 		end, function(trove)
 			TweenService:Create(deleteStructureFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 1,
