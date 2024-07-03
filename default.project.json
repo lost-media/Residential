@@ -38,6 +38,12 @@
       "$className": "ServerStorage",
       "$ignoreUnknownInstances": true,
       "$path": "ServerStorage"
+    },
+
+    "ReplicatedFirst": {
+      "$className": "ReplicatedFirst",
+      "$ignoreUnknownInstances": true,
+      "$path": "ReplicatedFirst"
     }
   }
 }

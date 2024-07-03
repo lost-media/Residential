@@ -27,12 +27,16 @@ local PlayerGui = Player.PlayerGui
 
 local TableUtil = require(LMEngine.SharedDir.TableUtil)
 
+local Trove = require(LMEngine.SharedDir.Trove)
+
 ---@type Signal
 local Signal = LMEngine.GetShared("Signal")
 
 ---@class UIController
 local UIController = LMEngine.CreateController({
 	Name = "UIController",
+
+	_frames = {},
 })
 
 ----- Private functions -----
@@ -139,8 +143,53 @@ function UIController:Start()
 	)
 end
 
-function UIController:RegisterFrame(name: string, openFunction: () -> (), closeFunction: () -> ())
+function UIController:RegisterFrame(
+	name: string,
+	openFunction: (trove: Trove.Trove) -> (),
+	closeFunction: (trove: Trove.Trove) -> ()
+)
 	-- Handle the logic
+
+	local cleanupTrove = Trove.new()
+
+	self._frames[name] = {
+		openFunction = openFunction,
+		closeFunction = closeFunction,
+		cleanupTrove = cleanupTrove,
+	}
+end
+
+function UIController:OpenFrame(name: string)
+	local frame = self._frames[name]
+
+	if frame == nil then
+		return
+	end
+
+	frame.openFunction(frame.cleanupTrove)
+end
+
+function UIController:CloseFrame(name: string | { string })
+	if name == nil then
+		return
+	end
+
+	if type(name) == "table" then
+		for _, frame_name in ipairs(name) do
+			self:CloseFrame(frame_name)
+		end
+
+		return
+	end
+
+	local frame = self._frames[name]
+
+	if frame == nil then
+		return
+	end
+
+	frame.closeFunction(frame.cleanupTrove)
+	frame.cleanupTrove:Destroy()
 end
 
 return UIController
