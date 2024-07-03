@@ -28,7 +28,7 @@ Changelog:
 
 local SETTINGS = {
 	SoundParent = game:GetService("SoundService"),
-	Volume = 0.25,
+	Volume = 0.15,
 
 	Sounds = {
 		{
