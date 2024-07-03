@@ -166,7 +166,9 @@ function UIController:OpenFrame(name: string)
 		return
 	end
 
-	frame.openFunction(frame.cleanupTrove)
+	coroutine.wrap(function()
+		frame.openFunction(frame.cleanupTrove)
+	end)()
 end
 
 function UIController:CloseFrame(name: string | { string })
