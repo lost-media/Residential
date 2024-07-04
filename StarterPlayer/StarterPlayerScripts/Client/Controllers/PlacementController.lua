@@ -43,6 +43,7 @@ local PlacementController = LMEngine.CreateController({
 	_state = nil,
 
 	-- Signals
+	OnStructureDeleteEnabled = Signal.new(),
 	OnStructureDeleteDisabled = Signal.new(),
 })
 
@@ -193,9 +194,15 @@ function PlacementController:EnableDeleteMode()
 		end
 	end
 
+	if self._delete_structure_client == nil then
+		return
+	end
+
 	self._state = "deleting"
 
 	self._delete_structure_client:Enable()
+
+	self.OnStructureDeleteEnabled:Fire()
 
 	local PlotService = LMEngine.GetService("PlotService")
 
@@ -208,6 +215,10 @@ end
 
 function PlacementController:DisableDeleteMode()
 	if self._state ~= "deleting" then
+		return
+	end
+
+	if self._delete_structure_client == nil then
 		return
 	end
 

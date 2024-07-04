@@ -12,22 +12,25 @@ local SETTINGS = {
 }
 
 ----- Private variables -----
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
+local uiContainer = ReplicatedStorage.UI
 local ui_Extras = ReplicatedStorage.Extras.UI
 
+local dirUiTemplates = uiContainer.Templates
+local structureShopPreviewTemplate = dirUiTemplates.StructureShopPreview
+
 ---@type LMEngineClient
-local UserInputService = game:GetService("UserInputService")
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 local Player = LMEngine.Player
 local PlayerGui = Player.PlayerGui
 
+local Signal = require(LMEngine.SharedDir.Signal)
 local Trove = require(LMEngine.SharedDir.Trove)
 
----@type Signal
-local Signal = LMEngine.GetShared("Signal")
+local StructureCollection = require(LMEngine.Game.Shared.Structures)
 
 local settFadeDuration = SETTINGS.FadeDuration
 
@@ -113,7 +116,7 @@ function UIController:Start()
 
 					local click_connection
 
-					click_connection = plot_button.MouseButton1Click:Connect(function()
+					click_connection = plot_button.Activated:Connect(function()
 						click_connection:Disconnect()
 						PlotsLoadedConnection:Disconnect()
 
@@ -128,7 +131,7 @@ function UIController:Start()
 				local create_plot_connection
 
 				-- set up connections to the buttons
-				create_plot_connection = title_screen.CityLoader.ScrollingFrame.CreatePlot.MouseButton1Click:Connect(
+				create_plot_connection = title_screen.CityLoader.ScrollingFrame.CreatePlot.Activated:Connect(
 					function()
 						create_plot_connection:Disconnect()
 
@@ -167,12 +170,12 @@ function UIController:Start()
 			}):Play()
 
 			-- set up connections
-			trove:Connect(buildModeButtons.Close.MouseButton1Click, function()
+			trove:Connect(buildModeButtons.Close.Activated, function()
 				self:CloseFrame("PlacementScreen")
 				self:OpenFrame("MainHUDPrimaryButtons")
 			end)
 
-			trove:Connect(buildModeButtons.Delete.MouseButton1Click, function()
+			trove:Connect(buildModeButtons.Delete.Activated, function()
 				self:CloseFrame("PlacementScreen")
 				self:OpenFrame("DeleteStructureFrame")
 			end)
@@ -215,7 +218,7 @@ function UIController:Start()
 				PlacementController:DisableDeleteMode()
 			end
 
-			trove:Connect(deleteStructureFrame.Button.MouseButton1Click, closeDeleteStructureFrame)
+			trove:Connect(deleteStructureFrame.Button.Activated, closeDeleteStructureFrame)
 
 			trove:Connect(PlacementController.OnStructureDeleteDisabled, closeDeleteStructureFrame)
 
@@ -247,6 +250,17 @@ function UIController:Start()
 
 		-- Selection in Placement UI
 		local selectionFrame: CanvasGroup = placementScreen.Frame.Selections
+		local selectionListContainer = selectionFrame.ListContainer
+		local selectionBottomContainer = selectionListContainer.Container
+		local selectionScrollingFrame = selectionBottomContainer.ScrollingFrame
+
+		local function clearSelectionScrollingFrame()
+			for _, child in ipairs(selectionScrollingFrame:GetChildren()) do
+				if child:IsA("GuiObject") == true then
+					child:Destroy()
+				end
+			end
+		end
 
 		self:RegisterFrame("SelectionFrame", function(trove)
 			TweenService:Create(selectionFrame, TweenInfo.new(settFadeDuration), {
@@ -257,6 +271,47 @@ function UIController:Start()
 			TweenService:Create(selectionFrame.UIScale, TweenInfo.new(settFadeDuration), {
 				Scale = 1,
 			}):Play()
+
+			-- add the structure preview buttons to the scrolling frame
+			clearSelectionScrollingFrame()
+
+			-- get all structures
+			for structureCategory, structureCategoryList in pairs(StructureCollection) do
+				for _, structureData in ipairs(structureCategoryList) do
+					local structureButton = structureShopPreviewTemplate:Clone()
+					structureButton.Name = structureData.Name
+					structureButton.Label.Text = structureData.Name
+					structureButton.Parent = selectionScrollingFrame
+
+					-- set up the viewport frame
+					if structureData.Model then
+						local viewport = structureButton.Viewport
+
+						local clonedStructure = structureData.Model:Clone()
+						clonedStructure.Parent = viewport
+
+						local camera = Instance.new("Camera")
+						camera.Parent = viewport
+
+						viewport.CurrentCamera = camera
+
+						-- set up the camera to look at the model
+						local modelSize = clonedStructure.PrimaryPart.Size
+						local modelCenter = clonedStructure.PrimaryPart.Position + modelSize / 2
+
+						local cameraDistance = modelSize.Magnitude * 1.5
+						local cameraPosition = modelCenter + Vector3.new(0, cameraDistance, 0)
+
+						camera.CFrame = CFrame.new(cameraPosition, modelCenter)
+					end
+
+					trove:Add(structureButton)
+
+					trove:Connect(structureButton.Button.Activated, function()
+						PlacementController:StartPlacement(structureData.Name)
+					end)
+				end
+			end
 		end, function(trove)
 			TweenService:Create(selectionFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 1,
@@ -270,11 +325,9 @@ function UIController:Start()
 
 		-- Group the Selection and Build Mode
 		self:RegisterFrame("PlacementScreen", function(trove)
+			self:CloseFrame("all")
 			self:OpenFrame("SelectionFrame")
 			self:OpenFrame("BuildModeFrame")
-			self:CloseFrame({
-				"MainHUDPrimaryButtons",
-			})
 		end, function(trove)
 			self:CloseFrame({ "SelectionFrame", "BuildModeFrame" })
 		end)
@@ -296,8 +349,12 @@ function UIController:Start()
 				:Play()
 
 			-- set up connections
-			trove:Connect(mainHudPrimaryButtonsContainer.Build.MouseButton1Click, function()
+			trove:Connect(mainHudPrimaryButtonsContainer.Build.Activated, function()
 				self:OpenFrame("PlacementScreen")
+			end)
+
+			trove:Connect(mainHudPrimaryButtonsContainer.Stats.Activated, function()
+				self:ToggleFrame("StatsFrame")
 			end)
 		end, function(trove)
 			TweenService:Create(mainHudPrimaryButtonsContainer, TweenInfo.new(settFadeDuration), {
@@ -310,6 +367,31 @@ function UIController:Start()
 					Scale = 0.5,
 				})
 				:Play()
+		end)
+
+		-- Stats frame
+		local statsFrame: CanvasGroup = mainHudScreen.CityStats
+
+		self:RegisterFrame("StatsFrame", function(trove)
+			TweenService:Create(statsFrame, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 0,
+				Position = UDim2.fromScale(0.5, 0.5),
+				Visible = true,
+			}):Play()
+
+			TweenService:Create(statsFrame.UIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 1,
+			}):Play()
+		end, function(trove)
+			TweenService:Create(statsFrame, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 1,
+				Position = UDim2.fromScale(0.5, 0.9),
+				Visible = false,
+			}):Play()
+
+			TweenService:Create(statsFrame.UIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 0.5,
+			}):Play()
 		end)
 
 		-- Open the main HUD
@@ -359,6 +441,14 @@ function UIController:CloseFrame(name: string | { string })
 		return
 	end
 
+	if name == "all" then
+		for frame_name, _ in pairs(self._frames) do
+			self:CloseFrame(frame_name)
+		end
+
+		return
+	end
+
 	if type(name) == "table" then
 		for _, frame_name in ipairs(name) do
 			self:CloseFrame(frame_name)
@@ -383,6 +473,20 @@ function UIController:CloseFrame(name: string | { string })
 		frame.closeFunction(frame.cleanupTrove)
 		frame.cleanupTrove:Destroy()
 	end)()
+end
+
+function UIController:ToggleFrame(name: string)
+	local frame = self._frames[name]
+
+	if frame == nil then
+		return
+	end
+
+	if frame.isOpen == true then
+		self:CloseFrame(name)
+	else
+		self:OpenFrame(name)
+	end
 end
 
 return UIController

@@ -1150,7 +1150,7 @@ local function Reset(client: PlacementClient)
 	client._state:dispatch(CurrentRotChanged(false))
 	client._state:dispatch(RotationChanged(0))
 	client._state:dispatch(AmplitudeChanged(5))
-	client._state:dispatch(FloorHeightChanged(0))
+	--client._state:dispatch(FloorHeightChanged(0))
 
 	if hitbox ~= nil then
 		hitbox:Destroy()
@@ -1466,7 +1466,7 @@ function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings
 	assert(model.ClassName == "Model", "[PlacementClient] InitiatePlacement: Model must be a Model")
 	assert(model:IsA("Model"), "[PlacementClient] InitiatePlacement: Model must be a Model")
 
-	local state = self._state:getState()
+	local state: State = self._state:getState()
 
 	if state._current_state ~= 4 then
 		-- TERMINATE
