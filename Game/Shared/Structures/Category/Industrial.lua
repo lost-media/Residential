@@ -22,7 +22,7 @@ local SharedProperties = {
 	},
 	Price = 100,
 	GridUnit = 4,
-	AerialViewAngle = 45,
+	AerialViewAngle = 0,
 
 	Properties = {
 		Radius = 2, -- Tiles

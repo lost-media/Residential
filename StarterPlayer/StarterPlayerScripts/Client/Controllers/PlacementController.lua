@@ -104,32 +104,6 @@ function PlacementController:Start()
 			end
 		end)
 	end)
-
-	InputController:RegisterInputBegan("PlacementController", function(input, gameProcessed)
-		if gameProcessed == true then
-			return
-		end
-
-		if self._placement_client == nil then
-			return
-		end
-
-		if input.KeyCode == Enum.KeyCode.E then
-			self._structures_index = self._structures_index + 1
-			if self._structures_index > #StructuresList then
-				self._structures_index = 1
-			end
-			self:StopPlacement()
-			self:StartPlacement(StructuresList[self._structures_index])
-		elseif input.KeyCode == Enum.KeyCode.Q then
-			self._structures_index = self._structures_index - 1
-			if self._structures_index < 1 then
-				self._structures_index = #StructuresList
-			end
-			self:StopPlacement()
-			self:StartPlacement(StructuresList[self._structures_index])
-		end
-	end)
 end
 
 function PlacementController:StartPlacement(structureId: string)

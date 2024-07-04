@@ -22,20 +22,45 @@ local SharedProperties = {
 	},
 	Price = 100,
 	GridUnit = 4,
-	AerialViewAngle = 45,
-
-	Properties = {
-		Radius = 2, -- Tiles
-	},
+	AerialViewAngle = 0,
 }
 
 local Residences: StructureTypes.CityHallCollection = {
 	TableUtil.Reconcile({
-		Name = "Medieval House",
+		Name = "Medieval House 1",
 		UID = 0,
-		Id = "Residence/Medieval House",
+		Id = "Residence/Medieval House 1",
 		Description = "A medieval house",
-		Model = ResidenceFolder["Medieval House"],
+		Model = ResidenceFolder["Medieval House 1"],
+
+		Price = 15000,
+	}, SharedProperties),
+
+	TableUtil.Reconcile({
+		Name = "Medieval House 2",
+		UID = 1,
+		Id = "Residence/Medieval House 2",
+		Description = "A medieval house",
+		Model = ResidenceFolder["Medieval House 2"],
+		Price = 9500,
+	}, SharedProperties),
+
+	TableUtil.Reconcile({
+		Name = "Victorian House 1",
+		UID = 2,
+		Id = "Residence/Victorian House 1",
+		Description = "A Victorian house",
+		Model = ResidenceFolder["Victorian House 1"],
+		Price = 2500,
+	}, SharedProperties),
+
+	TableUtil.Reconcile({
+		Name = "Victorian House 2",
+		UID = 3,
+		Id = "Residence/Victorian House 2",
+		Description = "A Victorian house",
+		Model = ResidenceFolder["Victorian House 2"],
+		Price = 1000,
 	}, SharedProperties),
 }
 

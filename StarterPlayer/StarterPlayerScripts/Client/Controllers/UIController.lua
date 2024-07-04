@@ -32,6 +32,7 @@ local Signal = require(LMEngine.SharedDir.Signal)
 local Trove = require(LMEngine.SharedDir.Trove)
 
 local StructureCollection = require(LMEngine.Game.Shared.Structures)
+local StructureUtils = require(LMEngine.Game.Shared.Structures.Utils)
 
 local settFadeDuration = SETTINGS.FadeDuration
 
@@ -40,6 +41,7 @@ local UIController = LMEngine.CreateController({
 	Name = "UIController",
 
 	_frames = {},
+	_lastStructureCategory = "Residence",
 })
 
 ----- Private functions -----
@@ -253,6 +255,10 @@ function UIController:Start()
 		local selectionFrame: CanvasGroup = placementScreen.Frame.Selections
 		local selectionListContainer = selectionFrame.ListContainer
 		local selectionBottomContainer = selectionListContainer.Container
+		local selectionTopTitle = selectionBottomContainer.Top.Title
+
+		local selectionTabContainer = selectionFrame.TabContainer
+
 		local selectionScrollingFrame = selectionBottomContainer.ScrollingFrame
 
 		local function clearSelectionScrollingFrame()
@@ -280,13 +286,62 @@ function UIController:Start()
 			-- add the structure preview buttons to the scrolling frame
 			clearSelectionScrollingFrame()
 
-			-- get all structures
-			for structureCategory, structureCategoryList in pairs(StructureCollection) do
-				for _, structureData in ipairs(structureCategoryList) do
+			trove:Connect(
+				selectionScrollingFrame.UIGridLayout:GetPropertyChangedSignal("AbsoluteContentSize"),
+				function()
+					selectionScrollingFrame.CanvasSize = UDim2.new(
+						0,
+						0,
+						0,
+						selectionScrollingFrame.UIGridLayout.AbsoluteContentSize.Y + 16
+					)
+
+					-- restore the scrolling frame position
+					selectionScrollingFrame.CanvasPosition =
+						Vector2.new(0, self._selectionFrameScrollingFramePosition or 0)
+				end
+			)
+
+			local isRenderingCollection = false
+
+			trove:Connect(
+				selectionScrollingFrame:GetPropertyChangedSignal("CanvasPosition"),
+				function()
+					if isRenderingCollection == true then
+						return
+					end
+					self._selectionFrameScrollingFramePosition =
+						selectionScrollingFrame.CanvasPosition.Y
+				end
+			)
+
+			local function sortByPrice(collections: table)
+				table.sort(collections, function(a, b)
+					return a.Price < b.Price
+				end)
+			end
+
+			local function renderCollection(collection: table)
+				if isRenderingCollection == true then
+					return
+				end
+
+				isRenderingCollection = true
+
+				clearSelectionScrollingFrame()
+
+				-- get all structures
+				for _, structureData in pairs(collection) do
 					local structureButton = structureShopPreviewTemplate:Clone()
 					structureButton.Name = structureData.Name
 					structureButton.Label.Text = structureData.Name
 					structureButton.Parent = selectionScrollingFrame
+
+					structureButton.UIScale.Scale = 0.5
+
+					TweenService:Create(structureButton.UIScale, TweenInfo.new(settFadeDuration), {
+						Scale = 1,
+					}):Play()
 
 					-- set up the viewport frame
 					if structureData.Model then
@@ -317,10 +372,19 @@ function UIController:Start()
 						end
 
 						local angle = 0
-						local speed = 0.8
+
+						local viewportRotationSpeed = 0.8
+
+						trove:Connect(structureButton.MouseEnter, function()
+							viewportRotationSpeed = 0.4
+						end)
+
+						trove:Connect(structureButton.MouseLeave, function()
+							viewportRotationSpeed = 0.8
+						end)
 
 						trove:Connect(RunService.RenderStepped, function(deltaTime)
-							angle = angle + speed * deltaTime
+							angle = angle + viewportRotationSpeed * deltaTime
 							updateCameraPosition(angle)
 						end)
 					end
@@ -330,8 +394,43 @@ function UIController:Start()
 					trove:Connect(structureButton.Button.Activated, function()
 						PlacementController:StartPlacement(structureData.Id)
 					end)
+
+					task.wait(0.05)
+				end
+
+				isRenderingCollection = false
+
+				-- restore the scrolling frame position
+				--selectionScrollingFrame.CanvasPosition = Vector2.new(0, self._selectionFrameScrollingFramePosition or 0)
+			end
+
+			local function filterByStructureCategory(category: string)
+				local collection = StructureUtils.GetStructuresFromCategory(category)
+
+				if collection == nil then
+					return
+				end
+
+				self._lastStructureCategory = category
+				selectionTopTitle.Text = category
+
+				-- sort by price
+				sortByPrice(collection)
+
+				coroutine.wrap(function()
+					renderCollection(collection)
+				end)()
+			end
+
+			for _, tab in ipairs(selectionTabContainer:GetChildren()) do
+				if tab:IsA("GuiObject") == true then
+					trove:Connect(tab.Button.Activated, function()
+						filterByStructureCategory(tab.Name)
+					end)
 				end
 			end
+
+			filterByStructureCategory(self._lastStructureCategory or "Residence")
 		end, function(trove)
 			TweenService:Create(selectionFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 1,
