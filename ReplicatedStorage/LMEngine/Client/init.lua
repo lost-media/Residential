@@ -140,6 +140,9 @@ KnitClient.SharedDir = dir_Shared
 
 KnitClient.Game = dir_Game
 
+KnitClient.GameIsReplicated = false
+KnitClient.GameReplicated = Signal.new()
+
 ----- Private functions -----
 
 local function DoesControllerExist(controllerName: string): boolean
@@ -485,8 +488,42 @@ function KnitClient.NewScriptSignal()
 	return Signal.new()
 end
 
+function KnitClient.IsGameReplicated()
+	return KnitClient.GameIsReplicated
+end
+
+function KnitClient.SetGameReplicated()
+	KnitClient.GameIsReplicated = true
+	KnitClient.GameReplicated:Fire()
+end
+
+function KnitClient.GameLoaded()
+	if KnitClient.GameIsReplicated == false then
+		return Promise.fromEvent(KnitClient.GameReplicated, function()
+			return true
+		end)
+	else
+		return Promise.resolve()
+	end
+end
+
+function KnitClient.WaitForGameReplicatedAsync()
+	if KnitClient.GameIsReplicated == false then
+		return KnitClient.GameReplicated:Wait()
+	end
+end
+
 if modulesLoaded == false then
 	LoadModules()
 end
+
+coroutine.wrap(function()
+	if game:IsLoaded() == false then
+		game.Loaded:Wait()
+	end
+
+	KnitClient.GameIsReplicated = true
+	KnitClient.GameReplicated:Fire()
+end)()
 
 return KnitClient

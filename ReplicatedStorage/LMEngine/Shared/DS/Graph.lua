@@ -214,6 +214,9 @@ function Graph:GetNeighbors(node: Node): { Node }?
 	local neighbors = {}
 
 	for neighbor_id, _ in pairs(self._nodes[id]) do
+		if neighbor_id == id then
+			continue
+		end
 		table.insert(neighbors, self._nodes[neighbor_id])
 	end
 
@@ -239,6 +242,10 @@ end
 function Graph:HasEdge(node1: Node, node2: Node): boolean
 	local id1 = node1:GetId()
 	local id2 = node2:GetId()
+
+	if self._nodes[id1] :: any == nil or self._nodes[id2] :: any == nil then
+		return false
+	end
 
 	return self._nodes[id1][id2] ~= nil
 end

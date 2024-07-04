@@ -17,6 +17,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
+local DeleteStructure = require(LMEngine.Game.Shared.Placement.DeleteStructure)
 local PlacementClient = require(LMEngine.Game.Shared.Placement.PlacementClient2)
 ---@type PlacementClient
 --local PlacementClient = LMEngine.GetModule("PlacementClient")
@@ -31,11 +32,20 @@ local TroveObject = Trove.new()
 
 local StructuresUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
 
+---@class PlacementController
 local PlacementController = LMEngine.CreateController({
 	Name = "PlacementController",
 
 	_placement_client = nil,
+	_delete_structure_client = nil,
 	_structures_index = 1,
+
+	_state = nil,
+
+	-- Signals
+	PlacementBegan = Signal.new(),
+	OnStructureDeleteEnabled = Signal.new(),
+	OnStructureDeleteDisabled = Signal.new(),
 })
 
 local StructuresList = {
@@ -65,6 +75,7 @@ function PlacementController:Start()
 
 	plotPromise:andThen(function(plot)
 		self._placement_client = PlacementClient.new(plot)
+		self._delete_structure_client = DeleteStructure.new(plot)
 
 		self._placement_client.PlacementConfirmed:Connect(function(structure_id, cframe)
 			---@type Promise
@@ -83,8 +94,14 @@ function PlacementController:Start()
 				end)
 		end)
 
-		self._placement_client.DeleteStructure:Connect(function(structure: Model)
-			PlotService:DeleteStructure(structure)
+		self._placement_client.Cancelled:Connect(function()
+			self._state = nil
+			if self._openPlacementFrame == true then
+				---@type UIController
+				local UIController = LMEngine.GetController("UIController")
+
+				UIController:OpenFrame("SelectionFrame")
+			end
 		end)
 	end)
 
@@ -116,6 +133,15 @@ function PlacementController:Start()
 end
 
 function PlacementController:StartPlacement(structureId: string)
+	if self._state == "placing" then
+		return
+	end
+
+	-- check if the player is in delete mode, if so, disable it
+	if self._state == "deleting" then
+		self:DisableDeleteMode()
+	end
+
 	local structure = StructuresUtils.GetStructureFromId(structureId)
 	assert(structure ~= nil, "[PlacementController] StartPlacement: Structure not found")
 
@@ -156,14 +182,76 @@ function PlacementController:StartPlacement(structureId: string)
 		settings.radius = properties.Radius
 	end
 
+	self._state = "placing"
+
 	self._placement_client:UpdateGridUnit(grid_unit)
 	self._placement_client:InitiatePlacement(clone, settings)
+
+	---@type UIController
+	local UIController = LMEngine.GetController("UIController")
+
+	-- get the "SelectionFrame" UI open status
+	local selectionFrameOpen = UIController:IsFrameOpen("SelectionFrame")
+
+	if selectionFrameOpen == true then
+		self._openPlacementFrame = true
+	else
+		self._openPlacementFrame = false
+	end
+
+	self.PlacementBegan:Fire()
 end
 
 function PlacementController:StopPlacement()
+	if self._state ~= "placing" then
+		return
+	end
 	if self._placement_client ~= nil then
+		self._state = nil
 		self._placement_client:CancelPlacement()
 	end
+end
+
+function PlacementController:EnableDeleteMode()
+	if self._placement_client ~= nil then
+		if self._placement_client:IsPlacing() == true then
+			self:StopPlacement()
+		end
+	end
+
+	if self._delete_structure_client == nil then
+		return
+	end
+
+	self._state = "deleting"
+
+	self._delete_structure_client:Enable()
+
+	self.OnStructureDeleteEnabled:Fire()
+
+	local PlotService = LMEngine.GetService("PlotService")
+
+	-- Listen for structure deletion
+	self._delete_structure_client.OnStructureDeleted:Connect(function(structure)
+		PlotService:DeleteStructure(structure)
+		-- show toast message
+	end)
+end
+
+function PlacementController:DisableDeleteMode()
+	if self._state ~= "deleting" then
+		return
+	end
+
+	if self._delete_structure_client == nil then
+		return
+	end
+
+	self._state = nil
+
+	self._delete_structure_client:Disable()
+
+	self.OnStructureDeleteDisabled:Fire()
 end
 
 return PlacementController
