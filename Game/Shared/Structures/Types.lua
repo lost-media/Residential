@@ -41,6 +41,7 @@ export type Structure = {
 
 	Stacking: Stacked?,
 	GridUnit: number,
+	AerialViewAngle: number,
 
 	Properties: {
 		Radius: number?,

@@ -13,6 +13,7 @@ local SETTINGS = {
 
 ----- Private variables -----
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -272,6 +273,10 @@ function UIController:Start()
 				Scale = 1,
 			}):Play()
 
+			trove:Connect(PlacementController.PlacementBegan, function()
+				self:CloseFrame("SelectionFrame")
+			end)
+
 			-- add the structure preview buttons to the scrolling frame
 			clearSelectionScrollingFrame()
 
@@ -295,20 +300,35 @@ function UIController:Start()
 
 						viewport.CurrentCamera = camera
 
-						-- set up the camera to look at the model
-						local modelSize = clonedStructure.PrimaryPart.Size
-						local modelCenter = clonedStructure.PrimaryPart.Position + modelSize / 2
+						-- Calculate the object's bounding box
+						local modelCFrame, modelSize = clonedStructure:GetBoundingBox()
+						local modelCenter = modelCFrame.Position
 
-						local cameraDistance = modelSize.Magnitude * 1.5
-						local cameraPosition = modelCenter + Vector3.new(0, cameraDistance, 0)
+						-- Initial camera distance based on the model size
+						local cameraDistance = modelSize.Magnitude * 0.7
 
-						camera.CFrame = CFrame.new(cameraPosition, modelCenter)
+						local function updateCameraPosition(angle)
+							local x = math.sin(angle) * cameraDistance
+							local z = math.cos(angle) * cameraDistance
+							local aerialAngleRadians = math.rad(structureData.AerialViewAngle or 0)
+							local y = math.sin(aerialAngleRadians) * cameraDistance
+							local cameraPosition = modelCenter + Vector3.new(x, y, z)
+							camera.CFrame = CFrame.new(cameraPosition, modelCenter)
+						end
+
+						local angle = 0
+						local speed = 0.8
+
+						trove:Connect(RunService.RenderStepped, function(deltaTime)
+							angle = angle + speed * deltaTime
+							updateCameraPosition(angle)
+						end)
 					end
 
 					trove:Add(structureButton)
 
 					trove:Connect(structureButton.Button.Activated, function()
-						PlacementController:StartPlacement(structureData.Name)
+						PlacementController:StartPlacement(structureData.Id)
 					end)
 				end
 			end
@@ -487,6 +507,16 @@ function UIController:ToggleFrame(name: string)
 	else
 		self:OpenFrame(name)
 	end
+end
+
+function UIController:IsFrameOpen(name: string): boolean
+	local frame = self._frames[name]
+
+	if frame == nil then
+		return false
+	end
+
+	return frame.isOpen
 end
 
 return UIController

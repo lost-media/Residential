@@ -43,6 +43,7 @@ local PlacementController = LMEngine.CreateController({
 	_state = nil,
 
 	-- Signals
+	PlacementBegan = Signal.new(),
 	OnStructureDeleteEnabled = Signal.new(),
 	OnStructureDeleteDisabled = Signal.new(),
 })
@@ -91,6 +92,16 @@ function PlacementController:Start()
 					warn("[PlacementController] Failed to place structure: " .. err)
 					-- TODO: Handle error, show toast message
 				end)
+		end)
+
+		self._placement_client.Cancelled:Connect(function()
+			self._state = nil
+			if self._openPlacementFrame == true then
+				---@type UIController
+				local UIController = LMEngine.GetController("UIController")
+
+				UIController:OpenFrame("SelectionFrame")
+			end
 		end)
 	end)
 
@@ -175,6 +186,20 @@ function PlacementController:StartPlacement(structureId: string)
 
 	self._placement_client:UpdateGridUnit(grid_unit)
 	self._placement_client:InitiatePlacement(clone, settings)
+
+	---@type UIController
+	local UIController = LMEngine.GetController("UIController")
+
+	-- get the "SelectionFrame" UI open status
+	local selectionFrameOpen = UIController:IsFrameOpen("SelectionFrame")
+
+	if selectionFrameOpen == true then
+		self._openPlacementFrame = true
+	else
+		self._openPlacementFrame = false
+	end
+
+	self.PlacementBegan:Fire()
 end
 
 function PlacementController:StopPlacement()
