@@ -28,6 +28,7 @@ local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 local Player = LMEngine.Player
 local PlayerGui = Player.PlayerGui
 
+local NumberFormatter = require(LMEngine.SharedDir.NumberFormatter)
 local Signal = require(LMEngine.SharedDir.Signal)
 local Trove = require(LMEngine.SharedDir.Trove)
 
@@ -62,6 +63,11 @@ end
 
 function UIController:Start()
 	-- wait for the GUIs to load
+
+	---@type InputController
+	local InputController = LMEngine.GetController("InputController")
+	local mouse = InputController:GetMouse()
+
 	LMEngine.GameLoaded():andThen(function()
 		-- inside this promise, we don't need WaitForChild
 
@@ -283,6 +289,9 @@ function UIController:Start()
 				self:CloseFrame("SelectionFrame")
 			end)
 
+			-- retirve the players credit value
+			local playerCreditsPromise = DataService:GetPlayerCredits()
+
 			-- add the structure preview buttons to the scrolling frame
 			clearSelectionScrollingFrame()
 
@@ -338,6 +347,21 @@ function UIController:Start()
 					structureButton.Parent = selectionScrollingFrame
 
 					structureButton.UIScale.Scale = 0.5
+
+					structureButton.Price.Text = NumberFormatter.MonetaryFormat(structureData.Price)
+
+					playerCreditsPromise:andThen(function(playerCredits: number?)
+						playerCredits = 500
+						if playerCredits == nil then
+							return
+						end
+
+						if playerCredits < structureData.Price then
+							structureButton.Price.TextColor3 = Color3.fromRGB(255, 0, 0)
+						else
+							structureButton.Price.TextColor3 = Color3.fromRGB(0, 100, 0)
+						end
+					end)
 
 					TweenService:Create(structureButton.UIScale, TweenInfo.new(settFadeDuration), {
 						Scale = 1,
@@ -399,9 +423,6 @@ function UIController:Start()
 				end
 
 				isRenderingCollection = false
-
-				-- restore the scrolling frame position
-				--selectionScrollingFrame.CanvasPosition = Vector2.new(0, self._selectionFrameScrollingFramePosition or 0)
 			end
 
 			local function filterByStructureCategory(category: string)

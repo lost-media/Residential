@@ -4,20 +4,22 @@ local SETTINGS = {
 	Schema = {
 		UserId = -1,
 		PlotData = nil,
-		Coins = 0,
-		Gems = 0,
+		Credits = 0,
+		Roadbucks = 0,
 		Inventory = {},
 	},
 
 	FieldsToAdd = {
 		UserId = -1,
 		PlotData = nil,
-		Coins = 0,
-		Gems = 0,
+		Credits = 0,
+		Roadbucks = 0,
 		Inventory = {},
 	},
 
-	FieldsToRemove = {},
+	FieldsToRemove = {
+		"Coins",
+	},
 	FieldsToMove = {},
 }
 ----- Private variables -----

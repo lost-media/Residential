@@ -73,19 +73,6 @@ local Roads: StructureTypes.RoadCollection = {
 		Description = "A curved road",
 		Model = RoadFolder["Dead End"],
 	}, SharedProperties),
-
-	["Streetlight"] = TableUtil.Reconcile({
-		Name = "Streetlight",
-		UID = 6,
-		Id = "Road/Streetlight",
-		Description = "A normal streetlight",
-		Model = RoadFolder["Streetlight"],
-		GridUnit = 0.25,
-
-		Stacking = {
-			Allowed = true,
-		},
-	}, SharedProperties),
 }
 
 return Roads

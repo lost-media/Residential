@@ -27,7 +27,7 @@ local SETTINGS = {
 
 	PlotProfileMigrations = {
 		[1] = require(script.Migrations.PlotProfile.Migration_001),
-		[2] = require(script.Migrations.PlotProfile.Migration_002),
+		--[2] = require(script.Migrations.PlotProfile.Migration_002),
 	},
 }
 
