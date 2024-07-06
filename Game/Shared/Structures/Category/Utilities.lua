@@ -10,10 +10,10 @@ local TableUtil = require(dir_Utils.TableUtil)
 local StructureTypes = require(script.Parent.Parent.Types)
 
 local StructureFolder: Folder = ReplicatedStorage.Structures
-local IndustrialFolder: Folder = StructureFolder.Industrial
+local UtilitiesFolder: Folder = StructureFolder.Utilities
 
 local SharedProperties = {
-	Category = "Industrial",
+	Category = "Utility",
 	BuildTime = 0,
 	FullArea = true,
 	IsABuilding = true,
@@ -33,9 +33,9 @@ local Industrials: StructureTypes.IndustrialCollection = {
 	TableUtil.Reconcile({
 		Name = "Water Tower",
 		UID = 0,
-		Id = "Industrial/Water Tower",
+		Id = "Utilities/Water Tower",
 		Description = "A normal road",
-		Model = IndustrialFolder["Water Tower"],
+		Model = UtilitiesFolder["Water Tower"],
 	}, SharedProperties),
 }
 

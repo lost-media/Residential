@@ -182,11 +182,26 @@ function UIController:Start()
 			trove:Connect(buildModeButtons.Close.Activated, function()
 				self:CloseFrame("PlacementScreen")
 				self:OpenFrame("MainHUDPrimaryButtons")
+
+				PlacementController:StopPlacement()
+				PlacementController:DisableDeleteMode()
 			end)
 
 			trove:Connect(buildModeButtons.Delete.Activated, function()
 				self:CloseFrame("PlacementScreen")
 				self:OpenFrame("DeleteStructureFrame")
+			end)
+
+			local playerCreditsPromise = DataService:GetPlayerCredits()
+
+			playerCreditsPromise:andThen(function(playerCredits: number?)
+				if playerCredits == nil then
+					return
+				end
+
+				local creditsLabel = buildModeContainer.CreditsDisplay.Label
+
+				creditsLabel.Text = NumberFormatter.MonetaryFormat(playerCredits)
 			end)
 		end, function(trove)
 			TweenService:Create(buildModeFrame, TweenInfo.new(settFadeDuration), {
@@ -330,7 +345,11 @@ function UIController:Start()
 				end)
 			end
 
-			local function renderCollection(collection: table)
+			-- render the collection of structures
+			-- @param collection: table
+			-- @param highlightedStructureId: string? (useful for quests
+			-- where the player needs to select a certain structure)
+			local function renderCollection(collection: table, highlightedStructureId: string?)
 				if isRenderingCollection == true then
 					return
 				end
@@ -339,90 +358,126 @@ function UIController:Start()
 
 				clearSelectionScrollingFrame()
 
-				-- get all structures
-				for _, structureData in pairs(collection) do
-					local structureButton = structureShopPreviewTemplate:Clone()
-					structureButton.Name = structureData.Name
-					structureButton.Label.Text = structureData.Name
-					structureButton.Parent = selectionScrollingFrame
+				local function getTweenInfo(i: number)
+					return TweenInfo.new(
+						settFadeDuration,
+						Enum.EasingStyle.Quad,
+						Enum.EasingDirection.Out,
+						0,
+						false,
+						i / 25
+					)
+				end
 
-					structureButton.UIScale.Scale = 0.5
+				playerCreditsPromise:andThen(function(playerCredits: number?)
+					-- get all structures
+					for i, structureData in pairs(collection) do
+						local structureButton = structureShopPreviewTemplate:Clone()
+						structureButton.Name = structureData.Name
+						structureButton.Label.Text = structureData.Name
+						structureButton.Parent = selectionScrollingFrame
 
-					structureButton.Price.Text = NumberFormatter.MonetaryFormat(structureData.Price)
+						structureButton.UIScale.Scale = 0.5
 
-					playerCreditsPromise:andThen(function(playerCredits: number?)
-						playerCredits = 500
-						if playerCredits == nil then
-							return
-						end
+						structureButton.Price.Text =
+							NumberFormatter.MonetaryFormat(structureData.Price)
 
-						if playerCredits < structureData.Price then
-							structureButton.Price.TextColor3 = Color3.fromRGB(255, 0, 0)
+						if playerCredits ~= nil then
+							if playerCredits < structureData.Price then
+								structureButton.Price.TextColor3 = Color3.fromRGB(255, 0, 0)
+							else
+								structureButton.Price.TextColor3 = Color3.fromRGB(0, 100, 0)
+							end
 						else
-							structureButton.Price.TextColor3 = Color3.fromRGB(0, 100, 0)
-						end
-					end)
-
-					TweenService:Create(structureButton.UIScale, TweenInfo.new(settFadeDuration), {
-						Scale = 1,
-					}):Play()
-
-					-- set up the viewport frame
-					if structureData.Model then
-						local viewport = structureButton.Viewport
-
-						local clonedStructure = structureData.Model:Clone()
-						clonedStructure.Parent = viewport
-
-						local camera = Instance.new("Camera")
-						camera.Parent = viewport
-
-						viewport.CurrentCamera = camera
-
-						-- Calculate the object's bounding box
-						local modelCFrame, modelSize = clonedStructure:GetBoundingBox()
-						local modelCenter = modelCFrame.Position
-
-						-- Initial camera distance based on the model size
-						local cameraDistance = modelSize.Magnitude * 0.7
-
-						local function updateCameraPosition(angle)
-							local x = math.sin(angle) * cameraDistance
-							local z = math.cos(angle) * cameraDistance
-							local aerialAngleRadians = math.rad(structureData.AerialViewAngle or 0)
-							local y = math.sin(aerialAngleRadians) * cameraDistance
-							local cameraPosition = modelCenter + Vector3.new(x, y, z)
-							camera.CFrame = CFrame.new(cameraPosition, modelCenter)
+							structureButton.Price.TextColor3 = Color3.fromRGB(0, 0, 0)
 						end
 
-						local angle = 0
+						structureButton.UIScale.Scale = 0.5
+						structureButton.GroupTransparency = 1
 
-						local viewportRotationSpeed = 0.8
+						TweenService:Create(structureButton, getTweenInfo(i), {
+							GroupTransparency = 0,
+							Visible = true,
+						}):Play()
 
-						trove:Connect(structureButton.MouseEnter, function()
-							viewportRotationSpeed = 0.4
-						end)
+						TweenService:Create(structureButton.UIScale, getTweenInfo(i), {
+							Scale = 1,
+						}):Play()
 
-						trove:Connect(structureButton.MouseLeave, function()
-							viewportRotationSpeed = 0.8
-						end)
+						if
+							highlightedStructureId ~= nil
+							and highlightedStructureId ~= structureData.Id
+						then
+							structureButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+							structureButton.Label.TextColor3 = Color3.fromRGB(100, 100, 100)
+							structureButton.Button.Visible = false
+						end
 
-						trove:Connect(RunService.RenderStepped, function(deltaTime)
-							angle = angle + viewportRotationSpeed * deltaTime
-							updateCameraPosition(angle)
+						-- set up the viewport frame
+						if structureData.Model then
+							local viewport = structureButton.Viewport
+
+							local clonedStructure = structureData.Model:Clone()
+							clonedStructure.Parent = viewport
+
+							local camera = Instance.new("Camera")
+							camera.Parent = viewport
+
+							viewport.CurrentCamera = camera
+
+							-- Calculate the object's bounding box
+							local modelCFrame, modelSize = clonedStructure:GetBoundingBox()
+							local modelCenter = modelCFrame.Position
+
+							-- Initial camera distance based on the model size
+							local cameraDistance = modelSize.Magnitude * 0.7
+
+							local function updateCameraPosition(angle)
+								local x = math.sin(angle) * cameraDistance
+								local z = math.cos(angle) * cameraDistance
+								local aerialAngleRadians =
+									math.rad(structureData.AerialViewAngle or 0)
+								local y = math.sin(aerialAngleRadians) * cameraDistance
+								local cameraPosition = modelCenter + Vector3.new(x, y, z)
+								camera.CFrame = CFrame.new(cameraPosition, modelCenter)
+							end
+
+							local angle = 0
+
+							local viewportRotationSpeed = 0.8
+
+							trove:Connect(structureButton.MouseEnter, function()
+								viewportRotationSpeed = 0.4
+
+								TweenService:Create(structureButton.UIStroke, TweenInfo.new(0.1), {
+									Transparency = 0.3,
+								}):Play()
+							end)
+
+							trove:Connect(structureButton.MouseLeave, function()
+								viewportRotationSpeed = 0.8
+
+								-- update the stoke color
+								TweenService:Create(structureButton.UIStroke, TweenInfo.new(0.1), {
+									Transparency = 0.9,
+								}):Play()
+							end)
+
+							trove:Connect(RunService.RenderStepped, function(deltaTime)
+								angle = angle + viewportRotationSpeed * deltaTime
+								updateCameraPosition(angle)
+							end)
+						end
+
+						trove:Add(structureButton)
+
+						trove:Connect(structureButton.Button.Activated, function()
+							PlacementController:StartPlacement(structureData.Id)
 						end)
 					end
 
-					trove:Add(structureButton)
-
-					trove:Connect(structureButton.Button.Activated, function()
-						PlacementController:StartPlacement(structureData.Id)
-					end)
-
-					task.wait(0.05)
-				end
-
-				isRenderingCollection = false
+					isRenderingCollection = false
+				end)
 			end
 
 			local function filterByStructureCategory(category: string)
@@ -439,7 +494,7 @@ function UIController:Start()
 				sortByPrice(collection)
 
 				coroutine.wrap(function()
-					renderCollection(collection)
+					renderCollection(collection, nil)
 				end)()
 			end
 

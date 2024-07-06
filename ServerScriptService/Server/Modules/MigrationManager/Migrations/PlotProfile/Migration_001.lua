@@ -7,6 +7,9 @@ local SETTINGS = {
 		Credits = 0,
 		Roadbucks = 0,
 		Inventory = {},
+
+		Quests = {},
+		CompletedQuests = {},
 	},
 
 	FieldsToAdd = {
@@ -15,6 +18,9 @@ local SETTINGS = {
 		Credits = 0,
 		Roadbucks = 0,
 		Inventory = {},
+
+		Quests = {},
+		CompletedQuests = {},
 	},
 
 	FieldsToRemove = {

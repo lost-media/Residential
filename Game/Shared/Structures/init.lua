@@ -44,28 +44,20 @@
             }
 --]]
 
-local RS = game:GetService("ReplicatedStorage")
-
 local StructureTypes = require(script.Types)
 
 local StructureCategoryFolder = script.Category
 
-local StructuresFolder = RS.Structures
-local Road: Folder = StructuresFolder.Road
-local Industrial: Folder = StructuresFolder.Industrial
-local Residence: Folder = StructuresFolder.Residence
-local Commercial: Folder = StructuresFolder.Commercial
-
 local CityHallCategory = require(StructureCategoryFolder.CityHall)
 local DecorationsCategory = require(StructureCategoryFolder.Decorations)
-local IndustrialCategory = require(StructureCategoryFolder.Industrial)
+local IndustrialCategory = require(StructureCategoryFolder.Utilities)
 local ResidenceCategory = require(StructureCategoryFolder.Residence)
 local RoadCategory = require(StructureCategoryFolder.Road)
 
 local Structures: StructureTypes.StructureCollection = {
 	["Residence"] = ResidenceCategory,
 	["Roads"] = RoadCategory,
-	["Utility"] = IndustrialCategory,
+	["Utilities"] = IndustrialCategory,
 	["City Hall"] = CityHallCategory,
 	["Decorations"] = DecorationsCategory,
 } :: StructureTypes.StructureCollection

@@ -150,6 +150,11 @@ function DataService:Start()
 	PlayerService:RegisterPlayerRemoved(function(player)
 		local profile = self._profiles[player]
 
+		if profile == nil then
+			warn("[DataService]: Player does not have a profile")
+			return
+		end
+
 		local last_plot_id_used = profile.Data.LastPlotIdUsed
 
 		if profile ~= nil then

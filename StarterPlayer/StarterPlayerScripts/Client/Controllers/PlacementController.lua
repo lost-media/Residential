@@ -95,13 +95,14 @@ function PlacementController:Start()
 		end)
 
 		self._placement_client.Cancelled:Connect(function()
-			self._state = nil
-			if self._openPlacementFrame == true then
+			if self._openPlacementFrame == true and self._state ~= nil then
 				---@type UIController
 				local UIController = LMEngine.GetController("UIController")
 
 				UIController:OpenFrame("SelectionFrame")
 			end
+
+			self._state = nil
 		end)
 	end)
 end
@@ -165,7 +166,7 @@ function PlacementController:StartPlacement(structureId: string)
 	local UIController = LMEngine.GetController("UIController")
 
 	-- get the "SelectionFrame" UI open status
-	local selectionFrameOpen = UIController:IsFrameOpen("SelectionFrame")
+	local selectionFrameOpen = UIController:IsFrameOpen("BuildModeFrame")
 
 	if selectionFrameOpen == true then
 		self._openPlacementFrame = true
