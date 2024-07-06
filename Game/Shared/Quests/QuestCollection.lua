@@ -7,11 +7,18 @@ for _, quest in ipairs(dirQuestList:GetChildren()) do
 		continue
 	end
 
-	if QuestCollection[quest.Name] ~= nil then
-		warn("[QuestCollection] Duplicate quest name: " .. quest.Name)
+	local questData = require(quest)
+
+	if questData.Name == nil then
+		warn("[QuestCollection] Quest name is nil")
 		continue
 	end
-	QuestCollection[quest.Name] = require(quest)
+
+	if QuestCollection[questData.Name] ~= nil then
+		warn("[QuestCollection] Duplicate quest name: " .. questData.Name)
+		continue
+	end
+	QuestCollection[questData.Name] = questData
 end
 
 return QuestCollection

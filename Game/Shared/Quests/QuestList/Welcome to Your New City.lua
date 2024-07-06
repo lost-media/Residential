@@ -141,15 +141,12 @@ return {
 
 		[7] = {
 			Narrative = "Great job! Now let's connect our city with roads.",
-			Objective = "Place a grocery store.",
-			Hint = "Select a business from the businesses menu and place it on your plot.",
+			Objective = "Connect all buildings with roads.",
+			Hint = "Each building should be connected to the road network that leads to the City Hall.",
 			CanSkip = false,
 			Action = {
-				Type = "Build",
-				Structure = "Business/Grocery Store",
-				Amount = 1,
-
-				Accumulative = false,
+				Type = "Connect",
+				Accumulative = true,
 			},
 
 			Rewards = {
