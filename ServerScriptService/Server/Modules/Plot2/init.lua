@@ -373,6 +373,45 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 	return true
 end
 
+function Plot:MoveStructure(structure: Model, cframe: CFrame)
+	assert(structure ~= nil, "[PlotService] MoveStructure: Structure is nil")
+	assert(
+		structure.Parent == self._plot_model.Structures,
+		"[PlotService] MoveStructure: Structure is not a child of the plot"
+	)
+
+	local collisions = GetCollisions(structure:GetAttribute("Id"))
+
+	local cloneTest = structure:Clone()
+	cloneTest.PrimaryPart.CanCollide = false
+	cloneTest:PivotTo(cframe)
+
+	--structure.PrimaryPart.CanCollide = false
+	--structure:PivotTo(cframe)
+
+	local platform = self._plot_model:FindFirstChild("Platform")
+
+	if CheckBoundaries(platform, cloneTest.PrimaryPart) == true then
+		return false
+	end
+
+	local can_place = HandleCollisions(self._player.Character, cloneTest, collisions, self)
+
+	if can_place == false then
+		return false
+	end
+
+	if cloneTest.PrimaryPart == nil then
+		warn("[Plot] Structure does not have a primary part")
+		return false
+	end
+
+	-- at this point, the structure can be moved to the new cframe
+	cloneTest:Destroy()
+
+	structure:PivotTo(cframe)
+end
+
 function Plot:GetPlaceable(model: Model)
 	local parent = model.Parent
 

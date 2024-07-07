@@ -21,6 +21,16 @@ for structureType, structureCategory in pairs(StructuresCollection) do
 	end
 end
 
+function StructuresUtils.GetStructuresFromCategory(category: string): { StructuresTypes.Structure }?
+	if StructuresCollection[category] == nil then
+		return
+	end
+
+	local structures: { StructuresTypes.Structure } = StructuresCollection[category]
+
+	return structures
+end
+
 function StructuresUtils.ParseStructureId(structureId: string)
 	local split = string.split(structureId, "/")
 

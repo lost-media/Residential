@@ -78,6 +78,8 @@ local DataService = LMEngine.CreateService({
 		CreatePlot = LMEngine.CreateSignal(),
 		LoadPlot = LMEngine.CreateSignal(),
 		PlayerPlotsLoaded = LMEngine.CreateSignal(),
+
+		GetPlayerCredits = LMEngine.CreateSignal(),
 	},
 
 	---@type table<Player, any>
@@ -148,6 +150,11 @@ function DataService:Start()
 	PlayerService:RegisterPlayerRemoved(function(player)
 		local profile = self._profiles[player]
 
+		if profile == nil then
+			warn("[DataService]: Player does not have a profile")
+			return
+		end
+
 		local last_plot_id_used = profile.Data.LastPlotIdUsed
 
 		if profile ~= nil then
@@ -163,6 +170,36 @@ function DataService:Start()
 			end
 		end
 	end, "LOW")
+end
+
+function DataService:GetPlayerCredits(player: Player)
+	local profile = self._profiles[player]
+
+	if profile == nil then
+		warn("[DataService]: Player does not have a profile")
+		return
+	end
+
+	-- find the players plot
+	local plot_uuid = profile.Data.LastPlotIdUsed
+
+	if plot_uuid == nil then
+		warn("[DataService]: Player does not have a plot")
+		return
+	end
+
+	local plot_profile = self._plots[plot_uuid]
+
+	if plot_profile == nil then
+		warn("[DataService]: Player does not have a plot")
+		return
+	end
+
+	return plot_profile.Data.Credits
+end
+
+function DataService.Client:GetPlayerCredits(player: Player)
+	return self.Server:GetPlayerCredits(player)
 end
 
 function DataService:LoadPlot(player: Player, plot_uuid: string)
@@ -196,6 +233,8 @@ function DataService:LoadPlot(player: Player, plot_uuid: string)
 			plot_profile:Release()
 			self._plots[plot_uuid] = nil
 		end
+
+		plot_profile.Data.Version = 0
 
 		-- Migrate the plot profile
 		plot_profile = MigrationManager.MigratePlotProfile(player, plot_profile)

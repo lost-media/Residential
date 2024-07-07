@@ -311,4 +311,40 @@ function PlotService.Client:DeleteStructure(player: Player, structure: Model)
 	self.Server:DeleteStructure(player, structure)
 end
 
+function PlotService:MoveStructure(player: Player, structure: Model, cframe: CFrame)
+	assert(player ~= nil, "[PlotService] MoveStructure: Player is nil")
+	assert(structure ~= nil, "[PlotService] MoveStructure: Structure is nil")
+	assert(cframe ~= nil, "[PlotService] MoveStructure: CFrame is nil")
+
+	local plot = self._players[player]
+	assert(plot, "[PlotService] MoveStructure: Player does not have a plot assigned")
+
+	local success, err = pcall(function()
+		-- Create the structure
+
+		local moveSuccessful = plot:MoveStructure(structure, cframe)
+
+		return moveSuccessful
+	end)
+
+	if success ~= true then
+		warn("[PlotService] Failed to move structure: " .. err)
+		return false
+	end
+
+	return err
+end
+
+function PlotService.Client:MoveStructure(player: Player, structure: Model, cframe: CFrame): boolean
+	-- Rate limit the function
+	assert(
+		PlotServiceRateLimiter:CheckRate(player) == true,
+		"[PlotService] MoveStructure: Rate limited"
+	)
+	assert(structure ~= nil, "[PlotService] MoveStructure: Structure is nil")
+	assert(cframe ~= nil, "[PlotService] MoveStructure: CFrame is nil")
+
+	return self.Server:MoveStructure(player, structure, cframe) :: boolean
+end
+
 return PlotService

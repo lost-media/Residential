@@ -28,10 +28,12 @@ local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 local Player = LMEngine.Player
 local PlayerGui = Player.PlayerGui
 
+local NumberFormatter = require(LMEngine.SharedDir.NumberFormatter)
 local Signal = require(LMEngine.SharedDir.Signal)
 local Trove = require(LMEngine.SharedDir.Trove)
 
 local StructureCollection = require(LMEngine.Game.Shared.Structures)
+local StructureUtils = require(LMEngine.Game.Shared.Structures.Utils)
 
 local settFadeDuration = SETTINGS.FadeDuration
 
@@ -40,6 +42,7 @@ local UIController = LMEngine.CreateController({
 	Name = "UIController",
 
 	_frames = {},
+	_lastStructureCategory = "Residence",
 })
 
 ----- Private functions -----
@@ -60,6 +63,11 @@ end
 
 function UIController:Start()
 	-- wait for the GUIs to load
+
+	---@type InputController
+	local InputController = LMEngine.GetController("InputController")
+	local mouse = InputController:GetMouse()
+
 	LMEngine.GameLoaded():andThen(function()
 		-- inside this promise, we don't need WaitForChild
 
@@ -174,11 +182,26 @@ function UIController:Start()
 			trove:Connect(buildModeButtons.Close.Activated, function()
 				self:CloseFrame("PlacementScreen")
 				self:OpenFrame("MainHUDPrimaryButtons")
+
+				PlacementController:StopPlacement()
+				PlacementController:DisableDeleteMode()
 			end)
 
 			trove:Connect(buildModeButtons.Delete.Activated, function()
 				self:CloseFrame("PlacementScreen")
 				self:OpenFrame("DeleteStructureFrame")
+			end)
+
+			local playerCreditsPromise = DataService:GetPlayerCredits()
+
+			playerCreditsPromise:andThen(function(playerCredits: number?)
+				if playerCredits == nil then
+					return
+				end
+
+				local creditsLabel = buildModeContainer.CreditsDisplay.Label
+
+				creditsLabel.Text = NumberFormatter.MonetaryFormat(playerCredits)
 			end)
 		end, function(trove)
 			TweenService:Create(buildModeFrame, TweenInfo.new(settFadeDuration), {
@@ -253,6 +276,10 @@ function UIController:Start()
 		local selectionFrame: CanvasGroup = placementScreen.Frame.Selections
 		local selectionListContainer = selectionFrame.ListContainer
 		local selectionBottomContainer = selectionListContainer.Container
+		local selectionTopTitle = selectionBottomContainer.Top.Title
+
+		local selectionTabContainer = selectionFrame.TabContainer
+
 		local selectionScrollingFrame = selectionBottomContainer.ScrollingFrame
 
 		local function clearSelectionScrollingFrame()
@@ -277,61 +304,209 @@ function UIController:Start()
 				self:CloseFrame("SelectionFrame")
 			end)
 
+			-- retirve the players credit value
+			local playerCreditsPromise = DataService:GetPlayerCredits()
+
 			-- add the structure preview buttons to the scrolling frame
 			clearSelectionScrollingFrame()
 
-			-- get all structures
-			for structureCategory, structureCategoryList in pairs(StructureCollection) do
-				for _, structureData in ipairs(structureCategoryList) do
-					local structureButton = structureShopPreviewTemplate:Clone()
-					structureButton.Name = structureData.Name
-					structureButton.Label.Text = structureData.Name
-					structureButton.Parent = selectionScrollingFrame
+			trove:Connect(
+				selectionScrollingFrame.UIGridLayout:GetPropertyChangedSignal("AbsoluteContentSize"),
+				function()
+					selectionScrollingFrame.CanvasSize = UDim2.new(
+						0,
+						0,
+						0,
+						selectionScrollingFrame.UIGridLayout.AbsoluteContentSize.Y + 16
+					)
 
-					-- set up the viewport frame
-					if structureData.Model then
-						local viewport = structureButton.Viewport
+					-- restore the scrolling frame position
+					selectionScrollingFrame.CanvasPosition =
+						Vector2.new(0, self._selectionFrameScrollingFramePosition or 0)
+				end
+			)
 
-						local clonedStructure = structureData.Model:Clone()
-						clonedStructure.Parent = viewport
+			local isRenderingCollection = false
 
-						local camera = Instance.new("Camera")
-						camera.Parent = viewport
+			trove:Connect(
+				selectionScrollingFrame:GetPropertyChangedSignal("CanvasPosition"),
+				function()
+					if isRenderingCollection == true then
+						return
+					end
+					self._selectionFrameScrollingFramePosition =
+						selectionScrollingFrame.CanvasPosition.Y
+				end
+			)
 
-						viewport.CurrentCamera = camera
+			local function sortByPrice(collections: table)
+				table.sort(collections, function(a, b)
+					return a.Price < b.Price
+				end)
+			end
 
-						-- Calculate the object's bounding box
-						local modelCFrame, modelSize = clonedStructure:GetBoundingBox()
-						local modelCenter = modelCFrame.Position
+			-- render the collection of structures
+			-- @param collection: table
+			-- @param highlightedStructureId: string? (useful for quests
+			-- where the player needs to select a certain structure)
+			local function renderCollection(collection: table, highlightedStructureId: string?)
+				if isRenderingCollection == true then
+					return
+				end
 
-						-- Initial camera distance based on the model size
-						local cameraDistance = modelSize.Magnitude * 0.7
+				isRenderingCollection = true
 
-						local function updateCameraPosition(angle)
-							local x = math.sin(angle) * cameraDistance
-							local z = math.cos(angle) * cameraDistance
-							local aerialAngleRadians = math.rad(structureData.AerialViewAngle or 0)
-							local y = math.sin(aerialAngleRadians) * cameraDistance
-							local cameraPosition = modelCenter + Vector3.new(x, y, z)
-							camera.CFrame = CFrame.new(cameraPosition, modelCenter)
+				clearSelectionScrollingFrame()
+
+				local function getTweenInfo(i: number)
+					return TweenInfo.new(
+						settFadeDuration,
+						Enum.EasingStyle.Quad,
+						Enum.EasingDirection.Out,
+						0,
+						false,
+						i / 25
+					)
+				end
+
+				playerCreditsPromise:andThen(function(playerCredits: number?)
+					-- get all structures
+					for i, structureData in pairs(collection) do
+						local structureButton = structureShopPreviewTemplate:Clone()
+						structureButton.Name = structureData.Name
+						structureButton.Label.Text = structureData.Name
+						structureButton.Parent = selectionScrollingFrame
+
+						structureButton.UIScale.Scale = 0.5
+
+						structureButton.Price.Text =
+							NumberFormatter.MonetaryFormat(structureData.Price)
+
+						if playerCredits ~= nil then
+							if playerCredits < structureData.Price then
+								structureButton.Price.TextColor3 = Color3.fromRGB(255, 0, 0)
+							else
+								structureButton.Price.TextColor3 = Color3.fromRGB(0, 100, 0)
+							end
+						else
+							structureButton.Price.TextColor3 = Color3.fromRGB(0, 0, 0)
 						end
 
-						local angle = 0
-						local speed = 0.8
+						structureButton.UIScale.Scale = 0.5
+						structureButton.GroupTransparency = 1
 
-						trove:Connect(RunService.RenderStepped, function(deltaTime)
-							angle = angle + speed * deltaTime
-							updateCameraPosition(angle)
+						TweenService:Create(structureButton, getTweenInfo(i), {
+							GroupTransparency = 0,
+							Visible = true,
+						}):Play()
+
+						TweenService:Create(structureButton.UIScale, getTweenInfo(i), {
+							Scale = 1,
+						}):Play()
+
+						if
+							highlightedStructureId ~= nil
+							and highlightedStructureId ~= structureData.Id
+						then
+							structureButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+							structureButton.Label.TextColor3 = Color3.fromRGB(100, 100, 100)
+							structureButton.Button.Visible = false
+						end
+
+						-- set up the viewport frame
+						if structureData.Model then
+							local viewport = structureButton.Viewport
+
+							local clonedStructure = structureData.Model:Clone()
+							clonedStructure.Parent = viewport
+
+							local camera = Instance.new("Camera")
+							camera.Parent = viewport
+
+							viewport.CurrentCamera = camera
+
+							-- Calculate the object's bounding box
+							local modelCFrame, modelSize = clonedStructure:GetBoundingBox()
+							local modelCenter = modelCFrame.Position
+
+							-- Initial camera distance based on the model size
+							local cameraDistance = modelSize.Magnitude * 0.7
+
+							local function updateCameraPosition(angle)
+								local x = math.sin(angle) * cameraDistance
+								local z = math.cos(angle) * cameraDistance
+								local aerialAngleRadians =
+									math.rad(structureData.AerialViewAngle or 0)
+								local y = math.sin(aerialAngleRadians) * cameraDistance
+								local cameraPosition = modelCenter + Vector3.new(x, y, z)
+								camera.CFrame = CFrame.new(cameraPosition, modelCenter)
+							end
+
+							local angle = 0
+
+							local viewportRotationSpeed = 0.8
+
+							trove:Connect(structureButton.MouseEnter, function()
+								viewportRotationSpeed = 0.4
+
+								TweenService:Create(structureButton.UIStroke, TweenInfo.new(0.1), {
+									Transparency = 0.3,
+								}):Play()
+							end)
+
+							trove:Connect(structureButton.MouseLeave, function()
+								viewportRotationSpeed = 0.8
+
+								-- update the stoke color
+								TweenService:Create(structureButton.UIStroke, TweenInfo.new(0.1), {
+									Transparency = 0.9,
+								}):Play()
+							end)
+
+							trove:Connect(RunService.RenderStepped, function(deltaTime)
+								angle = angle + viewportRotationSpeed * deltaTime
+								updateCameraPosition(angle)
+							end)
+						end
+
+						trove:Add(structureButton)
+
+						trove:Connect(structureButton.Button.Activated, function()
+							PlacementController:StartPlacement(structureData.Id)
 						end)
 					end
 
-					trove:Add(structureButton)
+					isRenderingCollection = false
+				end)
+			end
 
-					trove:Connect(structureButton.Button.Activated, function()
-						PlacementController:StartPlacement(structureData.Id)
+			local function filterByStructureCategory(category: string)
+				local collection = StructureUtils.GetStructuresFromCategory(category)
+
+				if collection == nil then
+					return
+				end
+
+				self._lastStructureCategory = category
+				selectionTopTitle.Text = category
+
+				-- sort by price
+				sortByPrice(collection)
+
+				coroutine.wrap(function()
+					renderCollection(collection, nil)
+				end)()
+			end
+
+			for _, tab in ipairs(selectionTabContainer:GetChildren()) do
+				if tab:IsA("GuiObject") == true then
+					trove:Connect(tab.Button.Activated, function()
+						filterByStructureCategory(tab.Name)
 					end)
 				end
 			end
+
+			filterByStructureCategory(self._lastStructureCategory or "Residence")
 		end, function(trove)
 			TweenService:Create(selectionFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 1,

@@ -31,6 +31,8 @@ export type IPlot = {
 	GetRoads: (self: Plot) -> { [number]: Model },
 
 	PlaceStructure: (self: Plot, structure: Model, cframe: CFrame) -> boolean,
+	MoveStructure: (self: Plot, structure: Model, cframe: CFrame) -> boolean,
+
 	GetPlaceable: (self: Plot, model: Model) -> Model?,
 	Serialize: (self: Plot) -> { [number]: SerializedStructure },
 
