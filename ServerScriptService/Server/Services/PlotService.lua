@@ -131,6 +131,10 @@ end
 
 ----- Public functions -----
 
+function PlotService:GetEmptyPlotDataString()
+	return Base64.ToBase64(HttpService:JSONEncode({}))
+end
+
 function PlotService:Init()
 	self._plots = CreatePlotObjects()
 end
@@ -354,6 +358,16 @@ function PlotService.Client:MoveStructure(player: Player, structure: Model, cfra
 	assert(cframe ~= nil, "[PlotService] MoveStructure: CFrame is nil")
 
 	return self.Server:MoveStructure(player, structure, cframe) :: boolean
+end
+
+function PlotService:PlotHasStructure(player: Player, structureId: string): boolean
+	assert(player ~= nil, "[PlotService] PlotHasStructure: Player is nil")
+	assert(structureId ~= nil, "[PlotService] PlotHasStructure: StructureID is nil")
+
+	local plot = self._players[player]
+	assert(plot, "[PlotService] PlotHasStructure: Player does not have a plot assigned")
+
+	return plot:HasStructure(structureId)
 end
 
 return PlotService

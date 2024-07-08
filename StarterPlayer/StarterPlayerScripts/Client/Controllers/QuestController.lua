@@ -93,6 +93,10 @@ function QuestController:Start()
 	QuestService.QuestStarted:Connect(function(id: string, step: number)
 		self:StartQuest(id, step)
 	end)
+
+	QuestService.QuestProgressed:Connect(function(id: string, step: number)
+		self:StartQuest(id, step)
+	end)
 end
 
 function QuestController:StartQuest(id: string, step: number)
@@ -109,6 +113,16 @@ function QuestController:StartQuest(id: string, step: number)
 		if quest.Id == SETTINGS.TutorialQuestId and step == 1 then
 			UIController:CloseFrame("MainHUDPrimaryButtons")
 		end
+
+		if quest.Id == SETTINGS.TutorialQuestId then
+			---@type PlacementController
+			local PlacementController = LMEngine.GetController("PlacementController")
+
+			PlacementController:StopPlacement()
+			UIController:CloseFrame("PlacementScreen")
+		end
+
+		UIController:CloseFrame("QuestObjectiveFrame")
 
 		questControllerTrove:Connect(UIController.QuestDialogAdvanced, function()
 			self:AdvanceQuestDialog()
@@ -151,7 +165,7 @@ function QuestController:AdvanceQuestDialog()
 
 		UIController:UpdateQuestObjective(quest.Name, quest.Quests[step].Objective)
 
-		if quest.Id == "Tutorial" and step == 1 then
+		if quest.Id == "Tutorial" then
 			UIController:OpenFrame("MainHUDPrimaryButtons")
 		end
 	end

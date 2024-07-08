@@ -577,6 +577,18 @@ function Plot:Clear()
 	self._cityHall = nil
 end
 
+function Plot:HasStructure(structureId: string): boolean
+	local structures = self._plot_model.Structures:GetChildren()
+
+	for i = 1, #structures do
+		if structures[i]:GetAttribute("Id") == structureId then
+			return true
+		end
+	end
+
+	return false
+end
+
 function Plot.__tostring(self: Plot): string
 	return "Plot " .. self._plot_model.Name
 end

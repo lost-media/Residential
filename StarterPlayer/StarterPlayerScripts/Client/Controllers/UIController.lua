@@ -889,6 +889,13 @@ function UIController:ShowQuestDialog(title: string, text: string)
 	questDialogTextContainer.Action.Visible = true
 end
 
-function UIController:UpdateQuestObjective(title: string, objective: string) end
+function UIController:UpdateQuestObjective(title: string, objective: string)
+	local questObjectiveFrame = PlayerGui.QuestDialog.Objective
+
+	questObjectiveFrame.Top.Title.Text = title
+	questObjectiveFrame.Task.Label.Text = objective
+
+	self:OpenFrame("QuestObjectiveFrame")
+end
 
 return UIController

@@ -11,6 +11,7 @@ local QuestService = LMEngine.CreateService({
 	Name = "QuestService",
 	Client = {
 		QuestStarted = LMEngine.CreateSignal(),
+		QuestProgressed = LMEngine.CreateSignal(),
 	},
 
 	_quests = {},
@@ -146,33 +147,67 @@ function QuestService:RegisterQuestAction(player: string, questId: string, step:
 		self._connections[player] = {}
 	end
 
+	local function checkProgress()
+		local progress = self._quests[player].Data.Progress[step] or 0
+		if progress >= questStep.Action.Amount then
+			self._quests[player].Data.Step = step + 1
+			self._quests[player].Data.Progress[step] = nil
+
+			self.Client.QuestProgressed:Fire(player, questId, step + 1)
+
+			-- check if the quest is completed
+			if self._quests[player].Quest.Quests[self._quests[player].Data.Step] == false then
+				print("[QuestService] RegisterQuestAction: Quest completed")
+
+				-- mark the quest as completed
+				local DataService = LMEngine.GetService("DataService")
+				local plot = DataService:GetPlot(player)
+				plot.Data.CompletedQuests = plot.Data.CompletedQuests or {}
+				plot.Data.CompletedQuests[questId] = true
+			else
+				-- register the next quest action
+				self:RegisterQuestAction(player, questId, step + 1)
+			end
+			return true
+		end
+
+		return false
+	end
+
 	if type == "Build" then
 		local structureType = questStep.Action.Structure
-		table.insert(
-			self._connections[player],
-			PlotService.StructurePlaced:Connect(function(structure: Model)
-				if structure == nil then
-					return
+
+		-- check if the user has already placed the structure
+		if questStep.Action.Accumulative == true then
+			if PlotService:PlotHasStructure(player, structureType) then
+				self._quests[player].Data.Progress[step] = 1
+
+				checkProgress()
+			end
+		end
+		local connection
+		connection = PlotService.StructurePlaced:Connect(function(structure: Model)
+			if structure == nil then
+				return
+			end
+
+			local structureId = structure:GetAttribute("Id")
+			if structureId == structureType then
+				print("[QuestService] RegisterQuestAction: StructurePlaced")
+
+				-- add one to the progress
+				self._quests[player].Data.Progress[step] = (
+					self._quests[player].Data.Progress[step] or 0
+				) + 1
+
+				local finished = checkProgress()
+				if finished then
+					connection:Disconnect()
 				end
+			end
+		end)
 
-				local structureId = structure:GetAttribute("Id")
-				if structureId == structureType then
-					print("[QuestService] RegisterQuestAction: StructurePlaced")
-
-					-- add one to the progress
-					self._quests[player].Data.Progress[step] = (
-						self._quests[player].Data.Progress[step] or 0
-					) + 1
-
-					-- check if the step is completed
-					if self._quests[player].Data.Progress[step] >= questStep.Action.Amount then
-						self._quests[player].Data.Step = step + 1
-						self._quests[player].Data.Progress[step] = nil
-						print("[QuestService] RegisterQuestAction: Step completed")
-					end
-				end
-			end)
-		)
+		table.insert(self._connections[player], connection)
 	end
 end
 

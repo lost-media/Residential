@@ -60,7 +60,7 @@ return {
 			CanSkip = false,
 			Action = {
 				Type = "Build",
-				Structure = "Road/Normal",
+				Structure = "Residence/Medieval House 1",
 				Amount = 1,
 
 				Accumulative = false, -- If the quest should check if they already did the action before
@@ -83,7 +83,7 @@ return {
 			CanSkip = false,
 			Action = {
 				Type = "Build",
-				Structure = "Utility/Water Tower",
+				Structure = "Utilities/Water Tower",
 				Amount = 1,
 
 				Accumulative = false, -- If the quest should check if they already did the action before

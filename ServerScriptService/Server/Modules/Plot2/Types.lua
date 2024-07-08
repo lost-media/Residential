@@ -37,6 +37,7 @@ export type IPlot = {
 	Serialize: (self: Plot) -> { [number]: SerializedStructure },
 
 	DeleteStructure: (self: Plot, structure: Model) -> (),
+	HasStructure: (self: Plot, structureId: string) -> boolean,
 }
 
 type PlotMembers = {

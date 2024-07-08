@@ -105,6 +105,9 @@ function DataService:Start()
 	---@type PlayerService
 	local PlayerService = LMEngine.GetService("PlayerService")
 
+	---@type PlotService
+	local PlotService = LMEngine.GetService("PlotService")
+
 	PlayerService:RegisterPlayerAdded(function(player)
 		-- Create leaderstats
 		local leaderstats = Instance.new("Folder")
@@ -163,6 +166,15 @@ function DataService:Start()
 		local plot_profile = self._plots[player]
 
 		if plot_profile ~= nil then
+			-- check if the tutorial is completed
+			if plot_profile.Data.CompletedTutorial == false then
+				-- reset the plot
+				plot_profile.Data.PlotData = PlotService:GetEmptyPlotDataString()
+
+				-- quests are reset
+				plot_profile.Data.Quests = {}
+			end
+
 			plot_profile:Release()
 			self._plots[player] = nil
 		end
