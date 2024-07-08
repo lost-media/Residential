@@ -101,12 +101,10 @@ function StructuresUtils.GetStructureModelFromId(structureId: string): Model?
 end
 
 function StructuresUtils.GetIdFromStructure(structure: Model): string?
-	for structureType, structureCollection in pairs(StructuresCollection) do
-		for structureName, structureData in pairs(structureCollection) do
-			if structureData.Model == structure then
-				return structureData.Id
-			end
-		end
+	local id = structure:GetAttribute("Id")
+
+	if id == nil then
+		return nil
 	end
 
 	return nil

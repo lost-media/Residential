@@ -1068,6 +1068,7 @@ local function SetupInitialization(client: PlacementClient)
 	end
 
 	local hitbox = client._trove:Clone(current_model.PrimaryPart)
+	hitbox:ClearAllChildren()
 	client._state:dispatch(HitboxChanged(hitbox))
 
 	--hitbox = object.PrimaryPart:Clone()

@@ -236,6 +236,7 @@ function UIController:Start()
 				if QuestController:IsOnTutorial() == true then
 					-- TODO: show toast message
 					print("You cannot do that right now")
+					return
 				end
 
 				self:CloseFrame("PlacementScreen")
@@ -359,6 +360,9 @@ function UIController:Start()
 
 			-- add the structure preview buttons to the scrolling frame
 			clearSelectionScrollingFrame()
+
+			-- enable the move mode
+			PlacementController:EnableMoveMode()
 
 			trove:Connect(
 				selectionScrollingFrame.UIGridLayout:GetPropertyChangedSignal("AbsoluteContentSize"),
@@ -616,6 +620,8 @@ function UIController:Start()
 			self:OpenFrame("BuildModeFrame")
 		end, function(trove)
 			self:CloseFrame({ "SelectionFrame", "BuildModeFrame" })
+
+			PlacementController:DisableMoveMode()
 		end)
 
 		local mainHudScreen = PlayerGui.MainHUD

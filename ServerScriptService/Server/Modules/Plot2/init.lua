@@ -386,22 +386,32 @@ function Plot:MoveStructure(structure: Model, cframe: CFrame)
 	cloneTest.PrimaryPart.CanCollide = false
 	cloneTest:PivotTo(cframe)
 
+	structure.Parent = nil
+
 	--structure.PrimaryPart.CanCollide = false
 	--structure:PivotTo(cframe)
 
 	local platform = self._plot_model:FindFirstChild("Platform")
 
 	if CheckBoundaries(platform, cloneTest.PrimaryPart) == true then
+		cloneTest:Destroy()
+		structure.Parent = self._plot_model.Structures
 		return false
 	end
+
+	print("ITS ALL GOOD")
 
 	local can_place = HandleCollisions(self._player.Character, cloneTest, collisions, self)
 
 	if can_place == false then
+		cloneTest:Destroy()
+		structure.Parent = self._plot_model.Structures
 		return false
 	end
 
 	if cloneTest.PrimaryPart == nil then
+		cloneTest:Destroy()
+		structure.Parent = self._plot_model.Structures
 		warn("[Plot] Structure does not have a primary part")
 		return false
 	end
@@ -410,6 +420,9 @@ function Plot:MoveStructure(structure: Model, cframe: CFrame)
 	cloneTest:Destroy()
 
 	structure:PivotTo(cframe)
+	structure.Parent = self._plot_model.Structures
+
+	return true
 end
 
 function Plot:GetPlaceable(model: Model)

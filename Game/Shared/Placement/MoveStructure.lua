@@ -1,5 +1,5 @@
 --[[
-*{Residential} -[DeleteStructure]- v1.0.0 -----------------------------------
+*{Residential} -[MoveStructure]- v1.0.0 -----------------------------------
 Handles the deletion system for structures in the game.
 
 Author: brandon-kong (ijmod)
@@ -9,8 +9,8 @@ Dependencies:
     - InputController
 
 Usage:
-    local DeleteStructure = require(game.ReplicatedStorage.Modules.DeleteStructure)
-    DeleteStructure.someFunction()
+    local MoveStructure = require(game.ReplicatedStorage.Modules.MoveStructure)
+    MoveStructure.someFunction()
 
 Functions:
     - functionName(param1: type, param2: type): returnType
@@ -31,15 +31,15 @@ Changelog:
 --]]
 
 local SETTINGS = {
-	SelectionBoxColor = Color3.fromRGB(255, 0, 0),
+	SelectionBoxColor = Color3.fromRGB(100, 100, 255),
 }
 
-type IDeleteStructure = {
-	__index: IDeleteStructure,
+type IMoveStructure = {
+	__index: IMoveStructure,
 
-	new: () -> DeleteStructure,
-	Enable: (self: DeleteStructure) -> (),
-	Disable: (self: DeleteStructure) -> (),
+	new: () -> MoveStructure,
+	Enable: (self: MoveStructure) -> (),
+	Disable: (self: MoveStructure) -> (),
 }
 
 ----- Private variables -----
@@ -52,19 +52,19 @@ local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 local Signal = require(LMEngine.SharedDir.Signal)
 local Trove = require(LMEngine.SharedDir.Trove)
 
-export type DeleteStructure = typeof(setmetatable(
+export type MoveStructure = typeof(setmetatable(
 	{} :: {
 		_trove: Trove.Trove,
 		_mouse: Mouse,
 		_plot: Model,
 
-		OnStructureDeleted: Signal.Signal,
+		OnStructureMoving: Signal.Signal,
 	},
-	{} :: IDeleteStructure
+	{} :: IMoveStructure
 ))
 
-local DeleteStructure: IDeleteStructure = {} :: IDeleteStructure
-DeleteStructure.__index = DeleteStructure
+local MoveStructure: IMoveStructure = {} :: IMoveStructure
+MoveStructure.__index = MoveStructure
 
 ----- Private functions -----
 
@@ -98,10 +98,10 @@ end
 
 ----- Public functions -----
 
-function DeleteStructure.new(plot: Model): DeleteStructure
-	assert(ModelIsPlot(plot) == true, "[DeleteStructure] new: plot is not a valid plot model")
+function MoveStructure.new(plot: Model): MoveStructure
+	assert(ModelIsPlot(plot) == true, "[MoveStructure] new: plot is not a valid plot model")
 
-	local self = setmetatable({}, DeleteStructure)
+	local self = setmetatable({}, MoveStructure)
 
 	---@type InputController
 	local InputController = LMEngine.GetController("InputController")
@@ -113,11 +113,11 @@ function DeleteStructure.new(plot: Model): DeleteStructure
 	self._mouse = mouse
 
 	-- Signals
-	self.OnStructureDeleted = Signal.new()
+	self.OnStructureMoving = Signal.new()
 	return self
 end
 
-function DeleteStructure:Enable()
+function MoveStructure:Enable()
 	-- set up events
 
 	-- create a selection box
@@ -179,16 +179,19 @@ function DeleteStructure:Enable()
 			return
 		end
 
-		self.OnStructureDeleted:Fire(model)
+		-- get the structures original cframe
+		local originalCFrame = model.PrimaryPart.CFrame
+
+		self.OnStructureMoving:Fire(model, originalCFrame)
 	end)
 end
 
-function DeleteStructure:Disable()
+function MoveStructure:Disable()
 	-- disconnect events
 	self._trove:Destroy()
 
 	-- Disconnect signals
-	self.OnStructureDeleted:DisconnectAll()
+	self.OnStructureMoving:DisconnectAll()
 end
 
-return DeleteStructure
+return MoveStructure

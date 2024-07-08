@@ -66,7 +66,7 @@ return {
 			CanSkip = false,
 			Action = {
 				Type = "Build",
-				Structure = "Residence/Medieval House 1",
+				Structure = "Residence/Victorian House 2",
 				Amount = 1,
 
 				Accumulative = false, -- If the quest should check if they already did the action before

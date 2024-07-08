@@ -70,7 +70,7 @@ function QuestService:Start()
 			if completedTutorial then
 				return
 			end
-			self:StartQuest(player, "Tutorial")
+			--self:StartQuest(player, "Tutorial")
 		end)
 	end, "LOW")
 
