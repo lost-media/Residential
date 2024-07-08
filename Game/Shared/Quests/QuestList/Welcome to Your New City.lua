@@ -1,5 +1,6 @@
 return {
-	Name = "Welcome to Your New City",
+	Id = "tutorial",
+	Name = "Welcome to Your New City!",
 	Quests = {
 		[1] = {
 			Narrative = "Welcome, Mayor! Let's start building your city. First, we need to establish a central hub.",
@@ -13,6 +14,11 @@ return {
 
 				Accumulative = true, -- If the quest should check if they already did the action before
 				-- e.g. if they already built a city hall before
+			},
+
+			AdditionalComments = {
+				"The City Hall is the central hub of your city. It provides a foundation for your city's growth.",
+				"You can access the City Hall's menu by clicking on it.",
 			},
 
 			Rewards = {
