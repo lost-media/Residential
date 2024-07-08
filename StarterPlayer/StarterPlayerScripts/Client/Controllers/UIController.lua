@@ -12,7 +12,7 @@ local SETTINGS = {
 	GraphemeWait = 0.025,
 	PunctuationWait = {
 		["."] = 1,
-		[","] = 0.35,
+		[","] = 0.25,
 		["!"] = 0.6,
 		["?"] = 0.6,
 	},
@@ -54,6 +54,7 @@ local UIController = LMEngine.CreateController({
 	_frames = {},
 	_lastStructureCategory = "Residence",
 
+	_skipQuestDialog = false,
 	_questDialogCompleted = true,
 	QuestDialogAdvanced = Signal.new(),
 })
@@ -522,6 +523,11 @@ function UIController:Start()
 				end)
 			end
 
+			---@type QuestController
+			local QuestController = LMEngine.GetController("QuestController")
+
+			local isOnTutorial = QuestController:IsOnTutorial()
+
 			local function filterByStructureCategory(category: string)
 				local collection = StructureUtils.GetStructuresFromCategory(category)
 
@@ -535,8 +541,30 @@ function UIController:Start()
 				-- sort by price
 				sortByPrice(collection)
 
+				local highlightedStructureId: string? = nil
+
+				if isOnTutorial == true then
+					local currentQuest: Quest = QuestController:GetCurrentQuest()
+
+					if currentQuest ~= nil then
+						local step = QuestController:GetQuestStep()
+
+						local questStep = currentQuest.Quests[step]
+
+						if questStep ~= nil then
+							if questStep.Action.Type == "Build" then
+								local structureId = questStep.Action.Structure
+
+								if structureId ~= nil then
+									highlightedStructureId = structureId
+								end
+							end
+						end
+					end
+				end
+
 				coroutine.wrap(function()
-					renderCollection(collection, nil)
+					renderCollection(collection, highlightedStructureId)
 				end)()
 			end
 
@@ -548,7 +576,19 @@ function UIController:Start()
 				end
 			end
 
-			filterByStructureCategory(self._lastStructureCategory or "Residence")
+			local category = "Residence"
+
+			if isOnTutorial == true then
+				local step = QuestController:GetQuestStep()
+
+				if step == 1 then
+					category = "City Hall"
+				end
+			else
+				category = self._lastStructureCategory or "Residence"
+			end
+
+			filterByStructureCategory(category)
 		end, function(trove)
 			TweenService:Create(selectionFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 1,
@@ -660,7 +700,7 @@ function UIController:Start()
 			TweenService:Create(questObjectiveContainer.UIScale, TweenInfo.new(settFadeDuration), {
 				Scale = 0.5,
 			}):Play()
-		end, function(trove) end)
+		end)
 
 		self:RegisterFrame("QuestDialogFrame", function(trove)
 			TweenService:Create(questDialogFrame, TweenInfo.new(settFadeDuration), {
@@ -676,8 +716,9 @@ function UIController:Start()
 				if self._questDialogCompleted == true then
 					-- do something
 					self.QuestDialogAdvanced:Fire()
+					self._skipQuestDialog = false
 				else
-					--self._questDialogCompleted = true
+					self._skipQuestDialog = true
 				end
 			end)
 		end, function(trove)
@@ -723,7 +764,7 @@ function UIController:OpenFrame(name: string)
 	end
 
 	if frame.isOpen == true then
-		--return
+		return
 	end
 
 	frame.isOpen = true
@@ -817,14 +858,17 @@ function UIController:ShowQuestDialog(title: string, text: string)
 	bodyText.MaxVisibleGraphemes = 0
 
 	self._questDialogCompleted = false
+	self._skipQuestDialog = false
 
-	for first, last in graphemes do
+	local first, last = graphemes()
+
+	while last ~= nil do
 		local grapheme = text:sub(first, last)
 		local punctuationWait = SETTINGS.PunctuationWait[grapheme]
 
 		bodyText.MaxVisibleGraphemes = last
 
-		if self._questDialogCompleted == true then
+		if self._skipQuestDialog == true then
 			break
 		end
 
@@ -833,10 +877,15 @@ function UIController:ShowQuestDialog(title: string, text: string)
 		else
 			task.wait(SETTINGS.GraphemeWait)
 		end
+
+		first, last = graphemes()
 	end
 
 	bodyText.MaxVisibleGraphemes = GetGraphemeCount(text)
+
 	self._questDialogCompleted = true
+	self._skipQuestDialog = false
+
 	questDialogTextContainer.Action.Visible = true
 end
 

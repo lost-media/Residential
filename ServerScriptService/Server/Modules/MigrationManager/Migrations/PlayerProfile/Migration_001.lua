@@ -4,18 +4,18 @@ local SETTINGS = {
 	Schema = {
 		Plots = {},
 		UserId = -1,
-		CompletedTutorial = false,
 		LastPlotIdUsed = nil,
 	},
 
 	FieldsToAdd = {
 		Plots = {},
 		UserId = -1,
-		CompletedTutorial = false,
 		LastPlotIdUsed = nil,
 	},
 
-	FieldsToRemove = {},
+	FieldsToRemove = {
+		"CompletedTutorial",
+	},
 	FieldsToMove = {},
 }
 ----- Private variables -----

@@ -1,9 +1,9 @@
 return {
-	Id = "tutorial",
+	Id = "Tutorial",
 	Name = "Welcome to Your New City!",
 	Quests = {
 		[1] = {
-			Narrative = "Welcome, Mayor! Let's start building your city. First, we need to establish a central hub.",
+			Narrative = 'Welcome, <font color="rgb(50, 150, 150)"><b>Mayor</b></font>! Let\'s start building your city. First, we need to establish a central hub.',
 			Objective = "Build a City Hall",
 			Hint = "Select the Town Hall from the building menu and place it on your plot.",
 			CanSkip = false,
@@ -17,8 +17,8 @@ return {
 			},
 
 			AdditionalComments = {
-				"The City Hall is the central hub of your city. It provides a foundation for your city's growth.",
-				"You can access the City Hall's menu by clicking on it.",
+				'The <font color="rgb(191, 124, 49)"><b>City Hall</b></font> is the central hub of your city. It provides a foundation for your city\'s growth.',
+				"You can access the City Hall's menu by clicking the 'hammer' icon on the bottom of the screen.",
 			},
 
 			Rewards = {

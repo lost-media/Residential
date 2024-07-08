@@ -2,22 +2,28 @@
 
 local SETTINGS = {
 	Schema = {
+		UUID = "",
 		UserId = -1,
 		PlotData = nil,
 		Credits = 0,
 		Roadbucks = 0,
 		Inventory = {},
+
+		CompletedTutorial = false,
 
 		Quests = {},
 		CompletedQuests = {},
 	},
 
 	FieldsToAdd = {
+		UUID = "",
 		UserId = -1,
 		PlotData = nil,
 		Credits = 0,
 		Roadbucks = 0,
 		Inventory = {},
+
+		CompletedTutorial = false,
 
 		Quests = {},
 		CompletedQuests = {},

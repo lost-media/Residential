@@ -31,6 +31,10 @@ Changelog:
     v1.0.0 - Initial implementation
 --]]
 
+local SETTINGS = {
+	TutorialQuestId = "Tutorial",
+}
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
@@ -40,8 +44,9 @@ local Trove = require(LMEngine.SharedDir.Trove)
 local questControllerTrove = Trove.new()
 
 local DialogCollection = require(LMEngine.Game.Shared.Quests)
-type Quest = Quest
+type Quest = DialogCollection.Quest
 
+---@class QuestController
 local QuestController = LMEngine.CreateController({
 	Name = "QuestController",
 
@@ -80,7 +85,13 @@ function QuestController:Start()
 
 	plotPromise:andThen(function(plot)
 		task.wait(1)
-		self:StartQuest("tutorial", 1)
+		--self:StartQuest(SETTINGS.TutorialQuestId, 1)
+	end)
+
+	local QuestService = LMEngine.GetService("QuestService")
+
+	QuestService.QuestStarted:Connect(function(id: string, step: number)
+		self:StartQuest(id, step)
 	end)
 end
 
@@ -94,6 +105,10 @@ function QuestController:StartQuest(id: string, step: number)
 
 		self._quest = quest
 		self._questStep = step
+
+		if quest.Id == SETTINGS.TutorialQuestId and step == 1 then
+			UIController:CloseFrame("MainHUDPrimaryButtons")
+		end
 
 		questControllerTrove:Connect(UIController.QuestDialogAdvanced, function()
 			self:AdvanceQuestDialog()
@@ -135,7 +150,23 @@ function QuestController:AdvanceQuestDialog()
 		UIController:OpenFrame("QuestObjectiveFrame")
 
 		UIController:UpdateQuestObjective(quest.Name, quest.Quests[step].Objective)
+
+		if quest.Id == "Tutorial" and step == 1 then
+			UIController:OpenFrame("MainHUDPrimaryButtons")
+		end
 	end
+end
+
+function QuestController:GetCurrentQuest()
+	return self._quest
+end
+
+function QuestController:IsOnTutorial()
+	return self._quest and self._quest.Id == SETTINGS.TutorialQuestId
+end
+
+function QuestController:GetQuestStep()
+	return self._questStep
 end
 
 return QuestController

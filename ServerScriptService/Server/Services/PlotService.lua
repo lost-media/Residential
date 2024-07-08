@@ -37,13 +37,12 @@ local LMEngine = require(ReplicatedStorage.LMEngine)
 
 local dir_Modules = script.Parent.Parent.Modules
 
----@type RetryAsync
-local RetryAsync = LMEngine.GetShared("RetryAsync")
+local Base64 = require(LMEngine.SharedDir.Base64)
+local RetryAsync = require(LMEngine.SharedDir.RetryAsync)
+local Signal = require(LMEngine.SharedDir.Signal)
 
 ---@type RateLimiter
 local RateLimiter = LMEngine.GetModule("RateLimiter")
-
-local Base64 = require(ReplicatedStorage.LMEngine.Shared.Base64)
 
 local PlotServiceRateLimiter = RateLimiter.NewRateLimiter(SETTINGS.MAX_RATE_PER_SECOND)
 
@@ -69,6 +68,10 @@ local PlotService = LMEngine.CreateService({
 
 	---@type table<Player, Plot2>
 	_players = {},
+
+	-- Signals
+	StructurePlaced = Signal.new(),
+	PlotAssigned = Signal.new(),
 })
 
 ----- Private functions -----
@@ -204,6 +207,7 @@ function PlotService:AssignPlot(player: Player, plot: Plot)
 
 	self._players[player] = plot
 	PlotService.Client.PlotAssigned:Fire(player, plot:GetModel())
+	self.PlotAssigned:Fire(player, plot:GetModel())
 end
 
 function PlotService:UnassignPlot(player: Player)
@@ -234,7 +238,12 @@ function PlotService:PlaceStructure(player: Player, structure_id: string, cframe
 		local structure = StructureFactory.MakeStructure(structure_id)
 		assert(structure ~= nil, "[PlotService] PlaceStructure: Structure not found")
 
-		local place_successful = plot:PlaceStructure(structure, cframe)
+		local place_successful, structure = plot:PlaceStructure(structure, cframe)
+
+		if place_successful == true then
+			-- Fire the structure placed event
+			self.StructurePlaced:Fire(structure)
+		end
 
 		return place_successful
 	end)

@@ -85,7 +85,7 @@ function PlacementController:Start()
 				:andThen(function(successful: boolean)
 					if successful == false then
 						-- Show toast message
-						print("[PlacementController] Structure placement failed")
+						--print("[PlacementController] Structure placement failed")
 					end
 				end)
 				:catch(function(err)
