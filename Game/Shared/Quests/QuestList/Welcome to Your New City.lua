@@ -44,6 +44,12 @@ return {
 				-- e.g. if they already built a city hall before
 			},
 
+			AdditionalComments = {
+				"Roads connect buildings and allow residents to travel.",
+				"Make sure to connect all buildings to the City Hall to ensure your buildings are accessible.",
+				"Buildings that are not connected to the City Hall will not be powered.",
+			},
+
 			Rewards = {
 				{
 					Structures = {},
@@ -65,6 +71,12 @@ return {
 
 				Accumulative = false, -- If the quest should check if they already did the action before
 				-- e.g. if they already built a city hall before
+			},
+
+			AdditionalComments = {
+				"Residential buildings provide housing for your residents.",
+				"They require power to function, so make sure they are connected to the City Hall.",
+				"Residential buildings generate taxes based on the number of residents living in them.",
 			},
 
 			Rewards = {

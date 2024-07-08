@@ -91,10 +91,12 @@ function QuestController:Start()
 	local QuestService = LMEngine.GetService("QuestService")
 
 	QuestService.QuestStarted:Connect(function(id: string, step: number)
+		questControllerTrove:Destroy()
 		self:StartQuest(id, step)
 	end)
 
 	QuestService.QuestProgressed:Connect(function(id: string, step: number)
+		questControllerTrove:Destroy()
 		self:StartQuest(id, step)
 	end)
 end
@@ -151,9 +153,9 @@ function QuestController:AdvanceQuestDialog()
 			)
 			self._additionalCommentIndex = self._additionalCommentIndex + 1
 			return
-		else
-			self._additionalCommentIndex = 1
 		end
+
+		self._additionalCommentIndex = 1
 
 		-- at this point, the quest dialog is complete, so just show the objective
 

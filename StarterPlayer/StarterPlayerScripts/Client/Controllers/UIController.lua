@@ -13,8 +13,8 @@ local SETTINGS = {
 	PunctuationWait = {
 		["."] = 1,
 		[","] = 0.25,
-		["!"] = 0.6,
-		["?"] = 0.6,
+		["!"] = 0.4,
+		["?"] = 0.5,
 	},
 }
 
@@ -717,11 +717,15 @@ function UIController:Start()
 					-- do something
 					self.QuestDialogAdvanced:Fire()
 					self._skipQuestDialog = false
+					self._questDialogCompleted = false
 				else
 					self._skipQuestDialog = true
 				end
 			end)
 		end, function(trove)
+			self._skipQuestDialog = false
+			self._questDialogCompleted = true
+
 			TweenService:Create(questDialogFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 1,
 				Visible = false,
@@ -841,11 +845,13 @@ function UIController:ShowQuestDialog(title: string, text: string)
 	assert(title ~= nil, "Title is nil")
 	assert(text ~= nil, "Text is nil")
 
+	if self:IsFrameOpen("QuestDialogFrame") == false then
+		self:OpenFrame("QuestDialogFrame")
+	end
+
 	local questDialogFrame = PlayerGui.QuestDialog.Frame
 	local questDialogContainer = questDialogFrame.Container
 	local questDialogTextContainer = questDialogContainer.Container
-
-	self:OpenFrame("QuestDialogFrame")
 
 	questDialogTextContainer.Title.Text = title
 	questDialogTextContainer.Action.Visible = false
@@ -863,14 +869,14 @@ function UIController:ShowQuestDialog(title: string, text: string)
 	local first, last = graphemes()
 
 	while last ~= nil do
+		if self._skipQuestDialog == true then
+			break
+		end
+
 		local grapheme = text:sub(first, last)
 		local punctuationWait = SETTINGS.PunctuationWait[grapheme]
 
 		bodyText.MaxVisibleGraphemes = last
-
-		if self._skipQuestDialog == true then
-			break
-		end
 
 		if punctuationWait ~= nil then
 			task.wait(punctuationWait)
