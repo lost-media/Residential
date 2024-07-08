@@ -157,6 +157,10 @@ function PlacementController:StartPlacement(structureId: string)
 		settings.radius = properties.Radius
 	end
 
+	if structure.IsABuilding == true then
+		settings.frontSurface = structure.FrontSurface
+	end
+
 	self._state = "placing"
 
 	self._placement_client:UpdateGridUnit(grid_unit)

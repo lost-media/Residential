@@ -112,7 +112,7 @@ return {
 		},
 
 		[5] = {
-			Narrative = "Your residents also need essential services. Let's build a hospital.",
+			Narrative = "<b>YOUCH!</b> I just stubbed my toe! We need a service to help with that.",
 			Objective = "Place a hospital.",
 			Hint = "Select a hospital from the services menu and place it on your plot.",
 			CanSkip = false,
@@ -123,6 +123,12 @@ return {
 
 				Accumulative = false, -- If the quest should check if they already did the action before
 				-- e.g. if they already built a city hall before
+			},
+
+			AdditionalComments = {
+				"Services like hospitals provide happiness to your residents.",
+				"Without them, residents may become unhappy and leave your city.",
+				"Make sure to place services near residential areas for maximum effect.",
 			},
 
 			Rewards = {

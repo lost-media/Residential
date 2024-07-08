@@ -199,6 +199,8 @@ function UIController:Start()
 			end
 		)
 
+		---@type QuestController
+		local QuestController = LMEngine.GetController("QuestController")
 		-- Register all frames
 
 		-- Build Mode
@@ -231,6 +233,11 @@ function UIController:Start()
 			end)
 
 			trove:Connect(buildModeButtons.Delete.Activated, function()
+				if QuestController:IsOnTutorial() == true then
+					-- TODO: show toast message
+					print("You cannot do that right now")
+				end
+
 				self:CloseFrame("PlacementScreen")
 				self:OpenFrame("DeleteStructureFrame")
 			end)
@@ -522,9 +529,6 @@ function UIController:Start()
 					isRenderingCollection = false
 				end)
 			end
-
-			---@type QuestController
-			local QuestController = LMEngine.GetController("QuestController")
 
 			local isOnTutorial = QuestController:IsOnTutorial()
 

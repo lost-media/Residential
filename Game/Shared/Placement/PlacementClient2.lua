@@ -133,6 +133,8 @@ local SETTINGS = {
 
 		HapticFeedback = false, -- If you want a controller to vibrate when placing objects (only works if the user has a controller with haptic support)
 		HapticVibrationAmount = 1, -- How large the vibration is when placing objects. Choose a value from 0, 1. hapticFeedback must be set to true.
+
+		BuildingFrontSurfaceDecalId = "rbxassetid://1385334521",
 	},
 
 	CONTROLS = {
@@ -245,6 +247,7 @@ export type PlacementClient = typeof(setmetatable(
 type ModelSettings = {
 	can_stack: boolean,
 	radius: number?,
+	frontSurface: { Enum.NormalId } | Enum.NormalId,
 }
 
 ----- Private variables -----
@@ -558,6 +561,26 @@ local function MakeRadiusVisual(radius: number, client: PlacementClient): Part?
 
 	client._state:dispatch(RadiusVisualChanged(radius_part))
 	return radius_part
+end
+
+local function MakeSurfaceSelection(frontSurface: Enum.NormalId, client: PlacementClient)
+	local state: State = client._state:getState()
+
+	local current_model = state._current_model
+
+	if current_model == nil then
+		return
+	end
+
+	local surfaceSelection = Instance.new("Decal")
+	surfaceSelection.Texture = SETTINGS.PLACEMENT_CONFIGS.BuildingFrontSurfaceDecalId
+	surfaceSelection.Transparency = 0.4
+	surfaceSelection.Face = frontSurface
+	surfaceSelection.Color3 = Color3.fromRGB(174, 3, 255)
+
+	surfaceSelection.Parent = current_model.PrimaryPart
+
+	client._trove:Add(surfaceSelection)
 end
 
 -- Clamps the x and z positions so they cannot leave the plot
@@ -1565,6 +1588,17 @@ function PlacementClient:InitiatePlacement(model: Model, settings: ModelSettings
 		if SETTINGS.InstantActivation == true then
 			self._state:dispatch(IsSetupChanged(true))
 			speed = 1
+		end
+	end
+
+	if settings and settings.frontSurface ~= nil then
+		-- create surfaceselection for each front surface
+		if type(settings.frontSurface) == "table" then
+			for i, surface in ipairs(settings.frontSurface) do
+				MakeSurfaceSelection(surface, self)
+			end
+		else
+			MakeSurfaceSelection(settings.frontSurface, self)
 		end
 	end
 

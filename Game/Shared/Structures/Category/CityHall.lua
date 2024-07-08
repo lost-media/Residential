@@ -23,6 +23,8 @@ local SharedProperties = {
 	Price = 100,
 	GridUnit = 4,
 	AerialViewAngle = 45,
+
+	FrontSurface = Enum.NormalId.Front, -- The "doors" of the house. there can be multiple doors
 }
 
 local CityHalls: StructureTypes.CityHallCollection = {

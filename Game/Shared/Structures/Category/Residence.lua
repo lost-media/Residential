@@ -23,6 +23,8 @@ local SharedProperties = {
 	Price = 100,
 	GridUnit = 4,
 	AerialViewAngle = 0,
+
+	FrontSurface = Enum.NormalId.Front, -- The "doors" of the house. there can be multiple doors
 }
 
 local Residences: StructureTypes.CityHallCollection = {
@@ -34,6 +36,11 @@ local Residences: StructureTypes.CityHallCollection = {
 		Model = ResidenceFolder["Medieval House 1"],
 
 		Price = 15000,
+
+		FrontSurface = {
+			Enum.NormalId.Left,
+			Enum.NormalId.Front,
+		},
 	}, SharedProperties),
 
 	TableUtil.Reconcile({
