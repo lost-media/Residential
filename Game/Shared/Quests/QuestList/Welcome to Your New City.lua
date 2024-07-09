@@ -118,7 +118,7 @@ return {
 			CanSkip = false,
 			Action = {
 				Type = "Build",
-				Structure = "Service/Hospital",
+				Structure = "Services/Hospital",
 				Amount = 1,
 
 				Accumulative = false, -- If the quest should check if they already did the action before

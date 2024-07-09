@@ -589,9 +589,16 @@ function UIController:Start()
 			if isOnTutorial == true then
 				local step = QuestController:GetQuestStep()
 
-				if step == 1 then
-					category = "City Hall"
-				end
+				local stepTable = {
+					[1] = "City Hall",
+					[2] = "Roads",
+					[3] = "Residence",
+					[4] = "Utilities",
+					[5] = "Services",
+					[6] = "Decorations",
+				}
+
+				category = stepTable[step] or "Residence"
 			else
 				category = self._lastStructureCategory or "Residence"
 			end

@@ -1076,7 +1076,11 @@ local function SetupInitialization(client: PlacementClient)
 	hitbox.Name = "Hitbox"
 	hitbox.Parent = current_model
 
-	client._state:dispatch(RotationChanged(0))
+	-- get the current model's rotation
+	local _, rotationY, _ = current_model.PrimaryPart.CFrame:ToEulerAnglesYXZ()
+	local rotation = math.deg(rotationY)
+
+	client._state:dispatch(RotationChanged(rotation))
 	client._state:dispatch(
 		AmplitudeChanged(math.clamp(SETTINGS.PLACEMENT_CONFIGS.AngleTiltAmplitude, 0, 10))
 	)
