@@ -1,8 +1,9 @@
 return {
-	Name = "Welcome to Your New City",
+	Id = "Tutorial",
+	Name = "Welcome to Your New City!",
 	Quests = {
 		[1] = {
-			Narrative = "Welcome, Mayor! Let's start building your city. First, we need to establish a central hub.",
+			Narrative = 'Welcome, <font color="rgb(50, 150, 150)"><b>Mayor</b></font>! Let\'s start building your city. First, we need to establish a central hub.',
 			Objective = "Build a City Hall",
 			Hint = "Select the Town Hall from the building menu and place it on your plot.",
 			CanSkip = false,
@@ -13,6 +14,11 @@ return {
 
 				Accumulative = true, -- If the quest should check if they already did the action before
 				-- e.g. if they already built a city hall before
+			},
+
+			AdditionalComments = {
+				'The <font color="rgb(191, 124, 49)"><b>City Hall</b></font> is the central hub of your city. It provides a foundation for your city\'s growth.',
+				"You can access the City Hall's menu by clicking the 'hammer' icon on the bottom of the screen.",
 			},
 
 			Rewards = {
@@ -38,6 +44,12 @@ return {
 				-- e.g. if they already built a city hall before
 			},
 
+			AdditionalComments = {
+				"Roads connect buildings and allow residents to travel.",
+				"Make sure to connect all buildings to the City Hall to ensure your buildings are accessible.",
+				"Buildings that are not connected to the City Hall will not be powered.",
+			},
+
 			Rewards = {
 				{
 					Structures = {},
@@ -54,11 +66,17 @@ return {
 			CanSkip = false,
 			Action = {
 				Type = "Build",
-				Structure = "Road/Normal",
+				Structure = "Residence/Victorian House 2",
 				Amount = 1,
 
 				Accumulative = false, -- If the quest should check if they already did the action before
 				-- e.g. if they already built a city hall before
+			},
+
+			AdditionalComments = {
+				"Residential buildings provide housing for your residents.",
+				"They require power to function, so make sure they are connected to the City Hall.",
+				"Residential buildings generate taxes based on the number of residents living in them.",
 			},
 
 			Rewards = {
@@ -77,7 +95,7 @@ return {
 			CanSkip = false,
 			Action = {
 				Type = "Build",
-				Structure = "Utility/Water Tower",
+				Structure = "Utilities/Water Tower",
 				Amount = 1,
 
 				Accumulative = false, -- If the quest should check if they already did the action before
@@ -94,7 +112,7 @@ return {
 		},
 
 		[5] = {
-			Narrative = "Your residents also need essential services. Let's build a hospital.",
+			Narrative = "<b>YOUCH!</b> I just stubbed my toe! We need a service to help with that.",
 			Objective = "Place a hospital.",
 			Hint = "Select a hospital from the services menu and place it on your plot.",
 			CanSkip = false,
@@ -105,6 +123,12 @@ return {
 
 				Accumulative = false, -- If the quest should check if they already did the action before
 				-- e.g. if they already built a city hall before
+			},
+
+			AdditionalComments = {
+				"Services like hospitals provide happiness to your residents.",
+				"Without them, residents may become unhappy and leave your city.",
+				"Make sure to place services near residential areas for maximum effect.",
 			},
 
 			Rewards = {

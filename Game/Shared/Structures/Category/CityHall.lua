@@ -24,9 +24,7 @@ local SharedProperties = {
 	GridUnit = 4,
 	AerialViewAngle = 45,
 
-	Properties = {
-		Radius = 2, -- Tiles
-	},
+	FrontSurface = Enum.NormalId.Front, -- The "doors" of the house. there can be multiple doors
 }
 
 local CityHalls: StructureTypes.CityHallCollection = {

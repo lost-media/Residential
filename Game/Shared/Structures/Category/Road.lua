@@ -21,7 +21,7 @@ local SharedProperties = {
 		Allowed = false,
 	},
 	Price = 100,
-	GridUnit = 8,
+	GridUnit = 4,
 	AerialViewAngle = 45,
 }
 

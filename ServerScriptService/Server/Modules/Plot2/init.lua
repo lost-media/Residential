@@ -285,35 +285,35 @@ function Plot:GetAttribute(attribute: string): any
 	return self._plot_model:GetAttribute(attribute)
 end
 
-function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
-	assert(structure ~= nil, "[PlotService] PlaceStructure: Structure is nil")
+function Plot:PlaceStructure(structure: Model, cframe: CFrame): (boolean, Model?)
+	assert(structure ~= nil, "[Plot2] PlaceStructure: Structure is nil")
 
 	local structure_id: string? = structure:GetAttribute("Id")
 
 	local structureContent = StructureUtils.GetStructureFromId(structure_id)
 	if structureContent == nil then
-		warn("[PlotService] PlaceStructure: Structure content is nil")
+		warn("[Plot2] PlaceStructure: Structure content is nil")
 		return false
 	end
 
 	local structureCategory = structureContent.Category
 
 	if structureCategory == nil then
-		warn("[PlotService] PlaceStructure: Structure category is nil")
+		warn("[Plot2] PlaceStructure: Structure category is nil")
 		return false
 	end
 
 	if structureCategory == "City Hall" then
 		if self._cityHall ~= nil then
-			warn("[PlotService] PlaceStructure: City Hall already exists")
+			warn("[Plot2] PlaceStructure: City Hall already exists")
 			return false
 		end
 
 		self._cityHall = structure
 	end
 
-	assert(structureCategory ~= nil, "[PlotService] PlaceStructure: Structure category is nil")
-	assert(structure_id ~= nil, "[PlotService] PlaceStructure: Structure ID is nil")
+	assert(structureCategory ~= nil, "[Plot2] PlaceStructure: Structure category is nil")
+	assert(structure_id ~= nil, "[Plot2] PlaceStructure: Structure ID is nil")
 
 	local collisions = GetCollisions(structure_id)
 
@@ -370,14 +370,14 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): boolean
 		self._road_network:AddBuilding(structure)
 	end
 
-	return true
+	return true, structure
 end
 
 function Plot:MoveStructure(structure: Model, cframe: CFrame)
-	assert(structure ~= nil, "[PlotService] MoveStructure: Structure is nil")
+	assert(structure ~= nil, "[Plot2] MoveStructure: Structure is nil")
 	assert(
 		structure.Parent == self._plot_model.Structures,
-		"[PlotService] MoveStructure: Structure is not a child of the plot"
+		"[Plot2] MoveStructure: Structure is not a child of the plot"
 	)
 
 	local collisions = GetCollisions(structure:GetAttribute("Id"))
@@ -386,22 +386,32 @@ function Plot:MoveStructure(structure: Model, cframe: CFrame)
 	cloneTest.PrimaryPart.CanCollide = false
 	cloneTest:PivotTo(cframe)
 
+	structure.Parent = nil
+
 	--structure.PrimaryPart.CanCollide = false
 	--structure:PivotTo(cframe)
 
 	local platform = self._plot_model:FindFirstChild("Platform")
 
 	if CheckBoundaries(platform, cloneTest.PrimaryPart) == true then
+		cloneTest:Destroy()
+		structure.Parent = self._plot_model.Structures
 		return false
 	end
+
+	print("ITS ALL GOOD")
 
 	local can_place = HandleCollisions(self._player.Character, cloneTest, collisions, self)
 
 	if can_place == false then
+		cloneTest:Destroy()
+		structure.Parent = self._plot_model.Structures
 		return false
 	end
 
 	if cloneTest.PrimaryPart == nil then
+		cloneTest:Destroy()
+		structure.Parent = self._plot_model.Structures
 		warn("[Plot] Structure does not have a primary part")
 		return false
 	end
@@ -410,6 +420,9 @@ function Plot:MoveStructure(structure: Model, cframe: CFrame)
 	cloneTest:Destroy()
 
 	structure:PivotTo(cframe)
+	structure.Parent = self._plot_model.Structures
+
+	return true
 end
 
 function Plot:GetPlaceable(model: Model)
@@ -438,14 +451,14 @@ function Plot:Serialize(): { [string]: { SerializedStructure } }
 		local structure_id = structure:GetAttribute("Id")
 
 		if structure.PrimaryPart == nil then
-			warn("[Plot] Structure does not have a primary part")
+			warn("[Plot2] Structure does not have a primary part")
 			continue
 		end
 
 		local cframe: CFrame = structure.PrimaryPart.CFrame
 
 		if structure_id == nil then
-			warn("[Plot] Structure does not have an ID")
+			warn("[Plot2] Structure does not have an ID")
 			continue
 		end
 
@@ -475,10 +488,10 @@ function Plot:Serialize(): { [string]: { SerializedStructure } }
 end
 
 function Plot:DeleteStructure(structure: Model)
-	assert(structure ~= nil, "[PlotService] DeleteStructure: Structure is nil")
+	assert(structure ~= nil, "[Plot2] DeleteStructure: Structure is nil")
 	assert(
 		structure.Parent == self._plot_model.Structures,
-		"[PlotService] DeleteStructure: Structure is not a child of the plot"
+		"[Plot2] DeleteStructure: Structure is not a child of the plot"
 	)
 
 	if structure == self._cityHall then
@@ -575,6 +588,18 @@ function Plot:Clear()
 		end
 	end
 	self._cityHall = nil
+end
+
+function Plot:HasStructure(structureId: string): boolean
+	local structures = self._plot_model.Structures:GetChildren()
+
+	for i = 1, #structures do
+		if structures[i]:GetAttribute("Id") == structureId then
+			return true
+		end
+	end
+
+	return false
 end
 
 function Plot.__tostring(self: Plot): string

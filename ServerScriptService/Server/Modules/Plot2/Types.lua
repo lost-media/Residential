@@ -30,13 +30,14 @@ export type IPlot = {
 	GetBuildings: (self: Plot) -> { [number]: Model },
 	GetRoads: (self: Plot) -> { [number]: Model },
 
-	PlaceStructure: (self: Plot, structure: Model, cframe: CFrame) -> boolean,
+	PlaceStructure: (self: Plot, structure: Model, cframe: CFrame) -> (boolean, Model),
 	MoveStructure: (self: Plot, structure: Model, cframe: CFrame) -> boolean,
 
 	GetPlaceable: (self: Plot, model: Model) -> Model?,
 	Serialize: (self: Plot) -> { [number]: SerializedStructure },
 
 	DeleteStructure: (self: Plot, structure: Model) -> (),
+	HasStructure: (self: Plot, structureId: string) -> boolean,
 }
 
 type PlotMembers = {

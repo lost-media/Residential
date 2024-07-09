@@ -33,7 +33,7 @@ local SETTINGS = {
 	RoadConnectionTag = "RoadConnection",
 	BuildingConnectionTag = "BuildingConnection",
 
-	NotConnectedToCityHallBillboardGuiName = "NotConnectedToCityHall",
+	BuildingIndicatorGuiName = "BuildingIndicatorGui",
 }
 
 ----- Types -----
@@ -161,7 +161,9 @@ function RoadNetwork:UpdateRoadConnectivity()
 					continue
 				end
 
-				if roadAttachment.WorldCFrame.Position == roadConnection.WorldCFrame.Position then
+				if
+					roadAttachment.WorldCFrame.Position:FuzzyEq(roadConnection.WorldCFrame.Position)
+				then
 					local neighborRoad = structure
 
 					if neighborRoad ~= nil then
@@ -188,6 +190,8 @@ function RoadNetwork:UpdateBuildingConnectivity()
 		local primaryPart = building.PrimaryPart
 		local attachments = primaryPart:GetChildren()
 
+		local buildingHasRoadConnection = false
+
 		for _, attachment: Attachment in ipairs(attachments) do
 			if attachment:IsA("Attachment") == false then
 				continue
@@ -201,8 +205,9 @@ function RoadNetwork:UpdateBuildingConnectivity()
 
 			for _, roadBuildingConnection: Attachment in ipairs(roadBuildingConnections) do
 				if
-					attachment.WorldCFrame.Position
-					== roadBuildingConnection.WorldCFrame.Position
+					attachment.WorldCFrame.Position:FuzzyEq(
+						roadBuildingConnection.WorldCFrame.Position
+					)
 				then
 					local road = self._graph:GetNodeWithVal(
 						roadBuildingConnection:FindFirstAncestorWhichIsA("Model")
@@ -211,10 +216,14 @@ function RoadNetwork:UpdateBuildingConnectivity()
 					if road ~= nil then
 						buildingRoadPairs[building] = road
 
-						--print("Building connected to road")
+						buildingHasRoadConnection = true
 					end
 				end
 			end
+		end
+
+		if buildingHasRoadConnection == false then
+			-- show indicator
 		end
 	end
 
@@ -230,11 +239,11 @@ function RoadNetwork:UpdateBuildingCityHallConnectivity()
 
 		if connectedToCityHall == false then
 			local primaryPart = building.PrimaryPart
-			local gui = primaryPart:FindFirstChild(SETTINGS.NotConnectedToCityHallBillboardGuiName)
+			local gui = primaryPart:FindFirstChild(SETTINGS.BuildingIndicatorGuiName)
 
 			if gui == nil then
 				gui = Instance.new("BillboardGui")
-				gui.Name = SETTINGS.NotConnectedToCityHallBillboardGuiName
+				gui.Name = SETTINGS.BuildingIndicatorGuiName
 				gui.Size = UDim2.new(1, 0, 1, 0)
 				gui.StudsOffset = Vector3.new(0, 5, 0)
 				gui.AlwaysOnTop = true
@@ -248,7 +257,7 @@ function RoadNetwork:UpdateBuildingCityHallConnectivity()
 			end
 		else
 			local primaryPart = building.PrimaryPart
-			local gui = primaryPart:FindFirstChild(SETTINGS.NotConnectedToCityHallBillboardGuiName)
+			local gui = primaryPart:FindFirstChild(SETTINGS.BuildingIndicatorGuiName)
 
 			if gui ~= nil then
 				gui:Destroy()

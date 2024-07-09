@@ -18,6 +18,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
 local DeleteStructure = require(LMEngine.Game.Shared.Placement.DeleteStructure)
+local MoveStructure = require(LMEngine.Game.Shared.Placement.MoveStructure)
 local PlacementClient = require(LMEngine.Game.Shared.Placement.PlacementClient2)
 ---@type PlacementClient
 --local PlacementClient = LMEngine.GetModule("PlacementClient")
@@ -38,28 +39,21 @@ local PlacementController = LMEngine.CreateController({
 
 	_placement_client = nil,
 	_delete_structure_client = nil,
-	_structures_index = 1,
+	_move_structure_client = nil,
 
 	_state = nil,
+	_isMoving = false,
 
 	-- Signals
 	PlacementBegan = Signal.new(),
 	OnStructureDeleteEnabled = Signal.new(),
 	OnStructureDeleteDisabled = Signal.new(),
+
+	OnStructureMoveEnabled = Signal.new(),
+	OnStructureMoveDisabled = Signal.new(),
 })
 
-local StructuresList = {
-	"Road/Ramp",
-	"City Hall",
-	"Residence/Medieval House",
-	"Industrial/Water Tower",
-	"Road/Streetlight",
-	"Road/T-Intersection",
-	"Road/Dead End",
-	"Road/Curved",
-	"Road/Normal",
-	"Road/Intersection",
-}
+----- Private functions -----
 
 ----- Public functions -----
 
@@ -76,16 +70,46 @@ function PlacementController:Start()
 	plotPromise:andThen(function(plot)
 		self._placement_client = PlacementClient.new(plot)
 		self._delete_structure_client = DeleteStructure.new(plot)
+		self._move_structure_client = MoveStructure.new(plot)
 
 		self._placement_client.PlacementConfirmed:Connect(function(structure_id, cframe)
 			---@type Promise
-			local placement_promise = PlotService:PlaceStructure(structure_id, cframe)
+			local placement_promise
+
+			if self._isMoving == true then
+				if self._movingStructure == nil then
+					return
+				end
+				placement_promise = PlotService:MoveStructure(self._movingStructure, cframe)
+			else
+				placement_promise = PlotService:PlaceStructure(structure_id, cframe)
+			end
 
 			placement_promise
 				:andThen(function(successful: boolean)
 					if successful == false then
 						-- Show toast message
-						print("[PlacementController] Structure placement failed")
+						--print("[PlacementController] Structure placement failed")
+					end
+
+					if successful == true then
+						if self._isMoving == true then
+							-- set the moving structure's parent back to the plot
+							self._movingStructure.Parent = plot.Structures
+							self._movingStructure:PivotTo(cframe)
+
+							self._movingStructure = nil
+							self._movingStructureOriginalCFrame = nil
+
+							self:StopPlacement()
+
+							if self._openPlacementFrame == true then
+								---@type UIController
+								local UIController = LMEngine.GetController("UIController")
+
+								UIController:OpenFrame("SelectionFrame")
+							end
+						end
 					end
 				end)
 				:catch(function(err)
@@ -100,6 +124,17 @@ function PlacementController:Start()
 				local UIController = LMEngine.GetController("UIController")
 
 				UIController:OpenFrame("SelectionFrame")
+			end
+
+			if
+				self._isMoving == true
+				and self._movingStructure ~= nil
+				and self._movingStructureOriginalCFrame ~= nil
+			then
+				self._movingStructure.Parent = plot.Structures
+				self._movingStructure:PivotTo(self._movingStructureOriginalCFrame)
+				self._movingStructure = nil
+				self._movingStructureOriginalCFrame = nil
 			end
 
 			self._state = nil
@@ -136,6 +171,28 @@ function PlacementController:StartPlacement(structureId: string)
 	end
 
 	local clone = structure.Model:Clone()
+
+	self._isMoving = false
+
+	self:StartMovement(clone)
+end
+
+function PlacementController:StartMovement(clone: Model)
+	local structureId = clone:GetAttribute("Id")
+
+	if structureId == nil then
+		return
+	end
+
+	-- disable delete mode and move mode
+	if self._state == "deleting" then
+		self:DisableDeleteMode()
+	end
+
+	self:DisableMoveMode()
+
+	local structure = StructuresUtils.GetStructureFromId(structureId)
+
 	clone.Parent = workspace
 
 	TroveObject:Add(clone)
@@ -155,6 +212,10 @@ function PlacementController:StartPlacement(structureId: string)
 
 	if properties ~= nil and properties.Radius ~= nil then
 		settings.radius = properties.Radius
+	end
+
+	if structure.IsABuilding == true then
+		settings.frontSurface = structure.FrontSurface
 	end
 
 	self._state = "placing"
@@ -184,6 +245,9 @@ function PlacementController:StopPlacement()
 	if self._placement_client ~= nil then
 		self._state = nil
 		self._placement_client:CancelPlacement()
+		self._isMoving = false
+		self._movingStructure = nil
+		self._movingStructureOriginalCFrame = nil
 	end
 end
 
@@ -214,10 +278,6 @@ function PlacementController:EnableDeleteMode()
 end
 
 function PlacementController:DisableDeleteMode()
-	if self._state ~= "deleting" then
-		return
-	end
-
 	if self._delete_structure_client == nil then
 		return
 	end
@@ -227,6 +287,68 @@ function PlacementController:DisableDeleteMode()
 	self._delete_structure_client:Disable()
 
 	self.OnStructureDeleteDisabled:Fire()
+end
+
+function PlacementController:EnableMoveMode()
+	if self._placement_client ~= nil then
+		if self._placement_client:IsPlacing() == true then
+			self:StopPlacement()
+		end
+	end
+
+	if self._move_structure_client == nil then
+		return
+	end
+
+	self._state = "moving"
+
+	self._move_structure_client:Enable()
+
+	self.OnStructureMoveEnabled:Fire()
+
+	local PlotService = LMEngine.GetService("PlotService")
+
+	-- Listen for structure deletion
+	self._move_structure_client.OnStructureMoving:Connect(
+		function(structure: Model, originalCFrame: CFrame)
+			-- create a cloen of the model
+			local clone = structure:Clone()
+
+			-- set the original model's parent to nil to prevent it from being deleted
+			structure.Parent = nil
+
+			-- add the clone to the workspace
+			clone.Parent = workspace
+
+			-- get the structure's id
+			local structure_id = structure:GetAttribute("Id")
+
+			if structure_id == nil then
+				return
+			end
+
+			self._isMoving = true
+
+			self._movingStructure = structure
+			self._movingStructureOriginalCFrame = originalCFrame
+
+			self:StartMovement(clone)
+		end
+	)
+end
+
+function PlacementController:DisableMoveMode()
+	if self._move_structure_client == nil then
+		return
+	end
+
+	self._state = nil
+
+	self._move_structure_client:Disable()
+
+	self.OnStructureMoveDisabled:Fire()
+
+	--self._isMoving = false
 end
 
 return PlacementController

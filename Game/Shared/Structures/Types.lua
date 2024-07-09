@@ -43,6 +43,8 @@ export type Structure = {
 	GridUnit: number,
 	AerialViewAngle: number,
 
+	FrontSurface: { Enum.NormalId } | Enum.NormalId,
+
 	Properties: {
 		Radius: number?,
 		[string]: any,

@@ -9,6 +9,13 @@
 
 local SETTINGS = {
 	FadeDuration = 0.1,
+	GraphemeWait = 0.025,
+	PunctuationWait = {
+		["."] = 1,
+		[","] = 0.25,
+		["!"] = 0.4,
+		["?"] = 0.5,
+	},
 }
 
 ----- Private variables -----
@@ -16,6 +23,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+
+local QuestCollection = require(ReplicatedStorage.Game.Shared.Quests)
+type Quest = QuestCollection.Quest
 
 local uiContainer = ReplicatedStorage.UI
 local ui_Extras = ReplicatedStorage.Extras.UI
@@ -43,9 +53,24 @@ local UIController = LMEngine.CreateController({
 
 	_frames = {},
 	_lastStructureCategory = "Residence",
+
+	_skipQuestDialog = false,
+	_questDialogCompleted = true,
+	QuestDialogAdvanced = Signal.new(),
 })
 
 ----- Private functions -----
+
+local function GetGraphemeCount(text: string): number
+	local graphemes = utf8.graphemes(text)
+	local count = 0
+
+	for _ in graphemes do
+		count = count + 1
+	end
+
+	return count
+end
 
 local function GenerateRandom3LetterString()
 	local letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -57,6 +82,24 @@ local function GenerateRandom3LetterString()
 	end
 
 	return random_string
+end
+
+local function AllFramesExcept(screens: { string }): { string }
+	local all_screens = {}
+
+	local frames = UIController._frames
+
+	if frames == nil then
+		return {}
+	end
+
+	for frame_name, _ in pairs(frames) do
+		if table.find(screens, frame_name) == nil then
+			table.insert(all_screens, frame_name)
+		end
+	end
+
+	return all_screens
 end
 
 ----- Public functions -----
@@ -156,6 +199,8 @@ function UIController:Start()
 			end
 		)
 
+		---@type QuestController
+		local QuestController = LMEngine.GetController("QuestController")
 		-- Register all frames
 
 		-- Build Mode
@@ -188,6 +233,12 @@ function UIController:Start()
 			end)
 
 			trove:Connect(buildModeButtons.Delete.Activated, function()
+				if QuestController:IsOnTutorial() == true then
+					-- TODO: show toast message
+					print("You cannot do that right now")
+					return
+				end
+
 				self:CloseFrame("PlacementScreen")
 				self:OpenFrame("DeleteStructureFrame")
 			end)
@@ -309,6 +360,9 @@ function UIController:Start()
 
 			-- add the structure preview buttons to the scrolling frame
 			clearSelectionScrollingFrame()
+
+			-- enable the move mode
+			PlacementController:EnableMoveMode()
 
 			trove:Connect(
 				selectionScrollingFrame.UIGridLayout:GetPropertyChangedSignal("AbsoluteContentSize"),
@@ -480,6 +534,8 @@ function UIController:Start()
 				end)
 			end
 
+			local isOnTutorial = QuestController:IsOnTutorial()
+
 			local function filterByStructureCategory(category: string)
 				local collection = StructureUtils.GetStructuresFromCategory(category)
 
@@ -493,8 +549,30 @@ function UIController:Start()
 				-- sort by price
 				sortByPrice(collection)
 
+				local highlightedStructureId: string? = nil
+
+				if isOnTutorial == true then
+					local currentQuest: Quest = QuestController:GetCurrentQuest()
+
+					if currentQuest ~= nil then
+						local step = QuestController:GetQuestStep()
+
+						local questStep = currentQuest.Quests[step]
+
+						if questStep ~= nil then
+							if questStep.Action.Type == "Build" then
+								local structureId = questStep.Action.Structure
+
+								if structureId ~= nil then
+									highlightedStructureId = structureId
+								end
+							end
+						end
+					end
+				end
+
 				coroutine.wrap(function()
-					renderCollection(collection, nil)
+					renderCollection(collection, highlightedStructureId)
 				end)()
 			end
 
@@ -506,7 +584,19 @@ function UIController:Start()
 				end
 			end
 
-			filterByStructureCategory(self._lastStructureCategory or "Residence")
+			local category = "Residence"
+
+			if isOnTutorial == true then
+				local step = QuestController:GetQuestStep()
+
+				if step == 1 then
+					category = "City Hall"
+				end
+			else
+				category = self._lastStructureCategory or "Residence"
+			end
+
+			filterByStructureCategory(category)
 		end, function(trove)
 			TweenService:Create(selectionFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 1,
@@ -520,11 +610,18 @@ function UIController:Start()
 
 		-- Group the Selection and Build Mode
 		self:RegisterFrame("PlacementScreen", function(trove)
-			self:CloseFrame("all")
+			self:CloseFrame(AllFramesExcept({
+				"SelectionFrame",
+				"BuildModeFrame",
+				"QuestDialogFrame",
+				"QuestObjectiveFrame",
+			}))
 			self:OpenFrame("SelectionFrame")
 			self:OpenFrame("BuildModeFrame")
 		end, function(trove)
 			self:CloseFrame({ "SelectionFrame", "BuildModeFrame" })
+
+			PlacementController:DisableMoveMode()
 		end)
 
 		local mainHudScreen = PlayerGui.MainHUD
@@ -589,6 +686,66 @@ function UIController:Start()
 			}):Play()
 		end)
 
+		local questDialogScreen = PlayerGui.QuestDialog
+		local questDialogFrame: CanvasGroup = questDialogScreen.Frame
+		local questDialogContainer = questDialogFrame.Container
+
+		local questObjectiveContainer: CanvasGroup = questDialogScreen.Objective
+
+		self:RegisterFrame("QuestObjectiveFrame", function(trove)
+			TweenService:Create(questObjectiveContainer, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 0,
+				Visible = true,
+			}):Play()
+
+			TweenService:Create(questObjectiveContainer.UIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 1,
+			}):Play()
+		end, function(trove)
+			TweenService:Create(questObjectiveContainer, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 1,
+				Visible = false,
+			}):Play()
+
+			TweenService:Create(questObjectiveContainer.UIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 0.5,
+			}):Play()
+		end)
+
+		self:RegisterFrame("QuestDialogFrame", function(trove)
+			TweenService:Create(questDialogFrame, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 0,
+				Visible = true,
+			}):Play()
+
+			TweenService:Create(questDialogContainer.UIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 1,
+			}):Play()
+
+			trove:Connect(questDialogContainer.Button.MouseButton1Click, function()
+				if self._questDialogCompleted == true then
+					-- do something
+					self.QuestDialogAdvanced:Fire()
+					self._skipQuestDialog = false
+					self._questDialogCompleted = false
+				else
+					self._skipQuestDialog = true
+				end
+			end)
+		end, function(trove)
+			self._skipQuestDialog = false
+			self._questDialogCompleted = true
+
+			TweenService:Create(questDialogFrame, TweenInfo.new(settFadeDuration), {
+				GroupTransparency = 1,
+				Visible = false,
+			}):Play()
+
+			TweenService:Create(questDialogContainer.UIScale, TweenInfo.new(settFadeDuration), {
+				Scale = 0.5,
+			}):Play()
+		end)
+
 		-- Open the main HUD
 		self:OpenFrame("MainHUDPrimaryButtons")
 	end)
@@ -621,7 +778,7 @@ function UIController:OpenFrame(name: string)
 	end
 
 	if frame.isOpen == true then
-		--return
+		return
 	end
 
 	frame.isOpen = true
@@ -692,6 +849,69 @@ function UIController:IsFrameOpen(name: string): boolean
 	end
 
 	return frame.isOpen
+end
+
+function UIController:ShowQuestDialog(title: string, text: string)
+	assert(title ~= nil, "Title is nil")
+	assert(text ~= nil, "Text is nil")
+
+	if self:IsFrameOpen("QuestDialogFrame") == false then
+		self:OpenFrame("QuestDialogFrame")
+	end
+
+	local questDialogFrame = PlayerGui.QuestDialog.Frame
+	local questDialogContainer = questDialogFrame.Container
+	local questDialogTextContainer = questDialogContainer.Container
+
+	questDialogTextContainer.Title.Text = title
+	questDialogTextContainer.Action.Visible = false
+
+	local graphemes = utf8.graphemes(text)
+	local bodyText: TextLabel = questDialogTextContainer.Body
+
+	bodyText.Text = text
+
+	bodyText.MaxVisibleGraphemes = 0
+
+	self._questDialogCompleted = false
+	self._skipQuestDialog = false
+
+	local first, last = graphemes()
+
+	while last ~= nil do
+		if self._skipQuestDialog == true then
+			break
+		end
+
+		local grapheme = text:sub(first, last)
+		local punctuationWait = SETTINGS.PunctuationWait[grapheme]
+
+		bodyText.MaxVisibleGraphemes = last
+
+		if punctuationWait ~= nil then
+			task.wait(punctuationWait)
+		else
+			task.wait(SETTINGS.GraphemeWait)
+		end
+
+		first, last = graphemes()
+	end
+
+	bodyText.MaxVisibleGraphemes = GetGraphemeCount(text)
+
+	self._questDialogCompleted = true
+	self._skipQuestDialog = false
+
+	questDialogTextContainer.Action.Visible = true
+end
+
+function UIController:UpdateQuestObjective(title: string, objective: string)
+	local questObjectiveFrame = PlayerGui.QuestDialog.Objective
+
+	questObjectiveFrame.Top.Title.Text = title
+	questObjectiveFrame.Task.Label.Text = objective
+
+	self:OpenFrame("QuestObjectiveFrame")
 end
 
 return UIController

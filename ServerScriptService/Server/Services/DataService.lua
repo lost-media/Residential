@@ -66,8 +66,8 @@ local PlotStore = ProfileService.GetProfileStore({
 	Scope = SETTINGS.PlotProfileScope,
 }, {})
 
----@type RetryAsync
-local RetryAsync = LMEngine.GetShared("RetryAsync")
+local RetryAsync = require(LMEngine.SharedDir.RetryAsync)
+local Signal = require(LMEngine.SharedDir.Signal)
 
 local MigrationManager = require(dir_Modules.MigrationManager)
 
@@ -89,6 +89,7 @@ local DataService = LMEngine.CreateService({
 	_plots = {},
 
 	-- Events
+	PlotLoaded = Signal.new(),
 })
 
 ---@type RateLimiter
@@ -103,6 +104,9 @@ local CreatePlotRateLimiter = RateLimiter.NewRateLimiter(1)
 function DataService:Start()
 	---@type PlayerService
 	local PlayerService = LMEngine.GetService("PlayerService")
+
+	---@type PlotService
+	local PlotService = LMEngine.GetService("PlotService")
 
 	PlayerService:RegisterPlayerAdded(function(player)
 		-- Create leaderstats
@@ -155,19 +159,24 @@ function DataService:Start()
 			return
 		end
 
-		local last_plot_id_used = profile.Data.LastPlotIdUsed
-
 		if profile ~= nil then
 			profile:Release()
 		end
 
-		if last_plot_id_used ~= nil then
-			local plot_profile = self._plots[last_plot_id_used]
+		local plot_profile = self._plots[player]
 
-			if plot_profile ~= nil then
-				plot_profile:Release()
-				self._plots[last_plot_id_used] = nil
+		if plot_profile ~= nil then
+			-- check if the tutorial is completed
+			if plot_profile.Data.CompletedTutorial == false then
+				-- reset the plot
+				plot_profile.Data.PlotData = PlotService:GetEmptyPlotDataString()
+
+				-- quests are reset
+				plot_profile.Data.Quests = {}
 			end
+
+			plot_profile:Release()
+			self._plots[player] = nil
 		end
 	end, "LOW")
 end
@@ -181,14 +190,7 @@ function DataService:GetPlayerCredits(player: Player)
 	end
 
 	-- find the players plot
-	local plot_uuid = profile.Data.LastPlotIdUsed
-
-	if plot_uuid == nil then
-		warn("[DataService]: Player does not have a plot")
-		return
-	end
-
-	local plot_profile = self._plots[plot_uuid]
+	local plot_profile = self._plots[player]
 
 	if plot_profile == nil then
 		warn("[DataService]: Player does not have a plot")
@@ -217,21 +219,21 @@ function DataService:LoadPlot(player: Player, plot_uuid: string)
 		return
 	end
 
-	local plot_profile = self._plots[plot_uuid]
+	local plot_profile = self._plots[player]
 
 	if plot_profile == nil then
 		plot_profile = PlotStore:LoadProfileAsync(plot_uuid)
-		self._plots[plot_uuid] = plot_profile
+		self._plots[player] = plot_profile
 
 		plot_profile:AddUserId(player.UserId)
 
 		plot_profile:ListenToRelease(function()
-			self._plots[plot_uuid] = nil
+			self._plots[player] = nil
 		end)
 
 		if player:IsDescendantOf(Players) == false then
 			plot_profile:Release()
-			self._plots[plot_uuid] = nil
+			self._plots[player] = nil
 		end
 
 		plot_profile.Data.Version = 0
@@ -240,15 +242,15 @@ function DataService:LoadPlot(player: Player, plot_uuid: string)
 		plot_profile = MigrationManager.MigratePlotProfile(player, plot_profile)
 	end
 
+	plot_profile.Data.UUID = plot_uuid
 	profile.Data.LastPlotIdUsed = plot_uuid
-
-	print("[DataService]: Loaded plot for player: " .. player.Name)
 
 	-- load the plot from PlotService
 	---@type PlotService
 	local PlotService = LMEngine.GetService("PlotService")
 
 	PlotService:LoadPlotData(player, plot_profile.Data, plot_uuid)
+	self.PlotLoaded:Fire(player, plot_profile.Data)
 
 	return plot_profile.Data
 end
@@ -270,7 +272,7 @@ function DataService:UpdatePlotData(player: Player, plot_uuid: string, plot_data
 		return
 	end
 
-	local plot_profile = self._plots[plot_uuid]
+	local plot_profile = self._plots[player]
 
 	if plot_profile == nil then
 		warn("[DataService]: Plot does not exist")
@@ -279,6 +281,11 @@ function DataService:UpdatePlotData(player: Player, plot_uuid: string, plot_data
 
 	if plot_profile.Data.UserId ~= player.UserId then
 		warn("[DataService]: Player does not own this plot")
+		return
+	end
+
+	if plot_profile.Data.UUID ~= plot_uuid then
+		warn("[DataService]: Plot UUID does not match")
 		return
 	end
 
@@ -332,18 +339,18 @@ function DataService:CreatePlot(player: Player, name: string)
 	plot_profile:AddUserId(player.UserId)
 
 	plot_profile:ListenToRelease(function()
-		self._plots[plot_uuid] = nil
+		self._plots[player] = nil
 	end)
 
 	if player:IsDescendantOf(Players) == false then
 		plot_profile:Release()
-		self._plots[plot_profile.Data.UserId] = nil
+		self._plots[player] = nil
 	end
 
 	-- Migrate the plot profile
 	plot_profile = MigrationManager.MigratePlotProfile(player, plot_profile)
 
-	self._plots[plot_uuid] = plot_profile
+	self._plots[player] = plot_profile
 
 	-- Add the plot to the player's profile
 	profile.Data.Plots[plot_uuid] = name
@@ -363,6 +370,10 @@ function DataService.Client:CreatePlot(player: Player, name: string)
 	assert(name ~= nil, "[DataService] CreatePlot: Name is nil")
 
 	return self.Server:CreatePlot(player, name)
+end
+
+function DataService:GetPlot(player: Player)
+	return self._plots[player]
 end
 
 return DataService
