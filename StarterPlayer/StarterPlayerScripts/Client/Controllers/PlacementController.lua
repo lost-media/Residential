@@ -92,11 +92,8 @@ function PlacementController:Start()
 						--print("[PlacementController] Structure placement failed")
 					end
 
-					print(successful, self._isMoving, self._movingStructure)
 					if successful == true then
 						if self._isMoving == true then
-							print("Stop moving!")
-
 							-- set the moving structure's parent back to the plot
 							self._movingStructure.Parent = plot.Structures
 							self._movingStructure:PivotTo(cframe)
