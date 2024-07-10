@@ -20,8 +20,6 @@ local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 local DeleteStructure = require(LMEngine.Game.Shared.Placement.DeleteStructure)
 local MoveStructure = require(LMEngine.Game.Shared.Placement.MoveStructure)
 local PlacementClient = require(LMEngine.Game.Shared.Placement.PlacementClient2)
----@type PlacementClient
---local PlacementClient = LMEngine.GetModule("PlacementClient")
 
 ---@type Signal
 local Signal = LMEngine.GetShared("Signal")
