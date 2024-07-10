@@ -399,8 +399,6 @@ function Plot:MoveStructure(structure: Model, cframe: CFrame)
 		return false
 	end
 
-	print("ITS ALL GOOD")
-
 	local can_place = HandleCollisions(self._player.Character, cloneTest, collisions, self)
 
 	if can_place == false then
@@ -421,6 +419,9 @@ function Plot:MoveStructure(structure: Model, cframe: CFrame)
 
 	structure:PivotTo(cframe)
 	structure.Parent = self._plot_model.Structures
+
+	-- update the road network
+	self._road_network:UpdateConnectivity()
 
 	return true
 end

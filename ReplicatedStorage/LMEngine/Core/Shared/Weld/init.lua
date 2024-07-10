@@ -55,6 +55,9 @@ function WeldLib.WeldModelToPrimaryPart(model: Model)
 	local primary_part = model.PrimaryPart
 	primary_part.Anchored = true
 
+	-- First, delete all existing welds in the model
+	WeldLib.UnweldModel(model)
+
 	-- Weld all parts to the primary part
 	for _, part in model:GetDescendants() do
 		if part:IsA("BasePart") == true and part ~= primary_part then
