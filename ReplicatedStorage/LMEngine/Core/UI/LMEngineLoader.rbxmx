@@ -2,7 +2,7 @@
 	<Meta name="ExplicitAutoJoints">true</Meta>
 	<External>null</External>
 	<External>nil</External>
-	<Item class="ScreenGui" referent="RBXE94570BB6E3C4C2FA6ECF554C142CF67">
+	<Item class="ScreenGui" referent="RBXD2B147A2889E46599A1758C3C5E556CC">
 		<Properties>
 			<BinaryString name="AttributesSerialize"></BinaryString>
 			<bool name="AutoLocalize">true</bool>
@@ -11,7 +11,7 @@
 			<bool name="DefinesCapabilities">false</bool>
 			<int name="DisplayOrder">99999999</int>
 			<bool name="Enabled">false</bool>
-			<string name="Name">LMEngine</string>
+			<string name="Name">LMEngineLoader</string>
 			<bool name="ResetOnSpawn">false</bool>
 			<Ref name="RootLocalizationTable">null</Ref>
 			<token name="SafeAreaCompatibility">1</token>
@@ -25,7 +25,7 @@
 			<BinaryString name="Tags"></BinaryString>
 			<token name="ZIndexBehavior">1</token>
 		</Properties>
-		<Item class="Frame" referent="RBX120453280A3A41DE98E88EE243B1B07C">
+		<Item class="Frame" referent="RBX67EBAF62F85548B9820EBA8C4773599F">
 			<Properties>
 				<bool name="Active">true</bool>
 				<Vector2 name="AnchorPoint">
@@ -88,7 +88,7 @@
 				<bool name="Visible">true</bool>
 				<int name="ZIndex">1</int>
 			</Properties>
-			<Item class="ImageLabel" referent="RBXF975792279544489AEBC09D1501A121E">
+			<Item class="ImageLabel" referent="RBX9D598A90C39D450483407628976E4CC6">
 				<Properties>
 					<bool name="Active">false</bool>
 					<Vector2 name="AnchorPoint">
@@ -184,7 +184,7 @@
 					<bool name="Visible">true</bool>
 					<int name="ZIndex">1</int>
 				</Properties>
-				<Item class="UIAspectRatioConstraint" referent="RBX6F70395B752A4F8B87E6C843FD689F31">
+				<Item class="UIAspectRatioConstraint" referent="RBX356DA2D25EDB4DCCA45ED229AA5DF4CC">
 					<Properties>
 						<float name="AspectRatio">1.56125832</float>
 						<token name="AspectType">0</token>
@@ -198,7 +198,139 @@
 					</Properties>
 				</Item>
 			</Item>
-			<Item class="Frame" referent="RBXCC75C97CC6CE48579219BC0309C8E066">
+			<Item class="TextLabel" referent="RBX8F6C15FCE86E45B6847683FFABC62D02">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Vector2 name="AnchorPoint">
+						<X>0.5</X>
+						<Y>0.5</Y>
+					</Vector2>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<bool name="AutoLocalize">true</bool>
+					<token name="AutomaticSize">0</token>
+					<Color3 name="BackgroundColor3">
+						<R>1</R>
+						<G>1</G>
+						<B>1</B>
+					</Color3>
+					<float name="BackgroundTransparency">1</float>
+					<Color3 name="BorderColor3">
+						<R>0</R>
+						<G>0</G>
+						<B>0</B>
+					</Color3>
+					<token name="BorderMode">0</token>
+					<int name="BorderSizePixel">0</int>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="DefinesCapabilities">false</bool>
+					<bool name="Draggable">false</bool>
+					<Font name="FontFace">
+						<Family><url>rbxassetid://12187365364</url></Family>
+						<Weight>700</Weight>
+						<Style>Normal</Style>
+					</Font>
+					<bool name="Interactable">true</bool>
+					<int name="LayoutOrder">0</int>
+					<float name="LineHeight">1</float>
+					<string name="LocalizationMatchIdentifier"></string>
+					<string name="LocalizationMatchedSourceText"></string>
+					<int name="MaxVisibleGraphemes">-1</int>
+					<string name="Name">Label</string>
+					<Ref name="NextSelectionDown">null</Ref>
+					<Ref name="NextSelectionLeft">null</Ref>
+					<Ref name="NextSelectionRight">null</Ref>
+					<Ref name="NextSelectionUp">null</Ref>
+					<string name="OpenTypeFeatures"></string>
+					<UDim2 name="Position">
+						<XS>0.5</XS>
+						<XO>0</XO>
+						<YS>0.437336802</YS>
+						<YO>0</YO>
+					</UDim2>
+					<bool name="RichText">false</bool>
+					<Ref name="RootLocalizationTable">null</Ref>
+					<float name="Rotation">0</float>
+					<bool name="Selectable">false</bool>
+					<token name="SelectionBehaviorDown">0</token>
+					<token name="SelectionBehaviorLeft">0</token>
+					<token name="SelectionBehaviorRight">0</token>
+					<token name="SelectionBehaviorUp">0</token>
+					<bool name="SelectionGroup">false</bool>
+					<Ref name="SelectionImageObject">null</Ref>
+					<int name="SelectionOrder">0</int>
+					<UDim2 name="Size">
+						<XS>0.51024735</XS>
+						<XO>0</XO>
+						<YS>0.0802005008</YS>
+						<YO>0</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<int64 name="SourceAssetId">-1</int64>
+					<BinaryString name="Tags"></BinaryString>
+					<string name="Text">Getting everything ready for you</string>
+					<Color3 name="TextColor3">
+						<R>0.298039228</R>
+						<G>0.466666669</G>
+						<B>0.400000006</B>
+					</Color3>
+					<token name="TextDirection">0</token>
+					<bool name="TextScaled">true</bool>
+					<float name="TextSize">14</float>
+					<Color3 name="TextStrokeColor3">
+						<R>0</R>
+						<G>0</G>
+						<B>0</B>
+					</Color3>
+					<float name="TextStrokeTransparency">1</float>
+					<float name="TextTransparency">0</float>
+					<token name="TextTruncate">0</token>
+					<bool name="TextWrapped">true</bool>
+					<token name="TextXAlignment">2</token>
+					<token name="TextYAlignment">1</token>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">1</int>
+				</Properties>
+				<Item class="UITextSizeConstraint" referent="RBX78D4794E828945F4B1C84E45D87496EB">
+					<Properties>
+						<BinaryString name="AttributesSerialize"></BinaryString>
+						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+						<bool name="DefinesCapabilities">false</bool>
+						<int name="MaxTextSize">36</int>
+						<int name="MinTextSize">1</int>
+						<string name="Name">UITextSizeConstraint</string>
+						<int64 name="SourceAssetId">-1</int64>
+						<BinaryString name="Tags"></BinaryString>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="UIPadding" referent="RBXFB472CDD57C243979F147692994C45B0">
+				<Properties>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">UIPadding</string>
+					<UDim name="PaddingBottom">
+						<S>0</S>
+						<O>16</O>
+					</UDim>
+					<UDim name="PaddingLeft">
+						<S>0</S>
+						<O>16</O>
+					</UDim>
+					<UDim name="PaddingRight">
+						<S>0</S>
+						<O>16</O>
+					</UDim>
+					<UDim name="PaddingTop">
+						<S>0</S>
+						<O>16</O>
+					</UDim>
+					<int64 name="SourceAssetId">-1</int64>
+					<BinaryString name="Tags"></BinaryString>
+				</Properties>
+			</Item>
+			<Item class="Frame" referent="RBX8E035E90890C4B92972B8C8035CA7580">
 				<Properties>
 					<bool name="Active">false</bool>
 					<Vector2 name="AnchorPoint">
@@ -261,7 +393,7 @@
 					<bool name="Visible">true</bool>
 					<int name="ZIndex">1</int>
 				</Properties>
-				<Item class="ImageLabel" referent="RBXE63E1206125549828801574A9EDC1E47">
+				<Item class="ImageLabel" referent="RBXD0578966A26745F18050F3D9DCFE3F1D">
 					<Properties>
 						<bool name="Active">false</bool>
 						<Vector2 name="AnchorPoint">
@@ -357,7 +489,7 @@
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
-					<Item class="UIAspectRatioConstraint" referent="RBXABE6584318404F76A91314EFEACAE105">
+					<Item class="UIAspectRatioConstraint" referent="RBX7160095090974BCA885DE027C0E9699E">
 						<Properties>
 							<float name="AspectRatio">1</float>
 							<token name="AspectType">0</token>
@@ -371,7 +503,7 @@
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="UIListLayout" referent="RBX56BF177208644968A7D600DA772A5D3C">
+				<Item class="UIListLayout" referent="RBXE4396F227A88424CA21E3745B79E01E6">
 					<Properties>
 						<BinaryString name="AttributesSerialize"></BinaryString>
 						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
@@ -393,7 +525,7 @@
 						<bool name="Wraps">false</bool>
 					</Properties>
 				</Item>
-				<Item class="ImageLabel" referent="RBX9798B395542444779043362CEBF27308">
+				<Item class="ImageLabel" referent="RBXF2D1E6BBE48B4BDA860FB3D19CDB7457">
 					<Properties>
 						<bool name="Active">false</bool>
 						<Vector2 name="AnchorPoint">
@@ -489,7 +621,7 @@
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
-					<Item class="UIAspectRatioConstraint" referent="RBXEE9791FF9F7447B9A4FBD80CDFF577AC">
+					<Item class="UIAspectRatioConstraint" referent="RBX20E2E9889E1A423D8E5F8F53056A079C">
 						<Properties>
 							<float name="AspectRatio">1</float>
 							<token name="AspectType">0</token>
@@ -502,36 +634,8 @@
 							<BinaryString name="Tags"></BinaryString>
 						</Properties>
 					</Item>
-					<Item class="LocalScript" referent="RBX9AC5129B758344AD8BF5C7414C703EE6">
-						<Properties>
-							<BinaryString name="AttributesSerialize"></BinaryString>
-							<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
-							<bool name="DefinesCapabilities">false</bool>
-							<bool name="Disabled">true</bool>
-							<Content name="LinkedSource"><null></null></Content>
-							<string name="Name">LocalScript</string>
-							<token name="RunContext">0</token>
-							<string name="ScriptGuid">{14E16321-13A7-4C73-9627-177F8FDEEB51}</string>
-							<ProtectedString name="Source"><![CDATA[local firstColor = Color3.fromRGB(181, 178, 172)
-local secondColor = Color3.fromRGB(113, 176, 151)
-
-local TweenService = game:GetService("TweenService")
-
-local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, -1, true, 0.25)
-
-script.Parent.ImageColor3 = firstColor
-
-local tween = TweenService:Create(script.Parent, tweenInfo, {
-	ImageColor3 = secondColor
-})
-
-tween:Play()]]></ProtectedString>
-							<int64 name="SourceAssetId">-1</int64>
-							<BinaryString name="Tags"></BinaryString>
-						</Properties>
-					</Item>
 				</Item>
-				<Item class="ImageLabel" referent="RBX5D1D1C503CA04DE187CC66649E066876">
+				<Item class="ImageLabel" referent="RBXF0A7F80228B247F9B1B775B082376B6D">
 					<Properties>
 						<bool name="Active">false</bool>
 						<Vector2 name="AnchorPoint">
@@ -627,7 +731,7 @@ tween:Play()]]></ProtectedString>
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
-					<Item class="UIAspectRatioConstraint" referent="RBX972F93B1C5994C49ADE9234D88E94D83">
+					<Item class="UIAspectRatioConstraint" referent="RBXB416DE52522A41C883A1C01502D25581">
 						<Properties>
 							<float name="AspectRatio">1</float>
 							<token name="AspectType">0</token>
@@ -641,7 +745,7 @@ tween:Play()]]></ProtectedString>
 						</Properties>
 					</Item>
 				</Item>
-				<Item class="ImageLabel" referent="RBXD722E4F41AC74E8CB3C2B7659CD49D9C">
+				<Item class="ImageLabel" referent="RBX03BDE75ADA4640B8A650BB171B570D67">
 					<Properties>
 						<bool name="Active">false</bool>
 						<Vector2 name="AnchorPoint">
@@ -737,7 +841,7 @@ tween:Play()]]></ProtectedString>
 						<bool name="Visible">true</bool>
 						<int name="ZIndex">1</int>
 					</Properties>
-					<Item class="UIAspectRatioConstraint" referent="RBX850E03932B2947E4BEF29DC51652F3A7">
+					<Item class="UIAspectRatioConstraint" referent="RBX0BD5CE45D2144331983FCF7DDD6381D4">
 						<Properties>
 							<float name="AspectRatio">1</float>
 							<token name="AspectType">0</token>
@@ -752,140 +856,8 @@ tween:Play()]]></ProtectedString>
 					</Item>
 				</Item>
 			</Item>
-			<Item class="TextLabel" referent="RBXB73A7E5B23F84268B3C91CD6E5F4F2B5">
-				<Properties>
-					<bool name="Active">false</bool>
-					<Vector2 name="AnchorPoint">
-						<X>0.5</X>
-						<Y>0.5</Y>
-					</Vector2>
-					<BinaryString name="AttributesSerialize"></BinaryString>
-					<bool name="AutoLocalize">true</bool>
-					<token name="AutomaticSize">0</token>
-					<Color3 name="BackgroundColor3">
-						<R>1</R>
-						<G>1</G>
-						<B>1</B>
-					</Color3>
-					<float name="BackgroundTransparency">1</float>
-					<Color3 name="BorderColor3">
-						<R>0</R>
-						<G>0</G>
-						<B>0</B>
-					</Color3>
-					<token name="BorderMode">0</token>
-					<int name="BorderSizePixel">0</int>
-					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
-					<bool name="ClipsDescendants">false</bool>
-					<bool name="DefinesCapabilities">false</bool>
-					<bool name="Draggable">false</bool>
-					<Font name="FontFace">
-						<Family><url>rbxassetid://12187365364</url></Family>
-						<Weight>700</Weight>
-						<Style>Normal</Style>
-					</Font>
-					<bool name="Interactable">true</bool>
-					<int name="LayoutOrder">0</int>
-					<float name="LineHeight">1</float>
-					<string name="LocalizationMatchIdentifier"></string>
-					<string name="LocalizationMatchedSourceText"></string>
-					<int name="MaxVisibleGraphemes">-1</int>
-					<string name="Name">Label</string>
-					<Ref name="NextSelectionDown">null</Ref>
-					<Ref name="NextSelectionLeft">null</Ref>
-					<Ref name="NextSelectionRight">null</Ref>
-					<Ref name="NextSelectionUp">null</Ref>
-					<string name="OpenTypeFeatures"></string>
-					<UDim2 name="Position">
-						<XS>0.5</XS>
-						<XO>0</XO>
-						<YS>0.437336802</YS>
-						<YO>0</YO>
-					</UDim2>
-					<bool name="RichText">false</bool>
-					<Ref name="RootLocalizationTable">null</Ref>
-					<float name="Rotation">0</float>
-					<bool name="Selectable">false</bool>
-					<token name="SelectionBehaviorDown">0</token>
-					<token name="SelectionBehaviorLeft">0</token>
-					<token name="SelectionBehaviorRight">0</token>
-					<token name="SelectionBehaviorUp">0</token>
-					<bool name="SelectionGroup">false</bool>
-					<Ref name="SelectionImageObject">null</Ref>
-					<int name="SelectionOrder">0</int>
-					<UDim2 name="Size">
-						<XS>0.51024735</XS>
-						<XO>0</XO>
-						<YS>0.0802005008</YS>
-						<YO>0</YO>
-					</UDim2>
-					<token name="SizeConstraint">0</token>
-					<int64 name="SourceAssetId">-1</int64>
-					<BinaryString name="Tags"></BinaryString>
-					<string name="Text">Getting everything ready for you</string>
-					<Color3 name="TextColor3">
-						<R>0.298039228</R>
-						<G>0.466666669</G>
-						<B>0.400000006</B>
-					</Color3>
-					<token name="TextDirection">0</token>
-					<bool name="TextScaled">true</bool>
-					<float name="TextSize">14</float>
-					<Color3 name="TextStrokeColor3">
-						<R>0</R>
-						<G>0</G>
-						<B>0</B>
-					</Color3>
-					<float name="TextStrokeTransparency">1</float>
-					<float name="TextTransparency">0</float>
-					<token name="TextTruncate">0</token>
-					<bool name="TextWrapped">true</bool>
-					<token name="TextXAlignment">2</token>
-					<token name="TextYAlignment">1</token>
-					<bool name="Visible">true</bool>
-					<int name="ZIndex">1</int>
-				</Properties>
-				<Item class="UITextSizeConstraint" referent="RBX6A23D76DBD7E4D148DB7678460583F75">
-					<Properties>
-						<BinaryString name="AttributesSerialize"></BinaryString>
-						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
-						<bool name="DefinesCapabilities">false</bool>
-						<int name="MaxTextSize">36</int>
-						<int name="MinTextSize">1</int>
-						<string name="Name">UITextSizeConstraint</string>
-						<int64 name="SourceAssetId">-1</int64>
-						<BinaryString name="Tags"></BinaryString>
-					</Properties>
-				</Item>
-			</Item>
-			<Item class="UIPadding" referent="RBX636360390DB44E349CE61CD35413043E">
-				<Properties>
-					<BinaryString name="AttributesSerialize"></BinaryString>
-					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
-					<bool name="DefinesCapabilities">false</bool>
-					<string name="Name">UIPadding</string>
-					<UDim name="PaddingBottom">
-						<S>0</S>
-						<O>16</O>
-					</UDim>
-					<UDim name="PaddingLeft">
-						<S>0</S>
-						<O>16</O>
-					</UDim>
-					<UDim name="PaddingRight">
-						<S>0</S>
-						<O>16</O>
-					</UDim>
-					<UDim name="PaddingTop">
-						<S>0</S>
-						<O>16</O>
-					</UDim>
-					<int64 name="SourceAssetId">-1</int64>
-					<BinaryString name="Tags"></BinaryString>
-				</Properties>
-			</Item>
 		</Item>
-		<Item class="Frame" referent="RBX63D12D8CC7704853A818205AC2A0B324">
+		<Item class="Frame" referent="RBX054E439AEFFF4A6CBF3D0A7952BC10FF">
 			<Properties>
 				<bool name="Active">false</bool>
 				<Vector2 name="AnchorPoint">
@@ -948,105 +920,7 @@ tween:Play()]]></ProtectedString>
 				<bool name="Visible">true</bool>
 				<int name="ZIndex">1</int>
 			</Properties>
-			<Item class="LocalScript" referent="RBXAD97069E6075470EBEDEAC071CCD60D3">
-				<Properties>
-					<BinaryString name="AttributesSerialize"></BinaryString>
-					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
-					<bool name="DefinesCapabilities">false</bool>
-					<bool name="Disabled">true</bool>
-					<Content name="LinkedSource"><null></null></Content>
-					<string name="Name">TweenTransparency</string>
-					<token name="RunContext">0</token>
-					<string name="ScriptGuid">{29930F50-D51C-4EEA-9AB0-8F8303B16B07}</string>
-					<ProtectedString name="Source"><![CDATA[local TweenService = game:GetService("TweenService")
-local LocalPlayer = game:GetService("Players").LocalPlayer
-local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-
-local frame = script.Parent
-local UIGradient = frame:FindFirstChildOfClass("UIGradient")
-local container = script.Parent.Parent.Container
-
-
-task.wait(2)
-
-local function tweenGradientIn()
-	local numbervalue = Instance.new("NumberValue")
-	numbervalue.Value = UIGradient.Transparency.Keypoints[1].Value
-
-	local nv2 = Instance.new("NumberValue")
-	nv2.Value = UIGradient.Transparency.Keypoints[2].Value
-
-
-	local number_con = numbervalue.Changed:Connect(function()
-		UIGradient.Transparency = NumberSequence.new(numbervalue.Value, nv2.Value)
-	end)
-
-	local number_con2 = nv2.Changed:Connect(function()
-		UIGradient.Transparency = NumberSequence.new(numbervalue.Value, nv2.Value)
-	end)
-
-	local tweenInfoFade = TweenInfo.new(0.21, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	local tweenInfoFade2 = TweenInfo.new(0.07, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-
-	local tw = TweenService:Create(numbervalue, tweenInfoFade, {Value = 0})
-	local tw2 = TweenService:Create(nv2, tweenInfoFade2, {Value = 0})
-
-	local tw_con; tw_con = tw.Completed:Connect(function()
-		number_con:Disconnect()
-		tw_con:Disconnect()
-		--numbervalue:Destroy()
-	end)
-
-	tw:Play()
-	tw2:Play()
-end
-
-
-local function tweenGradientOut()
-	local numbervalue = Instance.new("NumberValue")
-	numbervalue.Value = UIGradient.Transparency.Keypoints[1].Value
-
-	local nv2 = Instance.new("NumberValue")
-	nv2.Value = UIGradient.Transparency.Keypoints[2].Value
-
-
-	local number_con = numbervalue.Changed:Connect(function()
-		UIGradient.Transparency = NumberSequence.new(numbervalue.Value, nv2.Value)
-	end)
-
-	local number_con2 = nv2.Changed:Connect(function()
-		UIGradient.Transparency = NumberSequence.new(numbervalue.Value, nv2.Value)
-	end)
-
-	local tweenInfoFade = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	local tweenInfoFade2 = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-
-	local tw = TweenService:Create(numbervalue, tweenInfoFade, {Value = 1})
-	local tw2 = TweenService:Create(nv2, tweenInfoFade2, {Value = 1})
-
-	local tw_con; tw_con = tw.Completed:Connect(function()
-		number_con:Disconnect()
-		tw_con:Disconnect()
-		--numbervalue:Destroy()
-	end)
-
-	tw:Play()
-	tw2:Play()
-end
-
-tweenGradientIn()
-task.wait(1)
-container.Visible = false
-tweenGradientOut()
-
-]]></ProtectedString>
-					<int64 name="SourceAssetId">-1</int64>
-					<BinaryString name="Tags"></BinaryString>
-				</Properties>
-			</Item>
-			<Item class="UIGradient" referent="RBX8819DFCBF5FF4DCC9E437B8D39E6A47C">
+			<Item class="UIGradient" referent="RBX7D72F1BCB7E84274AD7A5B3E815B8749">
 				<Properties>
 					<BinaryString name="AttributesSerialize"></BinaryString>
 					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>

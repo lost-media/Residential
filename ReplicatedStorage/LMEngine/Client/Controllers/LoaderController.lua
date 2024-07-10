@@ -224,7 +224,7 @@ function LoaderController:Start()
 			end
 
 			tweenGradientIn()
-			task.wait(1)
+			task.wait(0.35)
 			container.Visible = false
 			tweenGradientOut()
 		end, true)
