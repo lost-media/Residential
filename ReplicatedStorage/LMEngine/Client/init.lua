@@ -106,7 +106,7 @@ local KnitClient = {}
 ]=]
 KnitClient.Player = game:GetService("Players").LocalPlayer
 
-local dir_Shared = script.Parent.Shared
+local dir_Shared = script.Parent.Core.Shared
 local dir_Game = ReplicatedStorage:FindFirstChild("Game")
 
 local Comm = require(dir_Shared.Comm)

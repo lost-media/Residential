@@ -120,7 +120,7 @@ local KnitServer = {}
 	folder only contains what is necessary for Knit to run in Wally mode.
 ]=]
 
-local dir_Shared = script.Parent.Shared
+local dir_Shared = script.Parent.Core.Shared
 
 local dir_Game = ReplicatedStorage:FindFirstChild("Game")
 
@@ -505,6 +505,12 @@ function KnitServer.Start(options: KnitOptions?)
 
 		-- Expose service remotes to everyone:
 		knitRepServiceFolder.Parent = script.Parent.Parent
+
+		-- indicate that the server has started to the client
+		local serverStarted = Instance.new("BoolValue")
+		serverStarted.Name = "LMEngineServerStarted"
+		serverStarted.Parent = ReplicatedStorage.LMEngine
+		serverStarted.Value = true
 	end)
 end
 

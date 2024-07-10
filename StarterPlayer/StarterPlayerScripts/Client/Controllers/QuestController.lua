@@ -108,12 +108,14 @@ function QuestController:StartQuest(id: string, step: number)
 	if quest then
 		---@type UIController
 		local UIController = LMEngine.GetController("UIController")
+		---@type FrameController
+		local FrameController = LMEngine.GetController("FrameController")
 
 		self._quest = quest
 		self._questStep = step
 
 		if quest.Id == SETTINGS.TutorialQuestId and step == 1 then
-			UIController:CloseFrame("MainHUDPrimaryButtons")
+			FrameController:CloseFrame("MainHUDPrimaryButtons")
 		end
 
 		if quest.Id == SETTINGS.TutorialQuestId then
@@ -121,10 +123,10 @@ function QuestController:StartQuest(id: string, step: number)
 			local PlacementController = LMEngine.GetController("PlacementController")
 
 			PlacementController:StopPlacement()
-			UIController:CloseFrame("PlacementScreen")
+			FrameController:CloseFrame("PlacementScreen")
 		end
 
-		UIController:CloseFrame("QuestObjectiveFrame")
+		FrameController:CloseFrame("QuestObjectiveFrame")
 
 		questControllerTrove:Connect(UIController.QuestDialogAdvanced, function()
 			self:AdvanceQuestDialog()
@@ -161,14 +163,16 @@ function QuestController:AdvanceQuestDialog()
 
 		---@type UIController
 		local UIController = LMEngine.GetController("UIController")
+		---@type FrameController
+		local FrameController = LMEngine.GetController("FrameController")
 
-		UIController:CloseFrame("QuestDialogFrame")
-		UIController:OpenFrame("QuestObjectiveFrame")
+		FrameController:CloseFrame("QuestDialogFrame")
+		FrameController:OpenFrame("QuestObjectiveFrame")
 
 		UIController:UpdateQuestObjective(quest.Name, quest.Quests[step].Objective)
 
 		if quest.Id == "Tutorial" then
-			UIController:OpenFrame("MainHUDPrimaryButtons")
+			FrameController:OpenFrame("MainHUDPrimaryButtons")
 		end
 	end
 end
