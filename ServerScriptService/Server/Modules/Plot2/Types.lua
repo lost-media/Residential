@@ -38,6 +38,10 @@ export type IPlot = {
 
 	DeleteStructure: (self: Plot, structure: Model) -> (),
 	HasStructure: (self: Plot, structureId: string) -> boolean,
+
+	GetRoadNetwork: (self: Plot) -> RoadNetworkTypes.RoadNetwork,
+	GetRoads: (self: Plot) -> { Model },
+	GetStructures: (self: Plot) -> { Model },
 }
 
 type PlotMembers = {

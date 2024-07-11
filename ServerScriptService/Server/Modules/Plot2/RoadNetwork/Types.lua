@@ -1,6 +1,7 @@
 local LMEngine = require(game:GetService("ReplicatedStorage").LMEngine)
 
 local Graph = require(LMEngine.SharedDir.DS.Graph)
+local Signal = require(LMEngine.SharedDir.Signal)
 
 local PlotTypes = script.Parent.Parent.Types
 type Plot = PlotTypes.Plot
@@ -19,6 +20,13 @@ export type IRoadNetwork = {
 export type RoadNetworkMembers = {
 	_plot: Plot,
 	_graph: Graph.Graph,
+	_allBuildingsConnected: boolean,
+	_buildings: { Instance },
+	_buildingRoadPairs: { [Instance]: Instance },
+
+	RoadConnected: Signal.Signal,
+	BuildingConnected: Signal.Signal,
+	AllBuildingsConnected: Signal.Signal,
 }
 
 export type RoadNetwork = typeof(setmetatable({} :: RoadNetworkMembers, {} :: IRoadNetwork))

@@ -67,6 +67,8 @@ local SETTINGS = {
 ----- Private variables -----
 
 local RoadNetwork = require(script.RoadNetwork)
+local RoadNetworkTypes = require(script.RoadNetwork.Types)
+type RoadNetwork = RoadNetworkTypes.RoadNetwork
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -553,6 +555,10 @@ function Plot:GetRoads()
 	end
 
 	return roads
+end
+
+function Plot:GetRoadNetwork(): RoadNetwork
+	return self._road_network
 end
 
 function Plot:GetBuildings()

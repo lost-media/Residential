@@ -402,7 +402,11 @@ function UIController:Start()
 			-- @param collection: table
 			-- @param highlightedStructureId: string? (useful for quests
 			-- where the player needs to select a certain structure)
-			local function renderCollection(collection: table, highlightedStructureId: string?)
+			local function renderCollection(
+				collection: table,
+				highlightedStructureId: string?,
+				categoryToHighlight: string?
+			)
 				if isRenderingCollection == true then
 					return
 				end
@@ -458,12 +462,21 @@ function UIController:Start()
 						}):Play()
 
 						if
-							highlightedStructureId ~= nil
+							categoryToHighlight == nil
+							and highlightedStructureId ~= nil
 							and highlightedStructureId ~= structureData.Id
 						then
 							structureButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 							structureButton.Label.TextColor3 = Color3.fromRGB(100, 100, 100)
 							structureButton.Button.Visible = false
+						end
+
+						if categoryToHighlight ~= nil then
+							if structureData.Category ~= categoryToHighlight then
+								structureButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+								structureButton.Label.TextColor3 = Color3.fromRGB(100, 100, 100)
+								structureButton.Button.Visible = false
+							end
 						end
 
 						-- set up the viewport frame
@@ -549,6 +562,7 @@ function UIController:Start()
 				sortByPrice(collection)
 
 				local highlightedStructureId: string? = nil
+				local categoryToHighlight: string? = nil
 
 				if isOnTutorial == true then
 					local currentQuest: Quest = QuestController:GetCurrentQuest()
@@ -565,13 +579,16 @@ function UIController:Start()
 								if structureId ~= nil then
 									highlightedStructureId = structureId
 								end
+							elseif step == 7 then
+								-- All roads should be highlighted
+								categoryToHighlight = "Road"
 							end
 						end
 					end
 				end
 
 				coroutine.wrap(function()
-					renderCollection(collection, highlightedStructureId)
+					renderCollection(collection, highlightedStructureId, categoryToHighlight)
 				end)()
 			end
 
@@ -594,7 +611,8 @@ function UIController:Start()
 					[3] = "Residence",
 					[4] = "Utilities",
 					[5] = "Services",
-					[6] = "Decorations",
+					[6] = "Business",
+					[7] = "Roads",
 				}
 
 				category = stepTable[step] or "Residence"
