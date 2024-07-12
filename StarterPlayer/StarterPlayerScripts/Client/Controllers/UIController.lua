@@ -107,9 +107,8 @@ end
 function UIController:Start()
 	-- wait for the GUIs to load
 
-	---@type InputController
-	local InputController = LMEngine.GetController("InputController")
-	local mouse = InputController:GetMouse()
+	---@type FrameController
+	local FrameController = LMEngine.GetController("FrameController")
 
 	LMEngine.GameLoaded():andThen(function()
 		-- inside this promise, we don't need WaitForChild
@@ -209,7 +208,7 @@ function UIController:Start()
 		local buildModeContainer = buildModeFrame.Container
 		local buildModeButtons = buildModeContainer.Buttons
 
-		self:RegisterFrame("BuildModeFrame", function(trove)
+		FrameController:RegisterFrame("BuildModeFrame", function(trove)
 			TweenService:Create(buildModeFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 0,
 				Visible = true,
@@ -225,8 +224,8 @@ function UIController:Start()
 
 			-- set up connections
 			trove:Connect(buildModeButtons.Close.Activated, function()
-				self:CloseFrame("PlacementScreen")
-				self:OpenFrame("MainHUDPrimaryButtons")
+				FrameController:CloseFrame("PlacementScreen")
+				FrameController:OpenFrame("MainHUDPrimaryButtons")
 
 				PlacementController:StopPlacement()
 				PlacementController:DisableDeleteMode()
@@ -239,8 +238,8 @@ function UIController:Start()
 					return
 				end
 
-				self:CloseFrame("PlacementScreen")
-				self:OpenFrame("DeleteStructureFrame")
+				FrameController:CloseFrame("PlacementScreen")
+				FrameController:OpenFrame("DeleteStructureFrame")
 			end)
 
 			local playerCreditsPromise = DataService:GetPlayerCredits()
@@ -273,7 +272,7 @@ function UIController:Start()
 
 		local deleteStructureFrame: CanvasGroup = placementScreen.Frame.DeleteStructure
 
-		self:RegisterFrame("DeleteStructureFrame", function(trove)
+		FrameController:RegisterFrame("DeleteStructureFrame", function(trove)
 			TweenService:Create(deleteStructureFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 0,
 				Visible = true,
@@ -288,8 +287,8 @@ function UIController:Start()
 			}):Play()
 
 			local function closeDeleteStructureFrame()
-				self:CloseFrame("DeleteStructureFrame")
-				self:OpenFrame("PlacementScreen")
+				FrameController:CloseFrame("DeleteStructureFrame")
+				FrameController:OpenFrame("PlacementScreen")
 				PlacementController:DisableDeleteMode()
 			end
 
@@ -341,7 +340,7 @@ function UIController:Start()
 			end
 		end
 
-		self:RegisterFrame("SelectionFrame", function(trove)
+		FrameController:RegisterFrame("SelectionFrame", function(trove)
 			TweenService:Create(selectionFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 0,
 				Visible = true,
@@ -352,7 +351,7 @@ function UIController:Start()
 			}):Play()
 
 			trove:Connect(PlacementController.PlacementBegan, function()
-				self:CloseFrame("SelectionFrame")
+				FrameController:CloseFrame("SelectionFrame")
 			end)
 
 			-- retirve the players credit value
@@ -403,7 +402,11 @@ function UIController:Start()
 			-- @param collection: table
 			-- @param highlightedStructureId: string? (useful for quests
 			-- where the player needs to select a certain structure)
-			local function renderCollection(collection: table, highlightedStructureId: string?)
+			local function renderCollection(
+				collection: table,
+				highlightedStructureId: string?,
+				categoryToHighlight: string?
+			)
 				if isRenderingCollection == true then
 					return
 				end
@@ -459,12 +462,21 @@ function UIController:Start()
 						}):Play()
 
 						if
-							highlightedStructureId ~= nil
+							categoryToHighlight == nil
+							and highlightedStructureId ~= nil
 							and highlightedStructureId ~= structureData.Id
 						then
 							structureButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 							structureButton.Label.TextColor3 = Color3.fromRGB(100, 100, 100)
 							structureButton.Button.Visible = false
+						end
+
+						if categoryToHighlight ~= nil then
+							if structureData.Category ~= categoryToHighlight then
+								structureButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+								structureButton.Label.TextColor3 = Color3.fromRGB(100, 100, 100)
+								structureButton.Button.Visible = false
+							end
 						end
 
 						-- set up the viewport frame
@@ -550,6 +562,7 @@ function UIController:Start()
 				sortByPrice(collection)
 
 				local highlightedStructureId: string? = nil
+				local categoryToHighlight: string? = nil
 
 				if isOnTutorial == true then
 					local currentQuest: Quest = QuestController:GetCurrentQuest()
@@ -566,13 +579,16 @@ function UIController:Start()
 								if structureId ~= nil then
 									highlightedStructureId = structureId
 								end
+							elseif step == 7 then
+								-- All roads should be highlighted
+								categoryToHighlight = "Road"
 							end
 						end
 					end
 				end
 
 				coroutine.wrap(function()
-					renderCollection(collection, highlightedStructureId)
+					renderCollection(collection, highlightedStructureId, categoryToHighlight)
 				end)()
 			end
 
@@ -589,9 +605,17 @@ function UIController:Start()
 			if isOnTutorial == true then
 				local step = QuestController:GetQuestStep()
 
-				if step == 1 then
-					category = "City Hall"
-				end
+				local stepTable = {
+					[1] = "City Hall",
+					[2] = "Roads",
+					[3] = "Residence",
+					[4] = "Utilities",
+					[5] = "Services",
+					[6] = "Business",
+					[7] = "Roads",
+				}
+
+				category = stepTable[step] or "Residence"
 			else
 				category = self._lastStructureCategory or "Residence"
 			end
@@ -609,17 +633,17 @@ function UIController:Start()
 		end)
 
 		-- Group the Selection and Build Mode
-		self:RegisterFrame("PlacementScreen", function(trove)
-			self:CloseFrame(AllFramesExcept({
+		FrameController:RegisterFrame("PlacementScreen", function(trove)
+			FrameController:CloseAllFramesExcept({
 				"SelectionFrame",
 				"BuildModeFrame",
 				"QuestDialogFrame",
 				"QuestObjectiveFrame",
-			}))
-			self:OpenFrame("SelectionFrame")
-			self:OpenFrame("BuildModeFrame")
+			})
+			FrameController:OpenFrame("SelectionFrame")
+			FrameController:OpenFrame("BuildModeFrame")
 		end, function(trove)
-			self:CloseFrame({ "SelectionFrame", "BuildModeFrame" })
+			FrameController:CloseFrame({ "SelectionFrame", "BuildModeFrame" })
 
 			PlacementController:DisableMoveMode()
 		end)
@@ -628,7 +652,7 @@ function UIController:Start()
 		local mainHudPrimaryButtons = mainHudScreen.PrimaryButtons
 		local mainHudPrimaryButtonsContainer: CanvasGroup = mainHudPrimaryButtons.Container
 
-		self:RegisterFrame("MainHUDPrimaryButtons", function(trove)
+		FrameController:RegisterFrame("MainHUDPrimaryButtons", function(trove)
 			TweenService:Create(mainHudPrimaryButtonsContainer, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 0,
 				Visible = true,
@@ -642,11 +666,11 @@ function UIController:Start()
 
 			-- set up connections
 			trove:Connect(mainHudPrimaryButtonsContainer.Build.Activated, function()
-				self:OpenFrame("PlacementScreen")
+				FrameController:OpenFrame("PlacementScreen")
 			end)
 
 			trove:Connect(mainHudPrimaryButtonsContainer.Stats.Activated, function()
-				self:ToggleFrame("StatsFrame")
+				FrameController:ToggleFrame("StatsFrame")
 			end)
 		end, function(trove)
 			TweenService:Create(mainHudPrimaryButtonsContainer, TweenInfo.new(settFadeDuration), {
@@ -664,7 +688,7 @@ function UIController:Start()
 		-- Stats frame
 		local statsFrame: CanvasGroup = mainHudScreen.CityStats
 
-		self:RegisterFrame("StatsFrame", function(trove)
+		FrameController:RegisterFrame("StatsFrame", function(trove)
 			TweenService:Create(statsFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 0,
 				Position = UDim2.fromScale(0.5, 0.5),
@@ -692,7 +716,7 @@ function UIController:Start()
 
 		local questObjectiveContainer: CanvasGroup = questDialogScreen.Objective
 
-		self:RegisterFrame("QuestObjectiveFrame", function(trove)
+		FrameController:RegisterFrame("QuestObjectiveFrame", function(trove)
 			TweenService:Create(questObjectiveContainer, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 0,
 				Visible = true,
@@ -712,7 +736,7 @@ function UIController:Start()
 			}):Play()
 		end)
 
-		self:RegisterFrame("QuestDialogFrame", function(trove)
+		FrameController:RegisterFrame("QuestDialogFrame", function(trove)
 			TweenService:Create(questDialogFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 0,
 				Visible = true,
@@ -747,116 +771,19 @@ function UIController:Start()
 		end)
 
 		-- Open the main HUD
-		self:OpenFrame("MainHUDPrimaryButtons")
+		FrameController:OpenFrame("MainHUDPrimaryButtons")
 	end)
-end
-
-function UIController:RegisterFrame(
-	name: string,
-	openFunction: (trove: Trove.Trove) -> (),
-	closeFunction: (trove: Trove.Trove) -> ()
-)
-	-- Handle the logic
-
-	local cleanupTrove = Trove.new()
-
-	self._frames[name] = {
-		openFunction = openFunction,
-		closeFunction = closeFunction,
-		cleanupTrove = cleanupTrove,
-		isOpen = false,
-	}
-
-	self:CloseFrame(name)
-end
-
-function UIController:OpenFrame(name: string)
-	local frame = self._frames[name]
-
-	if frame == nil then
-		return
-	end
-
-	if frame.isOpen == true then
-		return
-	end
-
-	frame.isOpen = true
-
-	coroutine.wrap(function()
-		frame.openFunction(frame.cleanupTrove)
-	end)()
-end
-
-function UIController:CloseFrame(name: string | { string })
-	if name == nil then
-		return
-	end
-
-	if name == "all" then
-		for frame_name, _ in pairs(self._frames) do
-			self:CloseFrame(frame_name)
-		end
-
-		return
-	end
-
-	if type(name) == "table" then
-		for _, frame_name in ipairs(name) do
-			self:CloseFrame(frame_name)
-		end
-
-		return
-	end
-
-	local frame = self._frames[name]
-
-	if frame == nil then
-		return
-	end
-
-	if frame.isOpen == false then
-		--return
-	end
-
-	frame.isOpen = false
-
-	coroutine.wrap(function()
-		frame.closeFunction(frame.cleanupTrove)
-		frame.cleanupTrove:Destroy()
-	end)()
-end
-
-function UIController:ToggleFrame(name: string)
-	local frame = self._frames[name]
-
-	if frame == nil then
-		return
-	end
-
-	if frame.isOpen == true then
-		self:CloseFrame(name)
-	else
-		self:OpenFrame(name)
-	end
-end
-
-function UIController:IsFrameOpen(name: string): boolean
-	local frame = self._frames[name]
-
-	if frame == nil then
-		return false
-	end
-
-	return frame.isOpen
 end
 
 function UIController:ShowQuestDialog(title: string, text: string)
 	assert(title ~= nil, "Title is nil")
 	assert(text ~= nil, "Text is nil")
 
-	if self:IsFrameOpen("QuestDialogFrame") == false then
-		self:OpenFrame("QuestDialogFrame")
+	---@type FrameController
+	local FrameController = LMEngine.GetController("FrameController")
+
+	if FrameController:IsFrameOpen("QuestDialogFrame") == false then
+		FrameController:OpenFrame("QuestDialogFrame")
 	end
 
 	local questDialogFrame = PlayerGui.QuestDialog.Frame
@@ -911,7 +838,10 @@ function UIController:UpdateQuestObjective(title: string, objective: string)
 	questObjectiveFrame.Top.Title.Text = title
 	questObjectiveFrame.Task.Label.Text = objective
 
-	self:OpenFrame("QuestObjectiveFrame")
+	---@type FrameController
+	local FrameController = LMEngine.GetController("FrameController")
+
+	FrameController:OpenFrame("QuestObjectiveFrame")
 end
 
 return UIController

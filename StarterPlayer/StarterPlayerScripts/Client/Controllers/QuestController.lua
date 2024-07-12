@@ -99,6 +99,27 @@ function QuestController:Start()
 		questControllerTrove:Destroy()
 		self:StartQuest(id, step)
 	end)
+
+	QuestService.QuestEnded:Connect(function(questId: string)
+		self._quest.Ended = true
+
+		---@type UIController
+		local UIController = LMEngine.GetController("UIController")
+		---@type FrameController
+		local FrameController = LMEngine.GetController("FrameController")
+
+		FrameController:CloseFrame("QuestObjectiveFrame")
+
+		UIController:ShowQuestDialog(
+			"Quest Complete",
+			"Congratulations! You have completed the quest."
+		)
+
+		questControllerTrove:Connect(UIController.QuestDialogAdvanced, function()
+			print("TEST")
+			self:AdvanceQuestEndingDialog()
+		end)
+	end)
 end
 
 function QuestController:StartQuest(id: string, step: number)
@@ -108,12 +129,15 @@ function QuestController:StartQuest(id: string, step: number)
 	if quest then
 		---@type UIController
 		local UIController = LMEngine.GetController("UIController")
+		---@type FrameController
+		local FrameController = LMEngine.GetController("FrameController")
 
 		self._quest = quest
 		self._questStep = step
+		quest.Ended = false
 
 		if quest.Id == SETTINGS.TutorialQuestId and step == 1 then
-			UIController:CloseFrame("MainHUDPrimaryButtons")
+			FrameController:CloseFrame("MainHUDPrimaryButtons")
 		end
 
 		if quest.Id == SETTINGS.TutorialQuestId then
@@ -121,10 +145,10 @@ function QuestController:StartQuest(id: string, step: number)
 			local PlacementController = LMEngine.GetController("PlacementController")
 
 			PlacementController:StopPlacement()
-			UIController:CloseFrame("PlacementScreen")
+			FrameController:CloseFrame("PlacementScreen")
 		end
 
-		UIController:CloseFrame("QuestObjectiveFrame")
+		FrameController:CloseFrame("QuestObjectiveFrame")
 
 		questControllerTrove:Connect(UIController.QuestDialogAdvanced, function()
 			self:AdvanceQuestDialog()
@@ -132,7 +156,14 @@ function QuestController:StartQuest(id: string, step: number)
 
 		coroutine.wrap(function()
 			local quest1 = quest.Quests[step]
-			UIController:ShowQuestDialog(quest.Name, quest1.Narrative)
+			if quest1 then
+				if quest1.Type ~= "Dialog" then
+					---@type UIController
+					UIController:ShowQuestDialog(quest.Name, quest1.Narrative)
+				else
+					UIController:ShowQuestDialog(quest.Name, quest1.Narrative)
+				end
+			end
 		end)()
 	end
 end
@@ -141,6 +172,10 @@ function QuestController:AdvanceQuestDialog()
 	if self._quest then
 		local quest = self._quest
 		local step = self._questStep
+
+		if quest.Quests[step] == nil then
+			return
+		end
 
 		local additionalComments = quest.Quests[step].AdditionalComments
 
@@ -161,15 +196,53 @@ function QuestController:AdvanceQuestDialog()
 
 		---@type UIController
 		local UIController = LMEngine.GetController("UIController")
+		---@type FrameController
+		local FrameController = LMEngine.GetController("FrameController")
 
-		UIController:CloseFrame("QuestDialogFrame")
-		UIController:OpenFrame("QuestObjectiveFrame")
+		FrameController:CloseFrame("QuestDialogFrame")
+		FrameController:OpenFrame("QuestObjectiveFrame")
 
 		UIController:UpdateQuestObjective(quest.Name, quest.Quests[step].Objective)
 
 		if quest.Id == "Tutorial" then
-			UIController:OpenFrame("MainHUDPrimaryButtons")
+			FrameController:OpenFrame("MainHUDPrimaryButtons")
 		end
+	end
+end
+
+function QuestController:AdvanceQuestEndingDialog()
+	if self._quest then
+		local quest = self._quest
+		local step = self._questStep
+
+		if quest.Quests[step] == nil then
+			return
+		end
+
+		local additionalComments = quest.Quests[step].EndingDialogue
+
+		if additionalComments and additionalComments[self._additionalCommentIndex] then
+			---@type UIController
+			local UIController = LMEngine.GetController("UIController")
+			UIController:ShowQuestDialog(
+				quest.Name,
+				additionalComments[self._additionalCommentIndex]
+			)
+			self._additionalCommentIndex = self._additionalCommentIndex + 1
+			return
+		end
+
+		self._additionalCommentIndex = 1
+
+		-- at this point, the quest dialog is complete, so hide everything
+
+		---@type UIController
+		local UIController = LMEngine.GetController("UIController")
+		---@type FrameController
+		local FrameController = LMEngine.GetController("FrameController")
+
+		FrameController:CloseFrame("QuestDialogFrame")
+		FrameController:OpenFrame("QuestObjectiveFrame")
 	end
 end
 

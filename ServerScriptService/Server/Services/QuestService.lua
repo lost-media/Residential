@@ -12,6 +12,7 @@ local QuestService = LMEngine.CreateService({
 	Client = {
 		QuestStarted = LMEngine.CreateSignal(),
 		QuestProgressed = LMEngine.CreateSignal(),
+		QuestEnded = LMEngine.CreateSignal(),
 	},
 
 	_quests = {},
@@ -70,7 +71,7 @@ function QuestService:Start()
 			if completedTutorial then
 				return
 			end
-			--self:StartQuest(player, "Tutorial")
+			self:StartQuest(player, "Tutorial")
 		end)
 	end, "LOW")
 
@@ -149,26 +150,52 @@ function QuestService:RegisterQuestAction(player: string, questId: string, step:
 
 	local function checkProgress()
 		local progress = self._quests[player].Data.Progress[step] or 0
-		if progress >= questStep.Action.Amount then
-			self._quests[player].Data.Step = step + 1
-			self._quests[player].Data.Progress[step] = nil
+		if questStep.Action.Amount ~= nil then
+			if progress >= questStep.Action.Amount then
+				self._quests[player].Data.Step = step + 1
+				self._quests[player].Data.Progress[step] = nil
 
-			self.Client.QuestProgressed:Fire(player, questId, step + 1)
+				self.Client.QuestProgressed:Fire(player, questId, step + 1)
 
-			-- check if the quest is completed
-			if self._quests[player].Quest.Quests[self._quests[player].Data.Step] == false then
-				print("[QuestService] RegisterQuestAction: Quest completed")
+				-- check if the quest is completed
+				if self._quests[player].Quest.Quests[self._quests[player].Data.Step] == nil then
+					print("[QuestService] RegisterQuestAction: Quest completed")
 
-				-- mark the quest as completed
-				local DataService = LMEngine.GetService("DataService")
-				local plot = DataService:GetPlot(player)
-				plot.Data.CompletedQuests = plot.Data.CompletedQuests or {}
-				plot.Data.CompletedQuests[questId] = true
-			else
+					-- mark the quest as completed
+					local DataService = LMEngine.GetService("DataService")
+					local plot = DataService:GetPlot(player)
+					plot.Data.CompletedQuests = plot.Data.CompletedQuests or {}
+					plot.Data.CompletedQuests[questId] = true
+
+					-- first, give the ending dialogue
+					self.Client.QuestEnded:Fire(player, questId)
+
+					-- check if it's the tutorial quest
+					if questId == "Tutorial" then
+						-- mark the plot as completed
+						plot.Data.CompletedTutorial = true
+					end
+
+					-- give the player the rewards
+					local rewards = self._quests[player].Quest.Rewards
+				else
+					-- register the next quest action
+					self:RegisterQuestAction(player, questId, step + 1)
+				end
+				return true
+			end
+		else
+			self._quests[player].Data.Progress[step] = progress
+
+			if progress > 0 then
+				-- progress to the next step
+				self._quests[player].Data.Step = step + 1
+
 				-- register the next quest action
 				self:RegisterQuestAction(player, questId, step + 1)
+
+				return true
 			end
-			return true
 		end
 
 		return false
@@ -204,6 +231,39 @@ function QuestService:RegisterQuestAction(player: string, questId: string, step:
 				if finished then
 					connection:Disconnect()
 				end
+			end
+		end)
+
+		table.insert(self._connections[player], connection)
+	elseif type == "ConnectAllBuildings" then
+		local plot = PlotService:GetPlot(player)
+		if plot == nil then
+			return
+		end
+
+		local roadNetwork = plot:GetRoadNetwork()
+
+		--[[if questStep.Action.Accumulative == true then
+			if roadNetwork._allBuildingsConnected == true then
+				self._quests[player].Data.Progress[step] = 1
+
+				checkProgress()
+
+				return
+			end
+		end]]
+
+		local connection
+		connection = roadNetwork.AllBuildingsConnected:Connect(function()
+			print("[QuestService] RegisterQuestAction: AllBuildingsConnected")
+
+			-- add one to the progress
+			self._quests[player].Data.Progress[step] = 1
+
+			local finished = checkProgress()
+
+			if finished then
+				connection:Disconnect()
 			end
 		end)
 

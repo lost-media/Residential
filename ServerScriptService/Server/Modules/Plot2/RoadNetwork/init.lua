@@ -73,6 +73,9 @@ function RoadNetwork.new(plot): RoadNetwork
 
 	self.RoadConnected = Signal.new()
 	self.BuildingConnected = Signal.new()
+	self.AllBuildingsConnected = Signal.new()
+
+	self._allBuildingsConnected = false
 
 	return self
 end
@@ -126,6 +129,13 @@ function RoadNetwork:AddBuilding(structure: Model)
 
 	-- fire event that the building has been connected to a road
 	self.BuildingConnected:Fire(structure, road)
+
+	-- check if the building is connected to city hall
+	local connectedToCityHall = self:BuildingIsConnectedToCityHall(structure)
+
+	if connectedToCityHall == false then
+		self._allBuildingsConnected = false
+	end
 end
 
 function RoadNetwork:UpdateRoadConnectivity()
@@ -272,6 +282,30 @@ function RoadNetwork:UpdateConnectivity()
 
 	-- check if buildings are connected to city hall
 	self:UpdateBuildingCityHallConnectivity()
+
+	-- if all buildings are connected to city hall, then fire event
+	local allConnected = true
+
+	local buildings = self:GetBuildings()
+
+	for _, building in ipairs(buildings) do
+		local connectedToCityHall = self:BuildingIsConnectedToCityHall(building)
+
+		if connectedToCityHall == false then
+			allConnected = false
+			self._allBuildingsConnected = false
+			break
+		end
+	end
+
+	if allConnected == true then
+		self._allBuildingsConnected = true
+		self.AllBuildingsConnected:Fire()
+	end
+
+	print("All buildings connected: " .. tostring(allConnected))
+
+	return allConnected
 end
 
 function RoadNetwork:BuildingsAreConnected(building1: Model, building2: Model): boolean

@@ -1,4 +1,0 @@
-return {
-	PLOT_LEVEL_HEIGHT = 9,
-	STRUCTURE_ID_ATTRIBUTE_KEY = "Id",
-}

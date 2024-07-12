@@ -20,8 +20,6 @@ local LMEngine
 
 local RunService: RunService = game:GetService("RunService")
 
-local ServerInit: string = "LMEngineServerInit"
-
 local IsServer: boolean = RunService:IsServer()
 local IsRunning: boolean = RunService:IsRunning()
 local IsTesting: boolean = RunService:IsStudio()
@@ -29,12 +27,6 @@ local IsTesting: boolean = RunService:IsStudio()
 local Client
 local Server
 ----- Initialize the engine core -----
-
--- Load the testing framework if the environment is a test environment
-
-if IsTesting == true then
-	require(script.Test.LMEngineTestInit)
-end
 
 if IsServer == true then
 	return require(script.Server)

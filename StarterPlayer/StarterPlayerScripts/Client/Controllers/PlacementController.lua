@@ -20,8 +20,6 @@ local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 local DeleteStructure = require(LMEngine.Game.Shared.Placement.DeleteStructure)
 local MoveStructure = require(LMEngine.Game.Shared.Placement.MoveStructure)
 local PlacementClient = require(LMEngine.Game.Shared.Placement.PlacementClient2)
----@type PlacementClient
---local PlacementClient = LMEngine.GetModule("PlacementClient")
 
 ---@type Signal
 local Signal = LMEngine.GetShared("Signal")
@@ -104,10 +102,9 @@ function PlacementController:Start()
 							self:StopPlacement()
 
 							if self._openPlacementFrame == true then
-								---@type UIController
-								local UIController = LMEngine.GetController("UIController")
-
-								UIController:OpenFrame("SelectionFrame")
+								---@type FrameController
+								local FrameController = LMEngine.GetController("FrameController")
+								FrameController:OpenFrame("SelectionFrame")
 							end
 						end
 					end
@@ -120,10 +117,10 @@ function PlacementController:Start()
 
 		self._placement_client.Cancelled:Connect(function()
 			if self._openPlacementFrame == true and self._state ~= nil then
-				---@type UIController
-				local UIController = LMEngine.GetController("UIController")
+				---@type FrameController
+				local FrameController = LMEngine.GetController("FrameController")
 
-				UIController:OpenFrame("SelectionFrame")
+				FrameController:OpenFrame("SelectionFrame")
 			end
 
 			if
@@ -223,11 +220,11 @@ function PlacementController:StartMovement(clone: Model)
 	self._placement_client:UpdateGridUnit(grid_unit)
 	self._placement_client:InitiatePlacement(clone, settings)
 
-	---@type UIController
-	local UIController = LMEngine.GetController("UIController")
+	---@type FrameController
+	local FrameController = LMEngine.GetController("FrameController")
 
 	-- get the "SelectionFrame" UI open status
-	local selectionFrameOpen = UIController:IsFrameOpen("BuildModeFrame")
+	local selectionFrameOpen = FrameController:IsFrameOpen("BuildModeFrame")
 
 	if selectionFrameOpen == true then
 		self._openPlacementFrame = true

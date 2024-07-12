@@ -67,6 +67,8 @@ local SETTINGS = {
 ----- Private variables -----
 
 local RoadNetwork = require(script.RoadNetwork)
+local RoadNetworkTypes = require(script.RoadNetwork.Types)
+type RoadNetwork = RoadNetworkTypes.RoadNetwork
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -399,8 +401,6 @@ function Plot:MoveStructure(structure: Model, cframe: CFrame)
 		return false
 	end
 
-	print("ITS ALL GOOD")
-
 	local can_place = HandleCollisions(self._player.Character, cloneTest, collisions, self)
 
 	if can_place == false then
@@ -421,6 +421,9 @@ function Plot:MoveStructure(structure: Model, cframe: CFrame)
 
 	structure:PivotTo(cframe)
 	structure.Parent = self._plot_model.Structures
+
+	-- update the road network
+	self._road_network:UpdateConnectivity()
 
 	return true
 end
@@ -552,6 +555,10 @@ function Plot:GetRoads()
 	end
 
 	return roads
+end
+
+function Plot:GetRoadNetwork(): RoadNetwork
+	return self._road_network
 end
 
 function Plot:GetBuildings()
