@@ -31,7 +31,6 @@ local SETTINGS = {
 type PlayerSchema = {
 	Plots: { [string]: string },
 	UserId: number,
-	CompletedTutorial: boolean,
 	LastPlotIdUsed: string,
 	Version: number,
 }
@@ -167,12 +166,16 @@ function DataService:Start()
 
 		if plot_profile ~= nil then
 			-- check if the tutorial is completed
-			if plot_profile.Data.CompletedTutorial == false then
+			if
+				plot_profile.Data.CompletedQuests
+				and plot_profile.Data.CompletedQuests["Tutorial"] == nil
+			then
 				-- reset the plot
 				plot_profile.Data.PlotData = PlotService:GetEmptyPlotDataString()
 
 				-- quests are reset
 				plot_profile.Data.Quests = {}
+				plot_profile.Data.CompletedQuests = {}
 			end
 
 			plot_profile:Release()
@@ -374,6 +377,63 @@ end
 
 function DataService:GetPlot(player: Player)
 	return self._plots[player]
+end
+
+function DataService:IsQuestCompleted(player: Player, questId: string)
+	local plot_profile = self._plots[player]
+
+	if plot_profile == nil then
+		warn("[DataService]: Plot does not exist")
+		return false
+	end
+
+	if plot_profile.Data.CompletedQuests and plot_profile.Data.CompletedQuests[questId] then
+		return true
+	end
+
+	return false
+end
+
+function DataService:IsQuestStarted(player: Player, questId: string)
+	local plot_profile = self._plots[player]
+
+	if plot_profile == nil then
+		warn("[DataService]: Plot does not exist")
+		return false
+	end
+
+	if plot_profile.Data.Quests and plot_profile.Data.Quests[questId] then
+		return true
+	end
+
+	return false
+end
+
+function DataService:SetQuestCompleted(player: Player, questId: string)
+	local plot_profile = self._plots[player]
+
+	if plot_profile == nil then
+		warn("[DataService]: Plot does not exist")
+		return
+	end
+
+	if plot_profile.Data.CompletedQuests == nil then
+		plot_profile.Data.CompletedQuests = {}
+	end
+
+	plot_profile.Data.CompletedQuests[questId] = true
+	plot_profile.Data.Quests[questId] = nil
+end
+
+function DataService:UpdateQuestProgress(player: Player, questId: string, progressData: any)
+	local plot_profile = self._plots[player]
+
+	if plot_profile == nil then
+		warn("[DataService]: Plot does not exist")
+		return
+	end
+
+	plot_profile.Data.Quests[questId] = progressData
 end
 
 return DataService

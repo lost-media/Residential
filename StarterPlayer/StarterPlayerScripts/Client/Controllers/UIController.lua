@@ -54,9 +54,9 @@ local UIController = LMEngine.CreateController({
 	_frames = {},
 	_lastStructureCategory = "Residence",
 
-	_skipQuestDialog = false,
-	_questDialogCompleted = true,
-	QuestDialogAdvanced = Signal.new(),
+	_skipDialog = false,
+	_dialogFinished = true,
+	DialogAdvanced = Signal.new(),
 })
 
 ----- Private functions -----
@@ -564,7 +564,7 @@ function UIController:Start()
 				local highlightedStructureId: string? = nil
 				local categoryToHighlight: string? = nil
 
-				if isOnTutorial == true then
+				--[[if isOnTutorial == true then
 					local currentQuest: Quest = QuestController:GetCurrentQuest()
 
 					if currentQuest ~= nil then
@@ -585,7 +585,7 @@ function UIController:Start()
 							end
 						end
 					end
-				end
+				end]]
 
 				coroutine.wrap(function()
 					renderCollection(collection, highlightedStructureId, categoryToHighlight)
@@ -602,7 +602,7 @@ function UIController:Start()
 
 			local category = "Residence"
 
-			if isOnTutorial == true then
+			--[[if isOnTutorial == true then
 				local step = QuestController:GetQuestStep()
 
 				local stepTable = {
@@ -618,7 +618,7 @@ function UIController:Start()
 				category = stepTable[step] or "Residence"
 			else
 				category = self._lastStructureCategory or "Residence"
-			end
+			end]]
 
 			filterByStructureCategory(category)
 		end, function(trove)
@@ -736,7 +736,7 @@ function UIController:Start()
 			}):Play()
 		end)
 
-		FrameController:RegisterFrame("QuestDialogFrame", function(trove)
+		FrameController:RegisterFrame("DialogFrame", function(trove)
 			TweenService:Create(questDialogFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 0,
 				Visible = true,
@@ -747,18 +747,18 @@ function UIController:Start()
 			}):Play()
 
 			trove:Connect(questDialogContainer.Button.MouseButton1Click, function()
-				if self._questDialogCompleted == true then
+				if self._dialogFinished == true then
 					-- do something
-					self.QuestDialogAdvanced:Fire()
-					self._skipQuestDialog = false
-					self._questDialogCompleted = false
+					self.DialogAdvanced:Fire()
+					self._skipDialog = false
+					self._dialogFinished = false
 				else
-					self._skipQuestDialog = true
+					self._skipDialog = true
 				end
 			end)
 		end, function(trove)
-			self._skipQuestDialog = false
-			self._questDialogCompleted = true
+			self._skipDialog = false
+			self._dialogFinished = true
 
 			TweenService:Create(questDialogFrame, TweenInfo.new(settFadeDuration), {
 				GroupTransparency = 1,
@@ -775,15 +775,15 @@ function UIController:Start()
 	end)
 end
 
-function UIController:ShowQuestDialog(title: string, text: string)
+function UIController:UpdateDialog(title: string, text: string | { string })
 	assert(title ~= nil, "Title is nil")
 	assert(text ~= nil, "Text is nil")
 
 	---@type FrameController
 	local FrameController = LMEngine.GetController("FrameController")
 
-	if FrameController:IsFrameOpen("QuestDialogFrame") == false then
-		FrameController:OpenFrame("QuestDialogFrame")
+	if FrameController:IsFrameOpen("DialogFrame") == false then
+		FrameController:OpenFrame("DialogFrame")
 	end
 
 	local questDialogFrame = PlayerGui.QuestDialog.Frame
@@ -800,13 +800,13 @@ function UIController:ShowQuestDialog(title: string, text: string)
 
 	bodyText.MaxVisibleGraphemes = 0
 
-	self._questDialogCompleted = false
-	self._skipQuestDialog = false
+	self._dialogFinished = false
+	self._skipDialog = false
 
 	local first, last = graphemes()
 
 	while last ~= nil do
-		if self._skipQuestDialog == true then
+		if self._skipDialog == true then
 			break
 		end
 
@@ -826,8 +826,8 @@ function UIController:ShowQuestDialog(title: string, text: string)
 
 	bodyText.MaxVisibleGraphemes = GetGraphemeCount(text)
 
-	self._questDialogCompleted = true
-	self._skipQuestDialog = false
+	self._dialogFinished = true
+	self._skipDialog = false
 
 	questDialogTextContainer.Action.Visible = true
 end

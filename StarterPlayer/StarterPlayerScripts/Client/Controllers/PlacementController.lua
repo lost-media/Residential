@@ -137,6 +137,15 @@ function PlacementController:Start()
 			self._state = nil
 		end)
 	end)
+
+	---@type FrameController
+	local FrameController = LMEngine.GetController("FrameController")
+
+	FrameController.FrameOpened:Connect(function(name: string)
+		if name == "SelectionFrame" then
+			print("SelectionFrame opened")
+		end
+	end)
 end
 
 function PlacementController:StartPlacement(structureId: string)

@@ -1,8 +1,8 @@
-export type QuestActionType = "Build" | "Upgrade" | "Destroy"
+export type QuestActionType = "BuildStructure" | "Upgrade" | "Destroy"
 
 export type QuestAction = {
 	Type: QuestActionType,
-	Structure: string,
+	StructureId: string,
 	Amount: number,
 	Accumulative: boolean,
 }
@@ -14,13 +14,11 @@ export type QuestReward = {
 }
 
 export type QuestStep = {
-	Narrative: string,
+	Narrative: { string },
 	Objective: string,
 	Hint: string,
 	CanSkip: boolean,
 	Action: QuestAction,
-
-	AdditionalComments: { string },
 
 	Rewards: QuestReward,
 }
@@ -30,6 +28,7 @@ export type Quest = {
 	Name: string,
 	Quests: { [number]: QuestStep },
 	Rewards: QuestReward,
+	EndingDialog: { string },
 }
 
 local dirQuestList = script.QuestList
