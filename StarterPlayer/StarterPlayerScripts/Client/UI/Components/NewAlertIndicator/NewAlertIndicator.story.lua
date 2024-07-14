@@ -4,12 +4,12 @@ local Packages = ReplicatedStorage.Packages
 local React = require(Packages.react)
 local ReactRoblox = require(Packages.reactroblox)
 
-local Button = require(script.Parent)
+local NewAlertIndicator = require(script.Parent)
 
 return function(target)
 	local handle = ReactRoblox.createRoot(target)
 
-	local createdComponent = React.createElement(Button, {})
+	local createdComponent = React.createElement(NewAlertIndicator, {})
 
 	handle:render(createdComponent)
 

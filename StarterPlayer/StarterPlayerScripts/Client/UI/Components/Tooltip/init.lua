@@ -113,6 +113,7 @@ return function(props: TooltipProps)
 			AutomaticSize = Enum.AutomaticSize.X,
 			ClearTextOnFocus = false,
 			ZIndex = 101,
+			Interactable = false,
 		}, {
 			e("UITextSizeConstraint", {
 				MaxTextSize = 20,

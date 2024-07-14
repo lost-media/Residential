@@ -32,12 +32,8 @@ return function(props: ButtonListProps)
 	local buttons = {}
 
 	for i, data in ipairs(props.buttons) do
-		buttons[i] = React.createElement(Button, {
-			Image = data.Image,
-			LayoutOrder = data.LayoutOrder or i,
-			Size = data.Size,
-			Name = data.Name,
-		})
+		buttons[i] = React.createElement(Button, data)
+		buttons[i].LayoutOrder = data.LayoutOrder or i
 	end
 
 	return e("Frame", {
