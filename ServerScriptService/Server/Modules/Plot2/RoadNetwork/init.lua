@@ -303,8 +303,6 @@ function RoadNetwork:UpdateConnectivity()
 		self.AllBuildingsConnected:Fire()
 	end
 
-	print("All buildings connected: " .. tostring(allConnected))
-
 	return allConnected
 end
 

@@ -1,3 +1,9 @@
+type StoredQuest = {
+	Step: number,
+	Progress: number,
+	Completed: boolean,
+}
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 ---@type LMEngineServer
@@ -11,10 +17,12 @@ local QuestService = LMEngine.CreateService({
 	Name = "QuestService",
 	Client = {
 		QuestStarted = LMEngine.CreateSignal(),
-		QuestProgressed = LMEngine.CreateSignal(),
-		QuestEnded = LMEngine.CreateSignal(),
+		QuestProgressUpdated = LMEngine.CreateSignal(),
+		QuestStepUpdated = LMEngine.CreateSignal(),
+		QuestCompleted = LMEngine.CreateSignal(),
 	},
 
+	---@type table<Player, table>
 	_quests = {},
 	_connections = {},
 })
@@ -61,18 +69,23 @@ function QuestService:Start()
 	local PlayerService = LMEngine.GetService("PlayerService")
 	---@type DataService
 	local DataService = LMEngine.GetService("DataService")
+	---@type PlotService
+	local PlotService = LMEngine.GetService("PlotService")
 
 	PlayerService:RegisterPlayerAdded(function(player: Player)
 		self._quests[player] = {}
 		self._connections[player] = {}
 
-		DataService.PlotLoaded:Connect(function(player: Player, plot: any)
-			local completedTutorial = plot.CompletedTutorial or false
-			if completedTutorial then
-				return
-			end
-			self:StartQuest(player, "Tutorial")
-		end)
+		table.insert(
+			self._connections[player],
+			DataService.PlotLoaded:Connect(function(player: Player, plot: any)
+				local completedTutorial = plot.CompletedTutorial or false
+				if completedTutorial then
+					return
+				end
+				self:StartQuest(player, "Tutorial")
+			end)
+		)
 	end, "LOW")
 
 	PlayerService:RegisterPlayerRemoved(function(player: Player)
@@ -83,191 +96,236 @@ function QuestService:Start()
 		end
 		self._connections[player] = nil
 	end)
+
+	-- Listen for events that trigger quest progress
+	PlotService.StructurePlaced:Connect(function(player: Player, structure: Model)
+		self:OnBuildStructure(player, structure)
+	end)
+
+	-- Listen for plot events
+	for _, plot in ipairs(PlotService:GetPlots()) do
+		local roadNetwork = plot:GetRoadNetwork()
+		roadNetwork.AllBuildingsConnected:Connect(function()
+			self:OnAllBuildingsConnected(plot:GetPlayer())
+		end)
+	end
 end
 
-function QuestService:StartQuest(player: Player, questId: string)
-	assert(player, "[QuestService] StartQuest: Player is nil")
-	assert(questId, "[QuestService] StartQuest: QuestId is nil")
-
-	local quest = getQuest(questId)
-	assert(quest ~= nil, "[QuestService] StartQuest: Quest does not exist")
+function QuestService:AddQuest(player: Player, questId: string)
+	assert(player, "[QuestService] AddQuest: Player is nil")
+	assert(questId, "[QuestService] AddQuest: QuestId is nil")
 
 	---@type DataService
 	local DataService = LMEngine.GetService("DataService")
 
-	local plot = DataService:GetPlot(player)
-	assert(plot, "[QuestService] StartQuest: Plot is nil")
+	local isQuestCompleted = DataService:IsQuestCompleted(player, questId)
 
-	local plotData = plot.Data
-
-	if plotData.CompletedQuests and plotData.CompletedQuests[questId] then
-		warn("[QuestService] StartQuest: Quest already completed")
+	if isQuestCompleted then
 		return
 	end
 
-	if plotData.Quests == nil then
-		plotData.Quests = {}
+	if self._quests[player] == nil then
+		self._quests[player] = {}
 	end
 
-	if plotData.Quests[questId] == nil then
-		plotData.Quests[questId] = {
+	if self._quests[player][questId] == nil then
+		self._quests[player][questId] = {
 			Step = 1,
-			Progress = {}, -- progress on the current step
+			Progress = 0,
+			Completed = false,
 		}
 	end
+end
 
-	self._quests[player] = {
-		Quest = quest,
-		Data = plotData.Quests[questId],
-	}
+function QuestService:GetQuest(player: Player, questId: string): StoredQuest?
+	assert(player, "[QuestService] GetQuest: Player is nil")
+	assert(questId, "[QuestService] GetQuest: QuestId is nil")
 
-	self:RegisterQuestAction(player, questId, plotData.Quests[questId].Step)
+	if self._quests[player] == nil then
+		return nil
+	end
 
-	self.Client.QuestStarted:Fire(player, questId, plotData.Quests[questId].Step)
+	return self._quests[player][questId]
+end
+
+function QuestService:UpdateQuestProgress(
+	player: Player,
+	questId: string,
+	progressIncrement: number
+)
+	assert(player ~= nil, "[QuestService] UpdateQuestProgress: Player is nil")
+	assert(questId ~= nil, "[QuestService] UpdateQuestProgress: QuestId is nil")
+	assert(progressIncrement ~= nil, "[QuestService] UpdateQuestProgress: ProgressIncrement is nil")
+
+	local quest = self:GetQuest(player, questId)
+	if not quest or quest.Completed then
+		return
+	end
+
+	-- Update progress
+	quest.Progress = quest.Progress + progressIncrement
+
+	-- Fire the QuestProgressUpdated event
+	self.Client.QuestProgressUpdated:Fire(player, questId, quest.Progress)
+
+	-- Get current quest step data
+	local questStepData = getQuestStep(questId, quest.Step)
+	if not questStepData or not questStepData.Action.Amount then
+		return
+	end
+
+	-- Check if current step is completed
+	if quest.Progress >= questStepData.Action.Amount then
+		-- Reward the player and reset progress for the next step
+		quest.Step = quest.Step + 1
+		quest.Progress = 0
+
+		-- Check if the quest is completed
+		local questData = getQuest(questId)
+		if quest.Step > #questData.Quests then
+			quest.Completed = true
+			-- Handle quest completion, e.g., reward player
+
+			-- Fire the QuestCompleted event
+			self.Client.QuestCompleted:Fire(player, questId)
+
+			-- Remove the quest from the player's quest list
+			self:RemoveQuest(player, questId)
+		else
+			-- Fire the QuestStepUpdated event
+			self.Client.QuestStepUpdated:Fire(player, questId, quest.Step)
+
+			-- Optionally handle the transition to the next step, if needed
+			-- e.g., update the quest objective in the UI
+			-- Additionally, reward the player for completing the step if needed
+			local stepRewards = questStepData.Rewards
+		end
+	end
+end
+
+function QuestService:CheckQuestCompletion(player, questId)
+	-- Check if a quest is completed
+	local quest = self.quests[player][questId]
+	if quest == nil then
+		return false
+	end
+
+	return quest.Completed
+end
+
+function QuestService:RemoveQuest(player, questId)
+	-- Remove a quest from a player
+	if self._quests[player] then
+		local quest = self._quests[player][questId]
+		if quest == nil then
+			return
+		end
+
+		local completed = quest.Completed
+		if completed == true then
+			-- Save the quest data to the player's plot profile
+			---@type DataService
+			local DataService = LMEngine.GetService("DataService")
+
+			DataService:SetQuestCompleted(player, questId)
+		end
+
+		self._quests[player][questId] = nil
+	end
+end
+
+function QuestService:StartQuest(player: Player, questId: string)
+	-- Validate the input
+	assert(player, "[QuestService] StartQuest: Player is nil")
+	assert(questId, "[QuestService] StartQuest: QuestId is nil")
+
+	-- Check if the quest exists
+	assert(getQuest(questId) ~= nil, "[QuestService] StartQuest: Quest does not exist")
+
+	---@type DataService
+	local DataService = LMEngine.GetService("DataService")
+
+	local isQuestCompleted = DataService:IsQuestCompleted(player, questId)
+
+	if isQuestCompleted then
+		return
+	end
+
+	local isQuestStarted = DataService:IsQuestStarted(player, questId)
+
+	if isQuestStarted then
+		return
+	end
+
+	self:AddQuest(player, questId)
+
+	DataService:UpdateQuestProgress(player, questId, {
+		Step = 1,
+		Progress = 0,
+	})
+
+	-- Fire the QuestStarted event
+	self.Client.QuestStarted:Fire(player, questId)
 
 	print("[QuestService] StartQuest: Started quest " .. questId .. " for player " .. player.Name)
 end
 
-function QuestService:RegisterQuestAction(player: string, questId: string, step: number)
-	assert(player ~= nil, "[QuestService] RegisterQuestAction: Player is nil")
-	assert(questId ~= nil, "[QuestService] RegisterQuestAction: Type is nil")
-	assert(step ~= nil, "[QuestService] RegisterQuestAction: Step is nil")
+function QuestService:OnBuildStructure(player: Player, structure: Model)
+	-- Validate the input
+	assert(player, "[QuestService] OnBuildStructure: Player is nil")
+	assert(structure, "[QuestService] OnBuildStructure: Structure is nil")
 
-	local questStep = getQuestStep(questId, step)
-
-	if questStep == nil then
+	local quests = self._quests[player]
+	if quests == nil then
 		return
 	end
 
-	local type = questStep.Action.Type
-
-	---@type PlotService
-	local PlotService = LMEngine.GetService("PlotService")
-
-	if self._connections[player] == nil then
-		self._connections[player] = {}
-	end
-
-	local function checkProgress()
-		local progress = self._quests[player].Data.Progress[step] or 0
-		if questStep.Action.Amount ~= nil then
-			if progress >= questStep.Action.Amount then
-				self._quests[player].Data.Step = step + 1
-				self._quests[player].Data.Progress[step] = nil
-
-				self.Client.QuestProgressed:Fire(player, questId, step + 1)
-
-				-- check if the quest is completed
-				if self._quests[player].Quest.Quests[self._quests[player].Data.Step] == nil then
-					print("[QuestService] RegisterQuestAction: Quest completed")
-
-					-- mark the quest as completed
-					local DataService = LMEngine.GetService("DataService")
-					local plot = DataService:GetPlot(player)
-					plot.Data.CompletedQuests = plot.Data.CompletedQuests or {}
-					plot.Data.CompletedQuests[questId] = true
-
-					-- first, give the ending dialogue
-					self.Client.QuestEnded:Fire(player, questId)
-
-					-- check if it's the tutorial quest
-					if questId == "Tutorial" then
-						-- mark the plot as completed
-						plot.Data.CompletedTutorial = true
-					end
-
-					-- give the player the rewards
-					local rewards = self._quests[player].Quest.Rewards
-				else
-					-- register the next quest action
-					self:RegisterQuestAction(player, questId, step + 1)
-				end
-				return true
-			end
-		else
-			self._quests[player].Data.Progress[step] = progress
-
-			if progress > 0 then
-				-- progress to the next step
-				self._quests[player].Data.Step = step + 1
-
-				-- register the next quest action
-				self:RegisterQuestAction(player, questId, step + 1)
-
-				return true
-			end
+	-- Check if the player has a quest to build a structure
+	for questId, questData in pairs(quests) do
+		local quest = getQuest(questId)
+		if quest == nil then
+			continue
 		end
 
-		return false
-	end
-
-	if type == "Build" then
-		local structureType = questStep.Action.Structure
-
-		-- check if the user has already placed the structure
-		if questStep.Action.Accumulative == true then
-			if PlotService:PlotHasStructure(player, structureType) then
-				self._quests[player].Data.Progress[step] = 1
-
-				checkProgress()
-			end
+		local questStepData = getQuestStep(questId, questData.Step)
+		if questStepData == nil then
+			continue
 		end
-		local connection
-		connection = PlotService.StructurePlaced:Connect(function(structure: Model)
-			if structure == nil then
-				return
-			end
 
+		if questStepData.Action.Type == "BuildStructure" then
 			local structureId = structure:GetAttribute("Id")
-			if structureId == structureType then
-				print("[QuestService] RegisterQuestAction: StructurePlaced")
-
-				-- add one to the progress
-				self._quests[player].Data.Progress[step] = (
-					self._quests[player].Data.Progress[step] or 0
-				) + 1
-
-				local finished = checkProgress()
-				if finished then
-					connection:Disconnect()
-				end
+			if structureId == questStepData.Action.StructureId then
+				self:UpdateQuestProgress(player, questId, 1)
 			end
-		end)
+		end
+	end
+end
 
-		table.insert(self._connections[player], connection)
-	elseif type == "ConnectAllBuildings" then
-		local plot = PlotService:GetPlot(player)
-		if plot == nil then
-			return
+function QuestService:OnAllBuildingsConnected(player: Player)
+	if player == nil then
+		return
+	end
+
+	local quests = self._quests[player]
+	if quests == nil then
+		return
+	end
+
+	-- Check if the player has a quest to build a structure
+	for questId, questData in pairs(quests) do
+		local quest = getQuest(questId)
+		if quest == nil then
+			continue
 		end
 
-		local roadNetwork = plot:GetRoadNetwork()
+		local questStepData = getQuestStep(questId, questData.Step)
+		if questStepData == nil then
+			continue
+		end
 
-		--[[if questStep.Action.Accumulative == true then
-			if roadNetwork._allBuildingsConnected == true then
-				self._quests[player].Data.Progress[step] = 1
-
-				checkProgress()
-
-				return
-			end
-		end]]
-
-		local connection
-		connection = roadNetwork.AllBuildingsConnected:Connect(function()
-			print("[QuestService] RegisterQuestAction: AllBuildingsConnected")
-
-			-- add one to the progress
-			self._quests[player].Data.Progress[step] = 1
-
-			local finished = checkProgress()
-
-			if finished then
-				connection:Disconnect()
-			end
-		end)
-
-		table.insert(self._connections[player], connection)
+		if questStepData.Action.Type == "ConnectAllBuildings" then
+			self:UpdateQuestProgress(player, questId, 1)
+		end
 	end
 end
 

@@ -9,8 +9,6 @@ local SETTINGS = {
 		Roadbucks = 0,
 		Inventory = {},
 
-		CompletedTutorial = false,
-
 		Quests = {},
 		CompletedQuests = {},
 	},
@@ -23,14 +21,13 @@ local SETTINGS = {
 		Roadbucks = 0,
 		Inventory = {},
 
-		CompletedTutorial = false,
-
 		Quests = {},
 		CompletedQuests = {},
 	},
 
 	FieldsToRemove = {
 		"Coins",
+		"CompletedTutorial",
 	},
 	FieldsToMove = {},
 }

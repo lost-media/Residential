@@ -42,7 +42,6 @@ function PlotController:Start()
 	local plotAssigned: RBXScriptConnection
 
 	plotAssigned = PlotService.PlotAssigned:Connect(function(plot)
-		print("[PlotController] Plot assigned")
 		self._plot = plot
 
 		self.OnPlotAssigned:Fire(plot)

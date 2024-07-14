@@ -199,6 +199,10 @@ function PlotService:Start()
 	end)
 end
 
+function PlotService:GetPlots()
+	return self._plots
+end
+
 function PlotService:AssignPlot(player: Player, plot: Plot)
 	assert(player, "[PlotService] AssignPlot: Player is nil")
 	assert(plot, "[PlotService] AssignPlot: Plot is nil")
@@ -246,7 +250,7 @@ function PlotService:PlaceStructure(player: Player, structure_id: string, cframe
 
 		if place_successful == true then
 			-- Fire the structure placed event
-			self.StructurePlaced:Fire(structure)
+			self.StructurePlaced:Fire(player, structure)
 		end
 
 		return place_successful
