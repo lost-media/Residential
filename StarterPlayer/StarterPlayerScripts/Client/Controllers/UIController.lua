@@ -45,6 +45,8 @@ local Trove = require(LMEngine.SharedDir.Trove)
 local StructureCollection = require(LMEngine.Game.Shared.Structures)
 local StructureUtils = require(LMEngine.Game.Shared.Structures.Utils)
 
+local reactUiInitializer = require(script.Parent.Parent.UI)
+
 local settFadeDuration = SETTINGS.FadeDuration
 
 ---@class UIController
@@ -112,6 +114,7 @@ function UIController:Start()
 
 	LMEngine.GameLoaded():andThen(function()
 		-- inside this promise, we don't need WaitForChild
+		reactUiInitializer.Initialize()
 
 		local title_screen = PlayerGui["Title Screen"]
 		local placementScreen = PlayerGui.Placement
@@ -771,7 +774,7 @@ function UIController:Start()
 		end)
 
 		-- Open the main HUD
-		FrameController:OpenFrame("MainHUDPrimaryButtons")
+		--FrameController:OpenFrame("MainHUDPrimaryButtons")
 	end)
 end
 
