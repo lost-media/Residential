@@ -30,12 +30,12 @@ return function(props: any)
 	return e(ButtonList, {
 		Position = UDim2.new(0.5, 0, 1, 0),
 		AnchorPoint = Vector2.new(0.5, 1),
-		BackgroundTransparency = 1,
-		AutomaticSize = Enum.AutomaticSize.XY,
+		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.new(0.5, 0, 0.15, 0),
 
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Bottom,
 		ListPadding = UDim.new(0, 16),
 
 		buttons = buttonData,

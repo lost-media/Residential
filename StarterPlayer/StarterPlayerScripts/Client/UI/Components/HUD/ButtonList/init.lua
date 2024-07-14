@@ -50,8 +50,8 @@ return function(props: ButtonListProps)
 	}, {
 		e("UIListLayout", {
 			FillDirection = props.FillDirection or Enum.FillDirection.Horizontal,
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-			VerticalAlignment = Enum.VerticalAlignment.Center,
+			HorizontalAlignment = props.HorizontalAlignment or Enum.HorizontalAlignment.Center,
+			VerticalAlignment = props.VerticalAlignment or Enum.VerticalAlignment.Center,
 			Padding = props.ListPadding or UDim.new(0, 8),
 		}),
 
