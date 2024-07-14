@@ -1,5 +1,5 @@
 local SETTINGS = {
-	MouseOffset = Vector2.new(0, -45), -- The offset of the tooltip from the mouse
+	MouseOffset = Vector2.new(5, -34), -- The offset of the tooltip from the mouse
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -99,6 +99,7 @@ return function(props: TooltipProps)
 			PaddingRight = UDim.new(0, 16),
 		}),
 		e("TextBox", {
+			TextTransparency = styles.opacity,
 			BackgroundTransparency = 1,
 			BorderSizePixel = 0,
 			FontFace = Font.fromName("Inter", Enum.FontWeight.SemiBold),
@@ -111,6 +112,7 @@ return function(props: TooltipProps)
 			TextScaled = false,
 			AutomaticSize = Enum.AutomaticSize.X,
 			ClearTextOnFocus = false,
+			ZIndex = 101,
 		}, {
 			e("UITextSizeConstraint", {
 				MaxTextSize = 20,

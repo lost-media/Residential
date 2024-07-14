@@ -36,7 +36,7 @@ local function initialize()
 	ui.Parent = playerGui
 	ui.IgnoreGuiInset = true
 	ui.ResetOnSpawn = false
-	ui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	ui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
 	local handle = ReactRoblox.createRoot(ui)
 

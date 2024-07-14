@@ -11,17 +11,17 @@ local e = React.createElement
 local buttonData = {
 	{
 		Image = "rbxassetid://18476991644",
-		Size = "md",
+		Size = "lg",
 		Name = "Build",
 	},
 	{
 		Image = "rbxassetid://18477186326",
-		Size = "md",
+		Size = "lg",
 		Name = "Stats",
 	},
 	{
 		Image = "rbxassetid://18477206156",
-		Size = "md",
+		Size = "lg",
 		Name = "Quests",
 	},
 }
@@ -36,7 +36,7 @@ return function(props: any)
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		VerticalAlignment = Enum.VerticalAlignment.Bottom,
-		ListPadding = UDim.new(0, 16),
+		ListPadding = UDim.new(0, 8),
 
 		buttons = buttonData,
 	})

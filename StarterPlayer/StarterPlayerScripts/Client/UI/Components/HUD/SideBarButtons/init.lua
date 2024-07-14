@@ -12,17 +12,17 @@ local buttonData = {
 	{
 		Image = "rbxassetid://17836127329",
 		Name = "Store",
-		Size = "sm",
+		Size = "md",
 	},
 	{
 		Image = "rbxassetid://18479367139",
 		Name = "Promo Codes",
-		Size = "sm",
+		Size = "md",
 	},
 	{
 		Image = "rbxassetid://18479396499",
 		Name = "Settings",
-		Size = "sm",
+		Size = "md",
 	},
 }
 
