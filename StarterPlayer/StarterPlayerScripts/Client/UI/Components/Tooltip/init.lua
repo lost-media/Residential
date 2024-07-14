@@ -1,5 +1,5 @@
 local SETTINGS = {
-	MouseOffset = Vector2.new(5, -20), -- The offset of the tooltip from the mouse
+	MouseOffset = Vector2.new(0, -45), -- The offset of the tooltip from the mouse
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -23,15 +23,21 @@ return function(props: TooltipProps)
 
 	local mousePosition, setMousePosition = React.useState(Vector2.new(0, 0))
 
-	local tooltipSpring = RoactSpring.useSpring({
-		opacity = props.Visible and 1 or 0,
-		scale = props.Visible and 1 or 0,
+	local styles = RoactSpring.useSpring({
+		from = { scale = 0.25, opacity = 1 },
+		to = {
+			scale = if props.Visible then 1 else 0.25,
+			opacity = if props.Visible then 0 else 1,
+		},
+		config = {
+			damping = 100,
+			mass = 1,
+			tension = 500,
+			clamp = true,
+		},
 	})
 
 	React.useEffect(function()
-		tooltipSpring.opacity = props.Visible and 1 or 0
-		tooltipSpring.scale = props.Visible and 1 or 0
-
 		local parent = props.ParentRef and props.ParentRef.current
 
 		local function updateMousePosition()
@@ -59,46 +65,56 @@ return function(props: TooltipProps)
 		return function()
 			connection:Disconnect()
 		end
-	end, { props.Visible, mousePosition })
+	end, { props.Visible })
 
-	return e("TextBox", {
-		ref = ref,
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	return e("CanvasGroup", {
 		BackgroundTransparency = 0,
-		BorderSizePixel = 0,
-		FontFace = Font.fromName("Inter", Enum.FontWeight.SemiBold),
-		Text = props.Text,
-		TextColor3 = Color3.fromRGB(0, 0, 0),
-		TextSize = 20,
-		TextWrapped = false,
-		Visible = props.Visible,
-		TextEditable = false,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		GroupTransparency = styles.opacity,
+		ref = ref,
 		ZIndex = 100,
-		Size = UDim2.new(0, 0, 0, 30),
+		AutomaticSize = Enum.AutomaticSize.X,
 		Position = UDim2.fromOffset(
 			mousePosition.X + SETTINGS.MouseOffset.X,
 			mousePosition.Y + SETTINGS.MouseOffset.Y
 		),
-
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		TextScaled = false,
-		AutomaticSize = Enum.AutomaticSize.X,
-		ClearTextOnFocus = false,
+		Size = UDim2.new(0, 0, 0, 30),
+		AnchorPoint = Vector2.new(0, 0.5),
 	}, {
+		e("UIStroke", {
+			Color = Color3.fromRGB(190, 190, 190),
+			Transparency = styles.opacity,
+			Thickness = 2,
+		}),
+		e("UICorner", {
+			CornerRadius = UDim.new(0, 16),
+		}),
+		e("UIScale", {
+			Scale = styles.scale,
+		}),
 		e("UIPadding", {
 			PaddingTop = UDim.new(0.1, 0),
 			PaddingBottom = UDim.new(0.1, 0),
 			PaddingLeft = UDim.new(0, 16),
 			PaddingRight = UDim.new(0, 16),
 		}),
-		e("UIScale", {
-			Scale = tooltipSpring.scale,
-		}),
-		e("UICorner", {
-			CornerRadius = UDim.new(0, 16),
-		}),
-		e("UITextSizeConstraint", {
-			MaxTextSize = 20,
+		e("TextBox", {
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			FontFace = Font.fromName("Inter", Enum.FontWeight.SemiBold),
+			Text = props.Text,
+			TextColor3 = Color3.fromRGB(0, 0, 0),
+			TextSize = 20,
+			TextWrapped = false,
+			TextEditable = false,
+			Size = UDim2.new(1, 0, 1, 0),
+			TextScaled = false,
+			AutomaticSize = Enum.AutomaticSize.X,
+			ClearTextOnFocus = false,
+		}, {
+			e("UITextSizeConstraint", {
+				MaxTextSize = 20,
+			}),
 		}),
 	})
 end

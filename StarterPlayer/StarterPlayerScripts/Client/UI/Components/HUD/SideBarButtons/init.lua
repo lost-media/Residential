@@ -16,7 +16,7 @@ local buttonData = {
 	},
 	{
 		Image = "rbxassetid://18479367139",
-		Name = "Promo Code",
+		Name = "Promo Codes",
 		Size = "sm",
 	},
 	{
