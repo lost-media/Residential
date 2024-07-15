@@ -16,6 +16,7 @@ type TooltipProps = {
 	Visible: boolean,
 	Text: string,
 	ParentRef: { current: GuiObject },
+	Offset: Vector2?,
 }
 
 return function(props: TooltipProps)
@@ -47,7 +48,7 @@ return function(props: TooltipProps)
 				newMousePosition = newMousePosition - parent.AbsolutePosition
 				-- add the offset
 
-				newMousePosition = newMousePosition + SETTINGS.MouseOffset
+				newMousePosition = newMousePosition + (props.Offset or SETTINGS.MouseOffset)
 			end
 
 			setMousePosition(newMousePosition)

@@ -12,6 +12,7 @@ local dirHUD = dirComponents.HUD
 
 local BottomBarButtons = require(dirHUD.BottomBarButtons)
 local SideBarButtons = require(dirHUD.SideBarButtons)
+local TopBar = require(dirHUD.TopBar)
 
 local function App(_)
 	return React.createElement("Frame", {
@@ -26,6 +27,7 @@ local function App(_)
 		}),
 		React.createElement(BottomBarButtons, {}),
 		React.createElement(SideBarButtons, {}),
+		React.createElement(TopBar, {}),
 	})
 end
 
@@ -36,7 +38,7 @@ local function initialize()
 	ui.Parent = playerGui
 	ui.IgnoreGuiInset = true
 	ui.ResetOnSpawn = false
-	ui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+	ui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 	local handle = ReactRoblox.createRoot(ui)
 

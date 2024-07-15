@@ -42,7 +42,7 @@ return function(props: ButtonListProps)
 		BackgroundTransparency = 1,
 		AutomaticSize = props.AutomaticSize or Enum.AutomaticSize.XY,
 
-		Size = props.Size or UDim2.new(0, 0, 0),
+		Size = props.Size or UDim2.new(0, 0, 0, 0),
 	}, {
 		e("UIListLayout", {
 			FillDirection = props.FillDirection or Enum.FillDirection.Horizontal,

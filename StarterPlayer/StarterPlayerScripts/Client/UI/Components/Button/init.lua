@@ -32,8 +32,9 @@ type ButtonProps = {
 	Position: UDim2?,
 	Image: string,
 	Name: string?,
+	
 	hasNewAlert: boolean?,
-
+	toolTipOffset: Vector2?,
 	hoverBgColor: Color3?,
 	hoverStripeColor: Color3?,
 }
@@ -137,6 +138,7 @@ return function(props: ButtonProps)
 					Visible = hovered,
 					Direction = "top",
 					ParentRef = buttonRef,
+					Offset = props.toolTipOffset,
 				}),
 			}),
 		}),
