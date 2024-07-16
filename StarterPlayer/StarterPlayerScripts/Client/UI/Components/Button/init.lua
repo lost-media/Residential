@@ -33,6 +33,7 @@ local Tooltip = require(dirComponents.Tooltip)
 type ButtonProps = {
 	OnClick: () -> ()?,
 	Size: ("sm" | "md" | "lg")?,
+	AnchorPoint: Vector2?,
 	Position: UDim2?,
 	Image: string,
 	Name: string?,
@@ -72,7 +73,7 @@ return function(props: ButtonProps)
 		Size = UDim2.new(1, 0, 1, 0),
 		ImageColor3 = Color3.fromRGB(255, 255, 255),
 		Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
-		AnchorPoint = Vector2.new(0.5, 0.5),
+		AnchorPoint = props.AnchorPoint or Vector2.new(0.5, 0.5),
 	}, {
 		e("UIPadding", {
 			PaddingTop = UDim.new(0, 2),
@@ -115,6 +116,8 @@ return function(props: ButtonProps)
 					setHovered(false)
 					tooltip.setVisible(false)
 				end,
+
+				[React.Event.MouseButton1Down] = function() end,
 
 				[React.Event.Activated] = function()
 					if props.onClick then

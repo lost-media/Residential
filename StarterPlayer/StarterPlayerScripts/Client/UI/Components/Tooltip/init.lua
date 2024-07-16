@@ -95,7 +95,7 @@ return function(props: TooltipProps)
 			TextTransparency = styles.opacity,
 			BackgroundTransparency = 1,
 			BorderSizePixel = 0,
-			FontFace = Font.fromName("Inter", Enum.FontWeight.SemiBold),
+			FontFace = Font.fromName("BuilderSans", Enum.FontWeight.SemiBold),
 			Text = props.Text,
 			TextColor3 = Color3.fromRGB(0, 0, 0),
 			TextSize = 20,
