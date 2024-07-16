@@ -15,7 +15,7 @@ local buttonData = {
 		Name = "Build",
 		hoverBgColor = Color3.fromRGB(150, 255, 140),
 		hoverStripeColor = Color3.fromRGB(102, 255, 88),
-		toolTipOffset = Vector2.new(-24, -88),
+		toolTipOffset = Vector2.new(-24, -40),
 	},
 	{
 		Image = "rbxassetid://18477186326",
@@ -23,8 +23,7 @@ local buttonData = {
 		Name = "Stats",
 		hoverBgColor = Color3.fromRGB(133, 255, 235),
 		hoverStripeColor = Color3.fromRGB(172, 255, 241),
-		toolTipOffset = Vector2.new(-24, -88),
-
+		toolTipOffset = Vector2.new(-24, -40),
 	},
 	{
 		Image = "rbxassetid://18477206156",
@@ -33,7 +32,7 @@ local buttonData = {
 		hasNewAlert = true,
 		hoverBgColor = Color3.fromRGB(255, 160, 242),
 		hoverStripeColor = Color3.fromRGB(255, 178, 245),
-		toolTipOffset = Vector2.new(-24, -88),
+		toolTipOffset = Vector2.new(-24, -40),
 	},
 }
 

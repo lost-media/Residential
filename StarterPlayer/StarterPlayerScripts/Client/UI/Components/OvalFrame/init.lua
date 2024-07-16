@@ -25,8 +25,8 @@ return function(props: OvalFrameProps)
 		Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
 		AnchorPoint = props.AnchorPoint or Vector2.new(0.5, 0.5),
 
-        ScaleType = Enum.ScaleType.Slice,
-        SliceCenter = Rect.new(250, 252, 550, 252),
+		ScaleType = Enum.ScaleType.Slice,
+		SliceCenter = Rect.new(250, 252, 550, 252),
 	}, {
 		unpack(props.children or {}),
 	})

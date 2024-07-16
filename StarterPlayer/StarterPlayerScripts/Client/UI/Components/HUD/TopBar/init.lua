@@ -9,8 +9,7 @@ local NumberIndicator = require(dirComponents.NumberIndicator)
 
 local e = React.createElement
 
-type TopBarProps = {	
-}
+type TopBarProps = {}
 
 return function(props: TopBarProps)
 	return e("Frame", {
@@ -23,20 +22,20 @@ return function(props: TopBarProps)
 		e("UIListLayout", {
 			FillDirection = props.FillDirection or Enum.FillDirection.Horizontal,
 			HorizontalAlignment = props.HorizontalAlignment or Enum.HorizontalAlignment.Center,
-			VerticalAlignment = props.VerticalAlignment or Enum.VerticalAlignment.Center,
+			VerticalAlignment = props.VerticalAlignment or Enum.VerticalAlignment.Top,
 			Padding = props.ListPadding or UDim.new(0, 16),
 		}),
 
 		e(NumberIndicator, {
-            Name = "Coins",
-            Text = "999.9K",
-            Size = UDim2.new(0.25, 0, 1, 0)
-        }),
+			Name = "Coins",
+			Text = "999.9K",
+			Size = UDim2.new(0.25, 0, 1, 0),
+		}),
 
-        e(NumberIndicator, {
-            Name = "Roadbucks",
-            Text = "999.9K",
-            Size = UDim2.new(0.25, 0, 1, 0)
-        })
+		e(NumberIndicator, {
+			Name = "Roadbucks",
+			Text = "999.9K",
+			Size = UDim2.new(0.25, 0, 1, 0),
+		}),
 	})
 end

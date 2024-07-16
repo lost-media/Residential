@@ -1,5 +1,5 @@
 local SETTINGS = {
-	MouseOffset = Vector2.new(5, -34), -- The offset of the tooltip from the mouse
+	MouseOffset = Vector2.new(12, 0), -- The offset of the tooltip from the mouse
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -15,7 +15,6 @@ local e = React.createElement
 type TooltipProps = {
 	Visible: boolean,
 	Text: string,
-	ParentRef: { current: GuiObject },
 	Offset: Vector2?,
 }
 
@@ -39,17 +38,10 @@ return function(props: TooltipProps)
 	})
 
 	React.useEffect(function()
-		local parent = props.ParentRef and props.ParentRef.current
-
 		local function updateMousePosition()
 			local newMousePosition = UserInputService:GetMouseLocation()
 			-- calculate the position from the parent
-			if parent then
-				newMousePosition = newMousePosition - parent.AbsolutePosition
-				-- add the offset
-
-				newMousePosition = newMousePosition + (props.Offset or SETTINGS.MouseOffset)
-			end
+			newMousePosition = newMousePosition + (props.Offset or SETTINGS.MouseOffset)
 
 			setMousePosition(newMousePosition)
 		end

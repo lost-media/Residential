@@ -22,6 +22,10 @@ local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 local e = React.createElement
 
 local dirComponents = script.Parent
+local dirProviders = dirComponents.Providers
+
+local TooltipProvider = require(dirProviders.TooltipProvider)
+
 local Circle = require(dirComponents.Circle)
 local NewAlertIndicator = require(dirComponents.NewAlertIndicator)
 local Tooltip = require(dirComponents.Tooltip)
@@ -32,7 +36,7 @@ type ButtonProps = {
 	Position: UDim2?,
 	Image: string,
 	Name: string?,
-	
+
 	hasNewAlert: boolean?,
 	toolTipOffset: Vector2?,
 	hoverBgColor: Color3?,
@@ -40,6 +44,8 @@ type ButtonProps = {
 }
 
 return function(props: ButtonProps)
+	local tooltip = React.useContext(TooltipProvider.Context)
+
 	local buttonRef = React.useRef()
 
 	props.Size = props.Size or "md"
@@ -100,10 +106,14 @@ return function(props: ButtonProps)
 
 				[React.Event.MouseEnter] = function()
 					setHovered(true)
+					tooltip.setOffset(props.toolTipOffset)
+					tooltip.setText(props.Name)
+					tooltip.setVisible(true)
 				end,
 
 				[React.Event.MouseLeave] = function()
 					setHovered(false)
+					tooltip.setVisible(false)
 				end,
 
 				[React.Event.Activated] = function()
@@ -131,14 +141,6 @@ return function(props: ButtonProps)
 					Position = UDim2.new(0.5, 0, 0.5, 0),
 					AnchorPoint = Vector2.new(0.5, 0.5),
 					ImageColor3 = Color3.new(0, 0, 0),
-				}),
-
-				e(Tooltip, {
-					Text = props.Name or "Button",
-					Visible = hovered,
-					Direction = "top",
-					ParentRef = buttonRef,
-					Offset = props.toolTipOffset,
 				}),
 			}),
 		}),

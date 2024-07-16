@@ -20,6 +20,9 @@ local React = require(Packages.react)
 local e = React.createElement
 
 local dirComponents = script.Parent
+local dirProviders = dirComponents.Providers
+
+local TooltipProvider = require(dirProviders.TooltipProvider)
 
 local OvalFrame = require(dirComponents.OvalFrame)
 local Tooltip = require(dirComponents.Tooltip)
@@ -32,11 +35,12 @@ type NumberIndicatorProps = {
 	Size: UDim2?,
 
 	Text: string,
-	
+
 	onClick: () -> ()?,
 }
 
 return function(props: NumberIndicatorProps)
+	local tooltip = React.useContext(TooltipProvider.Context)
 	local buttonRef = React.useRef()
 
 	local hovered, setHovered = React.useState(false)
@@ -87,10 +91,14 @@ return function(props: NumberIndicatorProps)
 
 				[React.Event.MouseEnter] = function()
 					setHovered(true)
+					tooltip.setOffset(props.toolTipOffset or Vector2.new(-32, 48))
+					tooltip.setVisible(true)
+					tooltip.setText(props.Name)
 				end,
 
 				[React.Event.MouseLeave] = function()
 					setHovered(false)
+					tooltip.setVisible(false)
 				end,
 
 				[React.Event.Activated] = function()
@@ -137,17 +145,7 @@ return function(props: NumberIndicatorProps)
 						MaxTextSize = 32,
 					}),
 				}),
-
 			}),
-			
-		}),
-
-		e(Tooltip, {
-			Text = props.Name or "Roadbucks (Click to buy)",
-			Visible = hovered,
-			Direction = "top",
-			ParentRef = buttonRef,
-			Offset = props.toolTipOffset or Vector2.new(-32, 24)
 		}),
 	})
 end

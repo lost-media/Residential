@@ -8,26 +8,31 @@ local React = require(Packages.react)
 local ReactRoblox = require(Packages.reactroblox)
 
 local dirComponents = script.Components
+local dirProviders = dirComponents.Providers
 local dirHUD = dirComponents.HUD
+
+local TooltipProvider = require(dirProviders.TooltipProvider)
 
 local BottomBarButtons = require(dirHUD.BottomBarButtons)
 local SideBarButtons = require(dirHUD.SideBarButtons)
 local TopBar = require(dirHUD.TopBar)
 
 local function App(_)
-	return React.createElement("Frame", {
-		Size = UDim2.new(1, 0, 1, 0),
-		BackgroundTransparency = 1,
-	}, {
-		React.createElement("UIPadding", {
-			PaddingTop = UDim.new(0, 16),
-			PaddingBottom = UDim.new(0, 16),
-			PaddingLeft = UDim.new(0, 16),
-			PaddingRight = UDim.new(0, 16),
+	return React.createElement(TooltipProvider.Provider, {}, {
+		React.createElement("Frame", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+		}, {
+			React.createElement("UIPadding", {
+				PaddingTop = UDim.new(0, 16),
+				PaddingBottom = UDim.new(0, 16),
+				PaddingLeft = UDim.new(0, 16),
+				PaddingRight = UDim.new(0, 16),
+			}),
+			React.createElement(BottomBarButtons, {}),
+			React.createElement(SideBarButtons, {}),
+			React.createElement(TopBar, {}),
 		}),
-		React.createElement(BottomBarButtons, {}),
-		React.createElement(SideBarButtons, {}),
-		React.createElement(TopBar, {}),
 	})
 end
 
