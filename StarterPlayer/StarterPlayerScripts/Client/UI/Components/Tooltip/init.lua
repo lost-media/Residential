@@ -12,6 +12,11 @@ local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 
 local e = React.createElement
 
+local dirComponents = script.Parent
+local dirFonts = dirComponents.Parent.Fonts
+
+local BuilderSans = require(dirFonts.BuilderSans)
+
 type TooltipProps = {
 	Visible: boolean,
 	Text: string,
@@ -95,7 +100,7 @@ return function(props: TooltipProps)
 			TextTransparency = styles.opacity,
 			BackgroundTransparency = 1,
 			BorderSizePixel = 0,
-			FontFace = Font.fromName("BuilderSans", Enum.FontWeight.SemiBold),
+			FontFace = BuilderSans.SemiBold,
 			Text = props.Text,
 			TextColor3 = Color3.fromRGB(0, 0, 0),
 			TextSize = 20,

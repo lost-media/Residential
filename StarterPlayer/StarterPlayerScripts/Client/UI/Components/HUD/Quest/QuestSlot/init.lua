@@ -13,9 +13,10 @@ local NumberFormatter = require(LMEngine.SharedDir.NumberFormatter)
 local e = React.createElement
 
 local dirComponents = script.Parent.Parent.Parent
+local dirFonts = dirComponents.Parent.Fonts
 local dirProviders = dirComponents.Providers
 
-local TooltipProvider = require(dirProviders.TooltipProvider)
+local BuilderSans = require(dirFonts.BuilderSans)
 
 local Button = require(dirComponents.Button)
 
@@ -67,7 +68,8 @@ local function Reward(props: RewardProps)
 	return e("Frame", {
 		BackgroundTransparency = 1,
 		Size = props.Size or UDim2.new(0.5, 0, 0.5, 0),
-		Position = props.Position or UDim2.new(0, 0, 0, 0),
+		Position = props.Position or UDim2.new(1, 0, 0, 0),
+		AnchorPoint = Vector2.new(1, 0),
 	}, {
 		e("UISizeConstraint", {
 			MaxSize = Vector2.new(120, 32),
@@ -106,7 +108,7 @@ local function Reward(props: RewardProps)
 			BackgroundTransparency = 1,
 			Text = amountAsText,
 			TextColor3 = Color3.fromRGB(92, 92, 92),
-			FontFace = Font.fromName("BuilderSans", Enum.FontWeight.Bold),
+			FontFace = BuilderSans.SemiBold,
 			Size = UDim2.new(0.6, 0, 1, 0),
 			Position = UDim2.new(0.5, 0, 0, 0),
 			TextXAlignment = Enum.TextXAlignment.Left,
@@ -172,7 +174,7 @@ return function(props)
 				BackgroundTransparency = 1,
 				Text = "Welcome to your New City!",
 				TextColor3 = Color3.fromRGB(73, 103, 71),
-				FontFace = Font.fromName("BuilderSans", Enum.FontWeight.Bold),
+				FontFace = BuilderSans.Medium,
 				TextScaled = true,
 				Size = UDim2.new(0.75, 0, 1, 0),
 				TextXAlignment = Enum.TextXAlignment.Left,
@@ -186,7 +188,7 @@ return function(props)
 				BackgroundTransparency = 1,
 				Text = "1/7",
 				TextColor3 = Color3.fromRGB(73, 103, 71),
-				FontFace = Font.fromName("BuilderSans", Enum.FontWeight.Bold),
+				FontFace = BuilderSans.Bold,
 				TextScaled = true,
 				Size = UDim2.new(0.25, 0, 1, 0),
 				Position = UDim2.new(0.75, 0, 0, 0),
@@ -225,7 +227,7 @@ return function(props)
 			e(ProgressBar, {
 				Progress = 1,
 				Total = 7,
-				Size = UDim2.new(1, 0, 0, 20),
+				Size = UDim2.new(1, 0, 0, 16),
 				bgColor = Color3.fromRGB(238, 238, 238),
 				fgColor = Color3.fromRGB(146, 206, 142),
 			}),
@@ -256,7 +258,7 @@ return function(props)
 						BackgroundTransparency = 1,
 						Text = "Build a Road (0/1)",
 						TextColor3 = Color3.fromRGB(73, 103, 71),
-						FontFace = Font.fromName("BuilderSans", Enum.FontWeight.Bold),
+						FontFace = BuilderSans.Bold,
 						TextScaled = true,
 						Size = UDim2.new(0.5, 0, 1, 0),
 						Position = UDim2.new(0, 0, 0, 0),
@@ -272,7 +274,7 @@ return function(props)
 						BackgroundTransparency = 1,
 						Text = "You will earn:",
 						TextColor3 = Color3.fromRGB(156, 156, 156),
-						FontFace = Font.fromName("BuilderSans", Enum.FontWeight.Bold),
+						FontFace = BuilderSans.SemiBold,
 						TextScaled = true,
 						Size = UDim2.new(0.5, 0, 1, 0),
 						Position = UDim2.new(0.5, 0, 0, 0),
@@ -309,21 +311,10 @@ return function(props)
 					}),
 					e(Reward, {
 						Image = "rbxassetid://18520836581",
-						Amount = 999999,
+						Amount = 99,
 						currencyName = "Roadbucks",
 					}),
 
-					e(Reward, {
-						Image = "rbxassetid://18521714111",
-						Amount = 999999,
-						currencyName = "Kloins",
-					}),
-
-					e(Reward, {
-						Image = "rbxassetid://18521714111",
-						Amount = 999999,
-						currencyName = "Kloins",
-					}),
 					e(Reward, {
 						Image = "rbxassetid://18521714111",
 						Amount = 999999,

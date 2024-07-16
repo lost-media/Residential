@@ -26,6 +26,12 @@ return function(props)
 
 		Size = UDim2.new(0.55, 0, 0.55, 0),
 	}, {
+        e("UIStroke", {
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            Color = Color3.fromRGB(0, 0, 0),
+            LineJoinMode = Enum.LineJoinMode.Round,
+            Thickness = 3,
+        }),
 		e("UISizeConstraint", {
 			MaxSize = Vector2.new(800, 800),
 			MinSize = Vector2.new(240, 240),
@@ -88,9 +94,9 @@ return function(props)
 		}, {
 			e("UIPadding", {
 				PaddingTop = UDim.new(0, 16),
-				PaddingBottom = UDim.new(0, 16),
+				PaddingBottom = UDim.new(0, 8),
 				PaddingLeft = UDim.new(0, 16),
-				PaddingRight = UDim.new(0, 16),
+				PaddingRight = UDim.new(0, 8),
 			}),
 			e("ScrollingFrame", {
 				ref = scrollingFrameRef,
@@ -99,7 +105,10 @@ return function(props)
 				Size = UDim2.new(1, 0, 1, 0),
 				CanvasSize = contentSize,
 
-				ScrollBarThickness = 8,
+                ScrollBarImageColor3 = Color3.fromRGB(197, 80, 187),
+                ScrollBarImageTransparency = 0.5,
+
+				ScrollBarThickness = 4,
 				ScrollingDirection = Enum.ScrollingDirection.Y,
 			}, {
 				e("UIListLayout", {
@@ -116,8 +125,48 @@ return function(props)
 					PaddingTop = UDim.new(0, 2),
 					PaddingBottom = UDim.new(0, 2),
 					PaddingLeft = UDim.new(0, 2),
-					PaddingRight = UDim.new(0, 16),
+					PaddingRight = UDim.new(0, 10),
 				}),
+
+                e("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 32),
+                    FontFace = Font.fromName("BuilderSans", Enum.FontWeight.SemiBold),
+                    Text = "Daily Quests",
+                    TextColor3 = Color3.fromRGB(0, 0, 0),
+                    TextScaled = true,
+
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                }, {
+                    e("UITextSizeConstraint", {
+                        MaxTextSize = 24,
+                    }),
+                   
+                }),
+
+                e(QuestSlot, {
+					Name = "Build a Road",
+					Description = "Build a road to the next town",
+					Reward = {},
+					Progress = "0/1",
+					Image = "rbxassetid://18521714111",
+				}),
+
+                e("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 32),
+                    FontFace = Font.fromName("BuilderSans", Enum.FontWeight.SemiBold),
+                    Text = "Active Quests",
+                    TextColor3 = Color3.fromRGB(0, 0, 0),
+                    TextScaled = true,
+
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                }, {
+                    e("UITextSizeConstraint", {
+                        MaxTextSize = 24,
+                    }),
+                   
+                }),
 
 				e(QuestSlot, {
 					Name = "Build a Road",
