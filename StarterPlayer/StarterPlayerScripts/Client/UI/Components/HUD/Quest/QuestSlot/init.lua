@@ -1,10 +1,14 @@
 local SETTINGS = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LMEngine = require(ReplicatedStorage.LMEngine)
 local Packages = ReplicatedStorage.Packages
 
 local React = require(Packages.react)
 local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
+
+local NumberFormatter = require(LMEngine.SharedDir.NumberFormatter)
 
 local e = React.createElement
 
@@ -56,28 +60,19 @@ type RewardProps = {
 }
 
 local function Reward(props: RewardProps)
-	props.Amount = props.Amount or 0
-	local tooltip: TooltipProvider.TooltipContext = React.useContext(TooltipProvider.Context)
+	local amountAsText = React.useMemo(function()
+		return NumberFormatter.MonetaryFormat(props.Amount or 0)
+	end, { props.Amount })
 
 	return e("Frame", {
-		AutomaticSize = Enum.AutomaticSize.X,
 		BackgroundTransparency = 1,
 		Size = props.Size or UDim2.new(0.5, 0, 0.5, 0),
 		Position = props.Position or UDim2.new(0, 0, 0, 0),
-
-		[React.Event.MouseEnter] = function()
-			tooltip.show({
-				Text = "You will earn " .. props.Amount .. " " .. (props.currencyName or "Coins"),
-				Visible = true,
-			})
-		end,
-
-		[React.Event.MouseLeave] = function()
-			tooltip.show({
-				Visible = false,
-			})
-		end,
 	}, {
+		e("UISizeConstraint", {
+			MaxSize = Vector2.new(120, 32),
+			MinSize = Vector2.new(24, 16),
+		}),
 		e("UIPadding", {
 			PaddingTop = UDim.new(0, 4),
 			PaddingBottom = UDim.new(0, 4),
@@ -94,7 +89,7 @@ local function Reward(props: RewardProps)
 		e("ImageLabel", {
 			LayoutOrder = 1,
 			BackgroundTransparency = 1,
-			Size = UDim2.new(0.5, 0, 1, 0),
+			Size = UDim2.new(0.4, 0, 1, 0),
 			Position = UDim2.new(0, 0, 0, 0),
 			Image = props.Image or "rbxassetid://18491523583",
 			ImageColor3 = props.ImageColor3 or Color3.fromRGB(255, 255, 255),
@@ -103,37 +98,50 @@ local function Reward(props: RewardProps)
 				AspectRatio = 1,
 			}),
 		}),
-		e("TextBox", {
+		e("TextLabel", {
 			Interactable = false,
-			AutomaticSize = Enum.AutomaticSize.X,
 			LayoutOrder = 2,
-			ClearTextOnFocus = false,
-			TextEditable = false,
+			--ClearTextOnFocus = false,
+			--TextEditable = false,
 			BackgroundTransparency = 1,
-			Text = props.Text or "",
-			TextColor3 = Color3.fromRGB(73, 103, 71),
+			Text = amountAsText,
+			TextColor3 = Color3.fromRGB(92, 92, 92),
 			FontFace = Font.fromName("BuilderSans", Enum.FontWeight.Bold),
-			TextScaled = true,
-			Size = UDim2.new(0, 0, 1, 0),
+			Size = UDim2.new(0.6, 0, 1, 0),
 			Position = UDim2.new(0.5, 0, 0, 0),
 			TextXAlignment = Enum.TextXAlignment.Left,
+
+			TextScaled = true,
+			TextWrapped = false,
 		}, {
 			e("UITextSizeConstraint", {
-				MaxTextSize = 24,
+				MaxTextSize = 20,
+				MinTextSize = 12,
 			}),
 		}),
 	})
 end
 
-return function(props: CircleProps)
+return function(props)
+	local showContent, setShowContent = React.useState(true)
+
 	return e("CanvasGroup", {
 		BackgroundTransparency = 0,
 		BorderSizePixel = 0,
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		Size = props.Size or UDim2.new(1, 0, 0, 160),
+		Size = props.Size or UDim2.new(1, 0, 0, 0),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		AnchorPoint = Vector2.new(0.5, 0.5),
+
+		AutomaticSize = Enum.AutomaticSize.Y,
 	}, {
+		e("UIListLayout", {
+			FillDirection = Enum.FillDirection.Vertical,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			VerticalAlignment = Enum.VerticalAlignment.Top,
+			Padding = UDim.new(0, 0),
+		}),
 		e("UICorner", {
 			CornerRadius = UDim.new(0, 8),
 		}),
@@ -141,10 +149,18 @@ return function(props: CircleProps)
 			Color = Color3.fromRGB(146, 206, 142),
 			Thickness = 2,
 		}),
-		Top = e("Frame", {
+		Top = e("TextButton", {
 			BorderSizePixel = 0,
 			BackgroundColor3 = Color3.fromRGB(181, 255, 176),
-			Size = UDim2.new(1, 0, 0.3, 0),
+			Size = UDim2.new(1, 0, 0, 50),
+			LayoutOrder = 0,
+			Text = "",
+			TextTransparency = 1,
+			AutoButtonColor = false,
+
+			[React.Event.Activated] = function()
+				setShowContent(not showContent)
+			end,
 		}, {
 			e("UIPadding", {
 				PaddingTop = UDim.new(0, 2),
@@ -184,90 +200,134 @@ return function(props: CircleProps)
 
 		e("Frame", {
 			BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 0.7, 0),
+			Size = UDim2.new(1, 0, 0, 0),
 			Position = UDim2.new(0, 0, 0.3, 0),
+
+			LayoutOrder = 1,
+
+			AutomaticSize = Enum.AutomaticSize.Y,
+			Visible = showContent,
 		}, {
+			e("UIListLayout", {
+				FillDirection = Enum.FillDirection.Vertical,
+				HorizontalAlignment = Enum.HorizontalAlignment.Left,
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				VerticalAlignment = Enum.VerticalAlignment.Top,
+				Padding = UDim.new(0, 8),
+			}),
 			e("UIPadding", {
-				PaddingTop = UDim.new(0, 4),
+				PaddingTop = UDim.new(0, 8),
 				PaddingBottom = UDim.new(0, 4),
-				PaddingLeft = UDim.new(0, 4),
-				PaddingRight = UDim.new(0, 4),
+				PaddingLeft = UDim.new(0, 8),
+				PaddingRight = UDim.new(0, 8),
 			}),
 
 			e(ProgressBar, {
 				Progress = 1,
 				Total = 7,
-				Size = UDim2.new(1, 0, 0.1, 0),
+				Size = UDim2.new(1, 0, 0, 20),
 				bgColor = Color3.fromRGB(238, 238, 238),
 				fgColor = Color3.fromRGB(146, 206, 142),
 			}),
 			e("Frame", {
 				BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 0.9, 0),
+				Size = UDim2.new(1, 0, 0, 0),
 				Position = UDim2.new(0, 0, 0.1, 0),
+
+				AutomaticSize = Enum.AutomaticSize.Y,
 			}, {
+				e("UIListLayout", {
+					FillDirection = Enum.FillDirection.Vertical,
+					HorizontalAlignment = Enum.HorizontalAlignment.Right,
+					SortOrder = Enum.SortOrder.LayoutOrder,
+					VerticalAlignment = Enum.VerticalAlignment.Top,
+				}),
 				e("UIPadding", {
 					PaddingTop = UDim.new(0, 8),
 					PaddingBottom = UDim.new(0, 8),
 					PaddingLeft = UDim.new(0, 8),
 					PaddingRight = UDim.new(0, 8),
 				}),
-				e("TextLabel", {
+				e("Frame", {
+					Size = UDim2.new(1, 0, 0, 48),
 					BackgroundTransparency = 1,
-					Text = "Build a Road (0/1)",
-					TextColor3 = Color3.fromRGB(73, 103, 71),
-					FontFace = Font.fromName("BuilderSans", Enum.FontWeight.Bold),
-					TextScaled = true,
-					Size = UDim2.new(0.5, 0, 0.5, 0),
-					Position = UDim2.new(0, 0, 0, 0),
-					TextXAlignment = Enum.TextXAlignment.Left,
-					TextYAlignment = Enum.TextYAlignment.Top,
 				}, {
-					e("UITextSizeConstraint", {
-						MaxTextSize = 24,
+					e("TextLabel", {
+						BackgroundTransparency = 1,
+						Text = "Build a Road (0/1)",
+						TextColor3 = Color3.fromRGB(73, 103, 71),
+						FontFace = Font.fromName("BuilderSans", Enum.FontWeight.Bold),
+						TextScaled = true,
+						Size = UDim2.new(0.5, 0, 1, 0),
+						Position = UDim2.new(0, 0, 0, 0),
+						TextXAlignment = Enum.TextXAlignment.Left,
+						TextYAlignment = Enum.TextYAlignment.Top,
+					}, {
+						e("UITextSizeConstraint", {
+							MaxTextSize = 24,
+						}),
 					}),
-				}),
 
-				e("TextLabel", {
-					BackgroundTransparency = 1,
-					Text = "You will earn:",
-					TextColor3 = Color3.fromRGB(73, 103, 71),
-					FontFace = Font.fromName("BuilderSans", Enum.FontWeight.Bold),
-					TextScaled = true,
-					Size = UDim2.new(0.5, 0, 0.5, 0),
-					Position = UDim2.new(0.5, 0, 0, 0),
-					TextXAlignment = Enum.TextXAlignment.Right,
-					TextYAlignment = Enum.TextYAlignment.Top,
-				}, {
-					e("UITextSizeConstraint", {
-						MaxTextSize = 24,
+					e("TextLabel", {
+						BackgroundTransparency = 1,
+						Text = "You will earn:",
+						TextColor3 = Color3.fromRGB(156, 156, 156),
+						FontFace = Font.fromName("BuilderSans", Enum.FontWeight.Bold),
+						TextScaled = true,
+						Size = UDim2.new(0.5, 0, 1, 0),
+						Position = UDim2.new(0.5, 0, 0, 0),
+						TextXAlignment = Enum.TextXAlignment.Right,
+						TextYAlignment = Enum.TextYAlignment.Top,
+					}, {
+						e("UITextSizeConstraint", {
+							MaxTextSize = 18,
+						}),
+						e("UIPadding", {
+							PaddingTop = UDim.new(0, 8),
+						}),
 					}),
 				}),
 
 				e("Frame", {
 					BackgroundTransparency = 1,
-					Size = UDim2.new(1, 0, 0.5, 0),
-					Position = UDim2.new(0, 0, 0.5, 0),
+					Size = UDim2.new(0.8, 0, 0, 0),
+					Position = UDim2.new(0.5, 0, 0.4, 0),
+					AnchorPoint = Vector2.new(0.5, 0),
+
+					AutomaticSize = Enum.AutomaticSize.Y,
 				}, {
-					e("UIListLayout", {
+					e("UIGridLayout", {
 						FillDirection = Enum.FillDirection.Horizontal,
 						HorizontalAlignment = Enum.HorizontalAlignment.Right,
 						SortOrder = Enum.SortOrder.LayoutOrder,
-						VerticalAlignment = Enum.VerticalAlignment.Center,
-						Padding = UDim.new(0, 4),
+						VerticalAlignment = Enum.VerticalAlignment.Top,
+						StartCorner = Enum.StartCorner.TopRight,
+
+						FillDirectionMaxCells = 3,
+						CellPadding = UDim2.new(0, 8, 0, 8),
+						CellSize = UDim2.new(0.3, -8, 0, 32),
 					}),
 					e(Reward, {
 						Image = "rbxassetid://18520836581",
-						Text = "999.9K",
-						Amount = 999900,
-						Size = UDim2.new(0, 0, 1, 0),
+						Amount = 999999,
+						currencyName = "Roadbucks",
 					}),
 
 					e(Reward, {
-						Image = "rbxassetid://18520836581",
-						Text = "1",
-						Amount = 1,
-						Size = UDim2.new(0, 0, 1, 0),
+						Image = "rbxassetid://18521714111",
+						Amount = 999999,
+						currencyName = "Kloins",
+					}),
+
+					e(Reward, {
+						Image = "rbxassetid://18521714111",
+						Amount = 999999,
+						currencyName = "Kloins",
+					}),
+					e(Reward, {
+						Image = "rbxassetid://18521714111",
+						Amount = 999999,
+						currencyName = "Kloins",
 					}),
 				}),
 			}),

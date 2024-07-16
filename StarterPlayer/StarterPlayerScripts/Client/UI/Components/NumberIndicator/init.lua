@@ -35,6 +35,7 @@ type NumberIndicatorProps = {
 	Size: UDim2?,
 
 	Text: string,
+	aspectRatio: number?,
 
 	onClick: () -> ()?,
 }
@@ -127,7 +128,7 @@ return function(props: NumberIndicatorProps)
 					AnchorPoint = Vector2.new(0, 0.5),
 				}, {
 					e("UIAspectRatioConstraint", {
-						AspectRatio = 1.33,
+						AspectRatio = props.aspectRatio or 1,
 					}),
 				}),
 				e("TextLabel", {

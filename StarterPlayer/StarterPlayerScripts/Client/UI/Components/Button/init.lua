@@ -28,7 +28,6 @@ local TooltipProvider = require(dirProviders.TooltipProvider)
 
 local Circle = require(dirComponents.Circle)
 local NewAlertIndicator = require(dirComponents.NewAlertIndicator)
-local Tooltip = require(dirComponents.Tooltip)
 
 type ButtonProps = {
 	OnClick: () -> ()?,

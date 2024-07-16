@@ -27,15 +27,18 @@ return function(props: TopBarProps)
 		}),
 
 		e(NumberIndicator, {
-			Name = "Coins",
+			Name = "Kloins",
 			Text = "999.9K",
+			Image = "rbxassetid://18521714111",
 			Size = UDim2.new(0.25, 0, 1, 0),
+			aspectRatio = 1,
 		}),
 
 		e(NumberIndicator, {
 			Name = "Roadbucks",
 			Text = "999.9K",
 			Size = UDim2.new(0.25, 0, 1, 0),
+			aspectRatio = 1.33,
 		}),
 	})
 end

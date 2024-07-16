@@ -38,7 +38,7 @@ local SETTINGS = {
 local NumberFormatter = {}
 
 -- Formats number into a more readable format (e.g., "$5.4k")
-function NumberFormatter.MonetaryFormat(number)
+function NumberFormatter.MonetaryFormat(number: number, includeDollarSign: boolean?): string
 	local suffixIndex = 1
 
 	while number >= 1000 and suffixIndex < #SETTINGS.Suffixes do
@@ -49,7 +49,15 @@ function NumberFormatter.MonetaryFormat(number)
 	-- Format number to one decimal place if it's not an integer
 	local formattedNumber = number % 1 == 0 and tostring(number) or string.format("%.1f", number)
 
-	return "$" .. formattedNumber .. SETTINGS.Suffixes[suffixIndex]
+	if includeDollarSign == true then
+		return "$" .. formattedNumber .. SETTINGS.Suffixes[suffixIndex]
+	end
+
+	return formattedNumber .. SETTINGS.Suffixes[suffixIndex]
+end
+
+function NumberFormatter.CommaFormat(number: number): string
+	return string.format("%d", number):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 end
 
 return NumberFormatter
