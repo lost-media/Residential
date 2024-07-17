@@ -18,6 +18,7 @@ local SideBarButtons = require(dirHUD.SideBarButtons)
 local TopBar = require(dirHUD.TopBar)
 
 -- Frames
+local BuildMode = require(dirHUD.BuildMode)
 local Quest = require(dirHUD.Quest)
 
 local function App(_)
@@ -32,10 +33,12 @@ local function App(_)
 				PaddingLeft = UDim.new(0, 16),
 				PaddingRight = UDim.new(0, 16),
 			}),
-			React.createElement(Quest, {}),
+
+			--React.createElement(Quest, {}),
 			React.createElement(BottomBarButtons, {}),
 			React.createElement(SideBarButtons, {}),
 			React.createElement(TopBar, {}),
+			React.createElement(BuildMode, {}),
 		}),
 	})
 end

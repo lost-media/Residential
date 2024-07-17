@@ -41,6 +41,11 @@ type ButtonProps = {
 	toolTipOffset: Vector2?,
 	hoverBgColor: Color3?,
 	hoverStripeColor: Color3?,
+
+	activeBgColor: Color3?,
+	activeStripeColor: Color3?,
+
+	active: boolean?,
 }
 
 return function(props: ButtonProps)
@@ -53,11 +58,13 @@ return function(props: ButtonProps)
 	local hovered, setHovered = React.useState(false)
 
 	local styles = RoactSpring.useSpring({
-		bgColor = if hovered
-			then props.hoverBgColor or SETTINGS.DefaultHoverBgColor
+		bgColor = if props.active
+			then props.activeBgColor or props.hoverBgColor or SETTINGS.DefaultHoverBgColor
+			elseif hovered then props.hoverBgColor or SETTINGS.DefaultHoverBgColor
 			else SETTINGS.DefaultBgColor,
-		stripeColor = if hovered
-			then props.hoverStripeColor or SETTINGS.DefaultHoverStripeColor
+		stripeColor = if props.active
+			then props.activeStripeColor or props.hoverStripeColor or SETTINGS.DefaultHoverStripeColor
+			elseif hovered then props.hoverStripeColor or SETTINGS.DefaultHoverStripeColor
 			else SETTINGS.DefaultStripeColor,
 		scale = if hovered then SETTINGS.ScaleFactor else 1,
 		config = {

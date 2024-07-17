@@ -14,7 +14,7 @@ type StripeTextureProps = {
 	tileSize: UDim2,
 	color: Color3,
 	transparency: number,
-
+	position: UDim2?,
 	size: UDim2,
 }
 
@@ -27,6 +27,7 @@ return function(props: StripeTextureProps)
 		ImageTransparency = props.transparency or 0,
 		ScaleType = Enum.ScaleType.Tile,
 		TileSize = props.tileSize or UDim2.new(1, 0, 1, 0),
+		Position = props.position or UDim2.new(0, 0, 0, 0),
 	}, {
 		props.children,
 	})
