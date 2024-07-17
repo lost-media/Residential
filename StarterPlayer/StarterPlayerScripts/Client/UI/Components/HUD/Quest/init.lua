@@ -26,12 +26,12 @@ return function(props)
 
 		Size = UDim2.new(0.55, 0, 0.55, 0),
 	}, {
-        e("UIStroke", {
-            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-            Color = Color3.fromRGB(0, 0, 0),
-            LineJoinMode = Enum.LineJoinMode.Round,
-            Thickness = 3,
-        }),
+		e("UIStroke", {
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			Color = Color3.fromRGB(0, 0, 0),
+			LineJoinMode = Enum.LineJoinMode.Round,
+			Thickness = 3,
+		}),
 		e("UISizeConstraint", {
 			MaxSize = Vector2.new(800, 800),
 			MinSize = Vector2.new(240, 240),
@@ -105,8 +105,8 @@ return function(props)
 				Size = UDim2.new(1, 0, 1, 0),
 				CanvasSize = contentSize,
 
-                ScrollBarImageColor3 = Color3.fromRGB(197, 80, 187),
-                ScrollBarImageTransparency = 0.5,
+				ScrollBarImageColor3 = Color3.fromRGB(197, 80, 187),
+				ScrollBarImageTransparency = 0.5,
 
 				ScrollBarThickness = 4,
 				ScrollingDirection = Enum.ScrollingDirection.Y,
@@ -122,81 +122,107 @@ return function(props)
 					end,
 				}),
 				e("UIPadding", {
-					PaddingTop = UDim.new(0, 2),
-					PaddingBottom = UDim.new(0, 2),
-					PaddingLeft = UDim.new(0, 2),
 					PaddingRight = UDim.new(0, 10),
 				}),
 
-                e("TextLabel", {
-                    BackgroundTransparency = 1,
-                    Size = UDim2.new(1, 0, 0, 32),
-                    FontFace = Font.fromName("BuilderSans", Enum.FontWeight.SemiBold),
-                    Text = "Daily Quests",
-                    TextColor3 = Color3.fromRGB(0, 0, 0),
-                    TextScaled = true,
+				e("CanvasGroup", {
+					BackgroundTransparency = 1,
+					Size = UDim2.new(1, 0, 0, 0),
+					AutomaticSize = Enum.AutomaticSize.Y,
+				}, {
+					e("UIPadding", {
+						PaddingTop = UDim.new(0, 2),
+						PaddingBottom = UDim.new(0, 16),
+						PaddingLeft = UDim.new(0, 2),
+						PaddingRight = UDim.new(0, 2),
+					}),
+					e("UICorner", {
+						CornerRadius = UDim.new(0, 16),
+					}),
+					e("UIListLayout", {
+						FillDirection = Enum.FillDirection.Vertical,
+						HorizontalAlignment = Enum.HorizontalAlignment.Center,
+						VerticalAlignment = Enum.VerticalAlignment.Top,
+						Padding = UDim.new(0, 8),
+					}),
+					e("TextLabel", {
+						BackgroundTransparency = 0,
+						BorderSizePixel = 0,
+						BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+						Size = UDim2.new(1, 0, 0, 48),
+						FontFace = Font.fromName("BuilderSans", Enum.FontWeight.SemiBold),
+						Text = "Daily Quests",
+						TextColor3 = Color3.fromRGB(255, 255, 255),
+						TextScaled = true,
 
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                }, {
-                    e("UITextSizeConstraint", {
-                        MaxTextSize = 24,
-                    }),
-                   
-                }),
+						TextXAlignment = Enum.TextXAlignment.Left,
+					}, {
+						e("UITextSizeConstraint", {
+							MaxTextSize = 24,
+						}),
+						e("UIPadding", {
+							PaddingLeft = UDim.new(0, 16),
+						}),
+					}),
 
-                e(QuestSlot, {
-					Name = "Build a Road",
-					Description = "Build a road to the next town",
-					Reward = {},
-					Progress = "0/1",
-					Image = "rbxassetid://18521714111",
+					e(QuestSlot, {
+						color = Color3.fromRGB(255, 255, 255),
+						strokeColor = Color3.fromRGB(143, 143, 143),
+						textColor = Color3.fromRGB(56, 56, 56),
+						progressColor = Color3.fromRGB(0, 0, 0),
+
+						defaultShowContent = false,
+
+						questName = "Collect 10 coins",
+					}),
 				}),
 
-                e("TextLabel", {
-                    BackgroundTransparency = 1,
-                    Size = UDim2.new(1, 0, 0, 32),
-                    FontFace = Font.fromName("BuilderSans", Enum.FontWeight.SemiBold),
-                    Text = "Active Quests",
-                    TextColor3 = Color3.fromRGB(0, 0, 0),
-                    TextScaled = true,
+				e("CanvasGroup", {
+					BackgroundTransparency = 1,
+					Size = UDim2.new(1, 0, 0, 0),
+					AutomaticSize = Enum.AutomaticSize.Y,
+				}, {
+					e("UIPadding", {
+						PaddingTop = UDim.new(0, 2),
+						PaddingBottom = UDim.new(0, 16),
+						PaddingLeft = UDim.new(0, 2),
+						PaddingRight = UDim.new(0, 2),
+					}),
+					e("UICorner", {
+						CornerRadius = UDim.new(0, 16),
+					}),
+					e("UIListLayout", {
+						FillDirection = Enum.FillDirection.Vertical,
+						HorizontalAlignment = Enum.HorizontalAlignment.Center,
+						VerticalAlignment = Enum.VerticalAlignment.Top,
+						Padding = UDim.new(0, 8),
+					}),
+					e("TextLabel", {
+						BackgroundTransparency = 0,
+						BorderSizePixel = 0,
+						BackgroundColor3 = Color3.fromRGB(226, 91, 213),
+						Size = UDim2.new(1, 0, 0, 48),
+						FontFace = Font.fromName("BuilderSans", Enum.FontWeight.SemiBold),
+						Text = "Active Quests",
+						TextColor3 = Color3.fromRGB(255, 255, 255),
+						TextScaled = true,
 
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                }, {
-                    e("UITextSizeConstraint", {
-                        MaxTextSize = 24,
-                    }),
-                   
-                }),
+						TextXAlignment = Enum.TextXAlignment.Left,
+					}, {
+						e("UITextSizeConstraint", {
+							MaxTextSize = 24,
+						}),
+						e("UIPadding", {
+							PaddingLeft = UDim.new(0, 16),
+						}),
+					}),
 
-				e(QuestSlot, {
-					Name = "Build a Road",
-					Description = "Build a road to the next town",
-					Reward = {},
-					Progress = "0/1",
-					Image = "rbxassetid://18521714111",
-				}),
-
-				e(QuestSlot, {
-					Name = "Build a Road",
-					Description = "Build a road to the next town",
-					Reward = {},
-					Progress = "0/1",
-					Image = "rbxassetid://18521714111",
-				}),
-
-				e(QuestSlot, {
-					Name = "Build a Road",
-					Description = "Build a road to the next town",
-					Reward = {},
-					Progress = "0/1",
-					Image = "rbxassetid://18521714111",
-				}),
-				e(QuestSlot, {
-					Name = "Build a Road",
-					Description = "Build a road to the next town",
-					Reward = {},
-					Progress = "0/1",
-					Image = "rbxassetid://18521714111",
+					e(QuestSlot, {
+						color = Color3.fromRGB(255, 255, 255),
+						strokeColor = Color3.fromRGB(202, 87, 191),
+						textColor = Color3.fromRGB(151, 60, 142),
+						defaultShowContent = true,
+					}),
 				}),
 			}),
 		}),

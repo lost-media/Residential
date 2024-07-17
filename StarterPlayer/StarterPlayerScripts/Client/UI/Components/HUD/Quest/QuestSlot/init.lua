@@ -38,7 +38,7 @@ local function ProgressBar(props)
 		Size = props.Size or UDim2.new(1, 0, 0.1, 0),
 	}, {
 		e("UICorner", {
-			CornerRadius = UDim.new(0, 0),
+			CornerRadius = UDim.new(1, 0),
 		}),
 		e("Frame", {
 			BackgroundTransparency = 0,
@@ -83,7 +83,7 @@ local function Reward(props: RewardProps)
 		}),
 		e("UIListLayout", {
 			FillDirection = Enum.FillDirection.Horizontal,
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			HorizontalAlignment = Enum.HorizontalAlignment.Right,
 			SortOrder = Enum.SortOrder.LayoutOrder,
 			VerticalAlignment = Enum.VerticalAlignment.Center,
 			Padding = UDim.new(0, 8),
@@ -102,19 +102,21 @@ local function Reward(props: RewardProps)
 		}),
 		e("TextLabel", {
 			Interactable = false,
-			LayoutOrder = 2,
+			LayoutOrder = 0,
 			--ClearTextOnFocus = false,
 			--TextEditable = false,
 			BackgroundTransparency = 1,
 			Text = amountAsText,
 			TextColor3 = Color3.fromRGB(92, 92, 92),
 			FontFace = BuilderSans.SemiBold,
-			Size = UDim2.new(0.6, 0, 1, 0),
+			Size = UDim2.new(0, 0, 1, 0),
 			Position = UDim2.new(0.5, 0, 0, 0),
 			TextXAlignment = Enum.TextXAlignment.Left,
 
 			TextScaled = true,
 			TextWrapped = false,
+
+			AutomaticSize = Enum.AutomaticSize.X,
 		}, {
 			e("UITextSizeConstraint", {
 				MaxTextSize = 20,
@@ -124,8 +126,19 @@ local function Reward(props: RewardProps)
 	})
 end
 
-return function(props)
-	local showContent, setShowContent = React.useState(true)
+type QuestSlotProps = {
+	color: Color3?,
+	strokeColor: Color3?,
+	textColor: Color3?,
+
+	questName: string?,
+	progressColor: Color3?,
+
+	defaultShowContent: boolean?,
+}
+
+return function(props: QuestSlotProps)
+	local showContent, setShowContent = React.useState(props.defaultShowContent or false)
 
 	return e("CanvasGroup", {
 		BackgroundTransparency = 0,
@@ -133,7 +146,6 @@ return function(props)
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 		Size = props.Size or UDim2.new(1, 0, 0, 0),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
-		AnchorPoint = Vector2.new(0.5, 0.5),
 
 		AutomaticSize = Enum.AutomaticSize.Y,
 	}, {
@@ -148,12 +160,12 @@ return function(props)
 			CornerRadius = UDim.new(0, 8),
 		}),
 		e("UIStroke", {
-			Color = Color3.fromRGB(146, 206, 142),
+			Color = props.strokeColor or Color3.fromRGB(146, 206, 142),
 			Thickness = 2,
 		}),
 		Top = e("TextButton", {
 			BorderSizePixel = 0,
-			BackgroundColor3 = Color3.fromRGB(181, 255, 176),
+			BackgroundColor3 = props.color or Color3.fromRGB(181, 255, 176),
 			Size = UDim2.new(1, 0, 0, 50),
 			LayoutOrder = 0,
 			Text = "",
@@ -172,8 +184,8 @@ return function(props)
 			}),
 			QuestName = e("TextLabel", {
 				BackgroundTransparency = 1,
-				Text = "Welcome to your New City!",
-				TextColor3 = Color3.fromRGB(73, 103, 71),
+				Text = props.questName or "Welcome to your New City!",
+				TextColor3 = props.textColor or Color3.fromRGB(73, 103, 71),
 				FontFace = BuilderSans.Medium,
 				TextScaled = true,
 				Size = UDim2.new(0.75, 0, 1, 0),
@@ -187,7 +199,7 @@ return function(props)
 			QuestStep = e("TextLabel", {
 				BackgroundTransparency = 1,
 				Text = "1/7",
-				TextColor3 = Color3.fromRGB(73, 103, 71),
+				TextColor3 = props.textColor or Color3.fromRGB(73, 103, 71),
 				FontFace = BuilderSans.Bold,
 				TextScaled = true,
 				Size = UDim2.new(0.25, 0, 1, 0),
@@ -229,7 +241,7 @@ return function(props)
 				Total = 7,
 				Size = UDim2.new(1, 0, 0, 16),
 				bgColor = Color3.fromRGB(238, 238, 238),
-				fgColor = Color3.fromRGB(146, 206, 142),
+				fgColor = props.progressColor or Color3.fromRGB(146, 206, 142),
 			}),
 			e("Frame", {
 				BackgroundTransparency = 1,
@@ -298,27 +310,31 @@ return function(props)
 
 					AutomaticSize = Enum.AutomaticSize.Y,
 				}, {
-					e("UIGridLayout", {
+					e("UIListLayout", {
 						FillDirection = Enum.FillDirection.Horizontal,
 						HorizontalAlignment = Enum.HorizontalAlignment.Right,
 						SortOrder = Enum.SortOrder.LayoutOrder,
 						VerticalAlignment = Enum.VerticalAlignment.Top,
-						StartCorner = Enum.StartCorner.TopRight,
-
-						FillDirectionMaxCells = 3,
-						CellPadding = UDim2.new(0, 8, 0, 8),
-						CellSize = UDim2.new(0.3, -8, 0, 32),
+						Wraps = true,
 					}),
 					e(Reward, {
 						Image = "rbxassetid://18520836581",
 						Amount = 99,
 						currencyName = "Roadbucks",
+						Size = UDim2.new(0.5, 0, 50, 0),
 					}),
 
 					e(Reward, {
 						Image = "rbxassetid://18521714111",
 						Amount = 999999,
 						currencyName = "Kloins",
+						Size = UDim2.new(0.5, 0, 50, 0),
+					}),
+					e(Reward, {
+						Image = "rbxassetid://18521714111",
+						Amount = 999999,
+						currencyName = "Kloins",
+						Size = UDim2.new(0.5, 0, 50, 0),
 					}),
 				}),
 			}),
