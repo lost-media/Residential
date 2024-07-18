@@ -4,6 +4,7 @@ local SETTINGS = {
 	IndustrialAssetId = "rbxassetid://18313003018",
 	CommercialAssetId = "rbxassetid://18539219318",
 	DecorationAssetId = "rbxassetid://18312572742",
+	RoadAssetId = "rbxassetid://18312539919",
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -22,11 +23,22 @@ local BuilderSans = require(dirFonts.BuilderSans)
 local Button = require(dirComponents.Button)
 local StripeTexture = require(dirComponents.StripeTexture)
 
+local StructureEntry = require(script.StructureEntry)
+
 local buttonTabs = {
+	{
+		Name = "Road",
+		Image = SETTINGS.RoadAssetId,
+		toolTipOffset = Vector2.new(-32, -32),
+
+		active = false,
+	},
 	{
 		Name = "City",
 		Image = SETTINGS.CityAssetId,
 		toolTipOffset = Vector2.new(-32, -32),
+
+		active = true,
 	},
 	{
 		Name = "Residential",
@@ -65,7 +77,7 @@ return function(props)
 		AnchorPoint = Vector2.new(0, 1),
 		BackgroundTransparency = 1,
 
-		Size = UDim2.new(1, 0, 0.4, 0),
+		Size = UDim2.new(1, 0, 0.5, 0),
 	}, {
 		e("UIListLayout", {
 			FillDirection = props.FillDirection or Enum.FillDirection.Vertical,
@@ -118,16 +130,16 @@ return function(props)
 				e("Frame", {
 					Position = UDim2.new(0.5, 0, 0, 0),
 					AnchorPoint = Vector2.new(0.5, 0),
-					Size = UDim2.new(0.2, 0, 0.2, 0),
+					Size = UDim2.new(1, 0, 0.2, 0),
 
 					BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 					BorderSizePixel = 0,
 				}, {
 
 					e("UIStroke", {
-						Thickness = 3,
+						Thickness = 2,
 						LineJoinMode = Enum.LineJoinMode.Round,
-						Color = Color3.fromRGB(0, 0, 0),
+						Color = Color3.fromRGB(226, 226, 226),
 					}),
 
 					e("TextLabel", {
@@ -155,6 +167,32 @@ return function(props)
 					ScrollingDirection = Enum.ScrollingDirection.X,
 
 					CanvasSize = UDim2.new(2, 0, 0, 0),
+				}, {
+					e("UIPadding", {
+						PaddingTop = UDim.new(0, 8),
+						PaddingBottom = UDim.new(0, 16),
+						PaddingLeft = UDim.new(0, 8),
+						PaddingRight = UDim.new(0, 8),
+					}),
+					e("UIListLayout", {
+						FillDirection = Enum.FillDirection.Horizontal,
+						HorizontalAlignment = Enum.HorizontalAlignment.Left,
+						VerticalAlignment = Enum.VerticalAlignment.Top,
+						Padding = UDim.new(0, 16),
+					}),
+
+					e(StructureEntry, {
+						name = "House",
+						price = "$1000",
+					}),
+
+					e(StructureEntry, {}),
+
+					e(StructureEntry, {}),
+
+					e(StructureEntry, {}),
+
+					e(StructureEntry, {}),
 				}),
 			}),
 		}),

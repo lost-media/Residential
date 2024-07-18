@@ -21,12 +21,12 @@ type TooltipProps = {
 	Visible: boolean,
 	Text: string,
 	Offset: Vector2?,
+
+	position: UDim2,
 }
 
 return function(props: TooltipProps)
 	local ref = React.useRef(nil)
-
-	local mousePosition, setMousePosition = React.useState(Vector2.new(0, 0))
 
 	local styles = RoactSpring.useSpring({
 		from = { scale = 0.25, opacity = 1 },
@@ -42,29 +42,6 @@ return function(props: TooltipProps)
 		},
 	})
 
-	React.useEffect(function()
-		local function updateMousePosition()
-			local newMousePosition = UserInputService:GetMouseLocation()
-			-- calculate the position from the parent
-			newMousePosition = newMousePosition + (props.Offset or SETTINGS.MouseOffset)
-
-			setMousePosition(newMousePosition)
-		end
-
-		updateMousePosition() -- Update immediately in case the mouse isn't moving
-
-		local connection = UserInputService.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseMovement then
-				updateMousePosition()
-			end
-		end)
-
-		-- Cleanup function to disconnect the event listener
-		return function()
-			connection:Disconnect()
-		end
-	end, { props.Visible })
-
 	return e("CanvasGroup", {
 		BackgroundTransparency = 0,
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -72,12 +49,9 @@ return function(props: TooltipProps)
 		ref = ref,
 		ZIndex = 100,
 		AutomaticSize = Enum.AutomaticSize.X,
-		Position = UDim2.fromOffset(
-			mousePosition.X + SETTINGS.MouseOffset.X,
-			mousePosition.Y + SETTINGS.MouseOffset.Y
-		),
+		Position = props.position,
 		Size = UDim2.new(0, 0, 0, 30),
-		AnchorPoint = Vector2.new(0, 0.5),
+		AnchorPoint = Vector2.new(0, 0),
 	}, {
 		e("UIStroke", {
 			Color = Color3.fromRGB(190, 190, 190),

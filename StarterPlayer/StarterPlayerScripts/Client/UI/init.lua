@@ -18,7 +18,7 @@ local SideBarButtons = require(dirHUD.SideBarButtons)
 local TopBar = require(dirHUD.TopBar)
 
 -- Frames
-local BuildMode = require(dirHUD.BuildMode)
+local BuildMenu = require(dirHUD.BuildMenu)
 local Quest = require(dirHUD.Quest)
 
 local function App(_)
@@ -38,7 +38,7 @@ local function App(_)
 			React.createElement(BottomBarButtons, {}),
 			React.createElement(SideBarButtons, {}),
 			React.createElement(TopBar, {}),
-			React.createElement(BuildMode, {}),
+			React.createElement(BuildMenu, {}),
 		}),
 	})
 end
