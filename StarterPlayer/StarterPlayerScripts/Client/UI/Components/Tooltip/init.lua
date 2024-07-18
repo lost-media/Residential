@@ -18,11 +18,9 @@ local dirFonts = dirComponents.Parent.Fonts
 local BuilderSans = require(dirFonts.BuilderSans)
 
 type TooltipProps = {
-	Visible: boolean,
-	Text: string,
-	Offset: Vector2?,
-
+	text: string,
 	position: UDim2,
+	visible: boolean,
 }
 
 return function(props: TooltipProps)
@@ -31,8 +29,8 @@ return function(props: TooltipProps)
 	local styles = RoactSpring.useSpring({
 		from = { scale = 0.25, opacity = 1 },
 		to = {
-			scale = if props.Visible then 1 else 0.25,
-			opacity = if props.Visible then 0 else 1,
+			scale = if props.visible then 1 else 0.25,
+			opacity = if props.visible then 0 else 1,
 		},
 		config = {
 			damping = 100,
@@ -75,7 +73,7 @@ return function(props: TooltipProps)
 			BackgroundTransparency = 1,
 			BorderSizePixel = 0,
 			FontFace = BuilderSans.SemiBold,
-			Text = props.Text,
+			Text = props.text,
 			TextColor3 = Color3.fromRGB(0, 0, 0),
 			TextSize = 20,
 			TextWrapped = false,

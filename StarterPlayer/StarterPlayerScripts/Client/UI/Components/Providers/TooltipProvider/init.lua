@@ -11,25 +11,33 @@ local React = require(Packages.react)
 
 local dirComponents = script.Parent.Parent
 
+local StructureTooltip = require(dirComponents.Tooltip.StructureTooltip)
 local Tooltip = require(dirComponents.Tooltip)
 
 local e = React.createElement
 
 type ShowParams = {
-	Text: string,
-	Visible: boolean,
-	Offset: UDim2,
+	text: string,
+	visible: boolean,
+	offset: UDim2,
+}
+
+type ShowStructureParams = {
+	structure: any,
+	offset: UDim2,
+	visible: boolean,
 }
 
 export type TooltipContext = {
-	Text: string,
-	Visible: boolean,
+	text: string,
+	visible: boolean,
 	setText: (text: string) -> (),
 	setVisible: (Visible: boolean) -> (),
-	Offset: UDim2,
+	offset: Vector2,
 	setOffset: (Offset: UDim2) -> (),
 
 	show: (params: ShowParams) -> (),
+	showStructureTooltip: (params: ShowStructureParams) -> (),
 }
 
 local TooltipContext = React.createContext({
@@ -37,23 +45,41 @@ local TooltipContext = React.createContext({
 	visible = false,
 	setText = function() end,
 	setVisible = function() end,
-	offset = UDim2.new(0, 0, 0, 0),
+	offset = Vector2.new(0, 0),
 	setOffset = function() end,
 
 	show = function() end,
 })
 
 local function TooltipProvider(props)
+	local tooltipToShow, setTooltipToShow = React.useState("small")
+
 	local text, setText = React.useState("Tooltip")
 	local visible, setVisible = React.useState(false)
 	local offset, setOffset = React.useState(Vector2.new(0, 0))
 
 	local mousePosition, setMousePosition = React.useState(Vector2.new(0, 0))
 
+	local structure, setStructure = React.useState({
+		name = "Structure",
+	})
+
+	-- Structure Tooltip state
 	local function show(params: ShowParams)
-		setText(params.Text)
-		setVisible(params.Visible)
-		setOffset(params.Offset)
+		setTooltipToShow("small")
+		setText(params.text)
+		setVisible(params.visible)
+		setOffset(params.offset)
+	end
+
+	local function showStructureTooltip(params: ShowStructureParams)
+		setTooltipToShow("structure")
+		setVisible(params.visible or false)
+		if params.offset then
+			setOffset(params.offset)
+		end
+
+		setStructure(params.structure)
 	end
 
 	local context = {
@@ -65,6 +91,7 @@ local function TooltipProvider(props)
 		setOffset = setOffset,
 
 		show = show,
+		showStructureTooltip = showStructureTooltip,
 	}
 
 	React.useEffect(function()
@@ -93,10 +120,18 @@ local function TooltipProvider(props)
 	return e(TooltipContext.Provider, {
 		value = context,
 	}, {
-		e(Tooltip, {
-			Text = text,
-			Visible = visible,
-			Offset = offset,
+		tooltipToShow == "small" and e(Tooltip, {
+			text = text,
+			visible = visible,
+
+			position = UDim2.fromOffset(
+				mousePosition.X + SETTINGS.MouseOffset.X,
+				mousePosition.Y + SETTINGS.MouseOffset.Y
+			),
+		}),
+		tooltipToShow == "structure" and e(StructureTooltip, {
+			structure = structure,
+			visible = visible,
 
 			position = UDim2.fromOffset(
 				mousePosition.X + SETTINGS.MouseOffset.X,

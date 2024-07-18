@@ -63,21 +63,25 @@ local buttonTabs = {
 }
 
 return function(props)
-	local scrollingFrameRef = React.useRef(nil)
-	local contentSize, setContentSize = React.useState(UDim2.new(0, 0, 0, 0))
+	local currentTab, setCurrentTab = React.useState("City")
 
 	local newButtonTabs = {}
 
 	for i, tab in pairs(buttonTabs) do
+		tab.active = tab.Name == currentTab
+		tab.onClick = function()
+			setCurrentTab(tab.Name)
+		end
+
 		table.insert(newButtonTabs, e(Button, tab))
 	end
 
 	return e("Frame", {
-		Position = UDim2.new(0, 0, 1, 0),
-		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.new(0.5, 0, 1, 0),
+		AnchorPoint = Vector2.new(0.5, 1),
 		BackgroundTransparency = 1,
 
-		Size = UDim2.new(1, 0, 0.5, 0),
+		Size = UDim2.new(0.8, 0, 0.5, 0),
 	}, {
 		e("UIListLayout", {
 			FillDirection = props.FillDirection or Enum.FillDirection.Vertical,
@@ -126,8 +130,11 @@ return function(props)
 					HorizontalAlignment = Enum.HorizontalAlignment.Center,
 					VerticalAlignment = Enum.VerticalAlignment.Top,
 					Padding = UDim.new(0, 4),
+
+					SortOrder = Enum.SortOrder.LayoutOrder,
 				}),
-				e("Frame", {
+				Top = e("Frame", {
+					LayoutOrder = 0,
 					Position = UDim2.new(0.5, 0, 0, 0),
 					AnchorPoint = Vector2.new(0.5, 0),
 					Size = UDim2.new(1, 0, 0.2, 0),
@@ -144,11 +151,14 @@ return function(props)
 
 					e("TextLabel", {
 						BackgroundTransparency = 1,
-						Size = UDim2.new(1, 0, 1, 0),
+						Size = UDim2.new(0.1, 0, 1, 0),
 						Text = "Residential",
 						FontFace = BuilderSans.SemiBold,
 						TextColor3 = Color3.fromRGB(0, 0, 0),
 						TextScaled = true,
+
+						AnchorPoint = Vector2.new(0.5, 0),
+						Position = UDim2.new(0.5, 0, 0, 0),
 					}, {
 						e("UITextSizeConstraint", {
 							MaxTextSize = 24,
@@ -157,6 +167,7 @@ return function(props)
 				}),
 
 				e("ScrollingFrame", {
+					LayoutOrder = 1,
 					Size = UDim2.new(1, 0, 0.8, 0),
 					BackgroundTransparency = 1,
 					BorderSizePixel = 0,
@@ -166,18 +177,18 @@ return function(props)
 					ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
 					ScrollingDirection = Enum.ScrollingDirection.X,
 
-					CanvasSize = UDim2.new(2, 0, 0, 0),
+					CanvasSize = UDim2.new(100, 0, 0, 0),
 				}, {
 					e("UIPadding", {
 						PaddingTop = UDim.new(0, 8),
 						PaddingBottom = UDim.new(0, 16),
-						PaddingLeft = UDim.new(0, 8),
+						PaddingLeft = UDim.new(0, 16),
 						PaddingRight = UDim.new(0, 8),
 					}),
 					e("UIListLayout", {
 						FillDirection = Enum.FillDirection.Horizontal,
 						HorizontalAlignment = Enum.HorizontalAlignment.Left,
-						VerticalAlignment = Enum.VerticalAlignment.Top,
+						VerticalAlignment = Enum.VerticalAlignment.Center,
 						Padding = UDim.new(0, 16),
 					}),
 

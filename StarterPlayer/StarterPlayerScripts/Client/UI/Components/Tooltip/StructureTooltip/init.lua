@@ -1,6 +1,4 @@
-local SETTINGS = {
-	MouseOffset = Vector2.new(12, 0), -- The offset of the tooltip from the mouse
-}
+local SETTINGS = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -18,11 +16,12 @@ local dirFonts = dirComponents.Parent.Fonts
 local BuilderSans = require(dirFonts.BuilderSans)
 
 type TooltipProps = {
-	Visible: boolean,
-	Text: string,
-	Offset: Vector2?,
-
+	name: string,
+	description: string,
+	structure: any,
 	position: UDim2,
+
+	visible: boolean,
 }
 
 return function(props: TooltipProps)
@@ -31,8 +30,8 @@ return function(props: TooltipProps)
 	local styles = RoactSpring.useSpring({
 		from = { scale = 0.25, opacity = 1 },
 		to = {
-			scale = if props.Visible then 1 else 0.25,
-			opacity = if props.Visible then 0 else 1,
+			scale = if props.visible then 1 else 0.25,
+			opacity = if props.visible then 0 else 1,
 		},
 		config = {
 			damping = 100,
@@ -49,7 +48,7 @@ return function(props: TooltipProps)
 		ref = ref,
 		ZIndex = 100,
 		Position = props.position,
-		Size = UDim2.new(0.5, 0, 0.25, 0),
+		Size = UDim2.new(0, 300, 0.25, 0),
 		AnchorPoint = Vector2.new(0, 0),
 	}, {
 		e("UISizeConstraint", {
@@ -68,10 +67,10 @@ return function(props: TooltipProps)
 			Scale = styles.scale,
 		}),
 		e("UIPadding", {
-			PaddingTop = UDim.new(0, 4),
-			PaddingBottom = UDim.new(0, 4),
-			PaddingLeft = UDim.new(0, 4),
-			PaddingRight = UDim.new(0, 4),
+			PaddingTop = UDim.new(0, 8),
+			PaddingBottom = UDim.new(0, 8),
+			PaddingLeft = UDim.new(0, 8),
+			PaddingRight = UDim.new(0, 8),
 		}),
 		e("UIListLayout", {
 			FillDirection = Enum.FillDirection.Horizontal,
@@ -80,51 +79,8 @@ return function(props: TooltipProps)
 			Padding = UDim.new(0, 8),
 		}),
 
-		-- TODO: make this an image
-		e("ImageLabel", {
-
-			Size = UDim2.new(0.4, 0, 1, 0),
-			Position = UDim2.new(0, 8, 0.5, 0),
-			AnchorPoint = Vector2.new(0, 0.5),
-			BackgroundTransparency = 0,
-			Image = "rbxassetid://6996359364",
-
-			BackgroundColor3 = Color3.fromRGB(200, 200, 200),
-		}, {
-			e("UIPadding", {
-				PaddingTop = UDim.new(0, 4),
-				PaddingBottom = UDim.new(0, 4),
-				PaddingLeft = UDim.new(0, 4),
-				PaddingRight = UDim.new(0, 8),
-			}),
-
-			e("UIAspectRatioConstraint", {
-				AspectRatio = 1,
-			}),
-			e("UICorner", {
-				CornerRadius = UDim.new(0, 16),
-			}),
-			e("TextLabel", {
-				AnchorPoint = Vector2.new(1, 1),
-				Position = UDim2.new(1, 0, 1, 0),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(0.5, 0, 0.5, 0),
-				Text = "$5000",
-				FontFace = BuilderSans.SemiBold,
-				TextColor3 = Color3.fromRGB(37, 143, 77),
-				TextScaled = true,
-
-				TextXAlignment = Enum.TextXAlignment.Right,
-				TextYAlignment = Enum.TextYAlignment.Bottom,
-			}, {
-				e("UITextSizeConstraint", {
-					MaxTextSize = 32,
-				}),
-			}),
-		}),
-
 		e("Frame", {
-			Size = UDim2.new(0.6, 0, 1, 0),
+			Size = UDim2.new(0.5, 0, 1, 0),
 			BackgroundTransparency = 1,
 		}, {
 			e("UIListLayout", {
@@ -135,9 +91,9 @@ return function(props: TooltipProps)
 			}),
 
 			e("TextLabel", {
-				Text = props.Text,
+				Text = props.name or "Structure Name",
 				TextSize = 16,
-				TextColor3 = Color3.fromRGB(66, 146, 86),
+				TextColor3 = Color3.fromRGB(97, 179, 118),
 				TextXAlignment = Enum.TextXAlignment.Left,
 				TextYAlignment = Enum.TextYAlignment.Top,
 				BackgroundTransparency = 1,
@@ -161,8 +117,8 @@ return function(props: TooltipProps)
 				TextYAlignment = Enum.TextYAlignment.Top,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
-				Size = UDim2.new(1, 0, 0.4, 0),
-				FontFace = BuilderSans.Regular,
+				Size = UDim2.new(1, 0, 0.5, 0),
+				FontFace = BuilderSans.Medium,
 				TextWrapped = true,
 				TextScaled = true,
 			}, {

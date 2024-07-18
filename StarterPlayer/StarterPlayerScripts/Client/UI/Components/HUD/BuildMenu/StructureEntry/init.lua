@@ -16,10 +16,12 @@ local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 local e = React.createElement
 
 local dirComponents = script.Parent.Parent.Parent
+local dirProviders = dirComponents.Providers
 local dirFonts = dirComponents.Parent.Fonts
 
 local BuilderSans = require(dirFonts.BuilderSans)
 local StripeTexture = require(dirComponents.StripeTexture)
+local TooltipProvider = require(dirProviders.TooltipProvider)
 
 type StructureEntryProps = {
 	structureType: "City" | "Residential" | "Industrial" | "Commercial" | "Decoration" | "Road",
@@ -40,7 +42,7 @@ return function(props)
 			AspectRatio = 1,
 		}),
 		e("UISizeConstraint", {
-			MaxSize = Vector2.new(256, 256),
+			MaxSize = Vector2.new(128, 128),
 		}),
 		e("UICorner", {
 			CornerRadius = UDim.new(0, 8),
@@ -70,8 +72,8 @@ return function(props)
 				SortOrder = Enum.SortOrder.LayoutOrder,
 			}),
 
-			e("Frame", {
-				Size = UDim2.new(1, 0, 0.2, 0),
+			Top = e("Frame", {
+				Size = UDim2.new(1, 0, 0.175, 0),
 				BackgroundTransparency = 1,
 				LayoutOrder = 1,
 			}, {
@@ -118,7 +120,7 @@ return function(props)
 
 			-- TODO: make this a viewport frame
 			Image = e("ImageLabel", {
-				Size = UDim2.new(1, 0, 0.45, 0),
+				Size = UDim2.new(1, 0, 0.475, 0),
 				BackgroundTransparency = 1,
 				Image = props.Image or "rbxassetid://18476991644",
 				ImageColor3 = Color3.fromRGB(0, 0, 0),

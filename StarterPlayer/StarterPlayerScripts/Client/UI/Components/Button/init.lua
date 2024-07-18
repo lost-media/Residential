@@ -94,7 +94,7 @@ return function(props: ButtonProps)
 			MaxSize = props.Size == "sm" and Vector2.new(48, 48)
 				or props.Size == "md" and Vector2.new(56, 56)
 				or props.Size == "lg" and Vector2.new(72, 72),
-			MinSize = Vector2.new(24, 24),
+			MinSize = Vector2.new(40, 40),
 		}),
 		e(Circle, {
 			Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
@@ -113,9 +113,11 @@ return function(props: ButtonProps)
 
 				[React.Event.MouseEnter] = function()
 					setHovered(true)
-					tooltip.setOffset(props.toolTipOffset)
-					tooltip.setText(props.Name)
-					tooltip.setVisible(true)
+					tooltip.show({
+						offset = props.toolTipOffset,
+						text = props.Name,
+						visible = true,
+					})
 				end,
 
 				[React.Event.MouseLeave] = function()
@@ -123,11 +125,9 @@ return function(props: ButtonProps)
 					tooltip.setVisible(false)
 				end,
 
-				[React.Event.MouseButton1Down] = function() end,
-
 				[React.Event.Activated] = function()
 					if props.onClick then
-						props.OnClick()
+						props.onClick()
 					end
 
 					local clickSound = Instance.new("Sound")
