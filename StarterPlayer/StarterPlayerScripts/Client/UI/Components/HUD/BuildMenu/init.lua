@@ -10,6 +10,9 @@ local SETTINGS = {
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage.Packages
 
+local LMEngine = require(ReplicatedStorage.LMEngine)
+local Structures2 = require(LMEngine.Game.Shared.Structures2)
+
 local React = require(Packages.react)
 local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 
@@ -25,56 +28,47 @@ local StripeTexture = require(dirComponents.StripeTexture)
 
 local StructureEntry = require(script.StructureEntry)
 
-local buttonTabs = {
-	{
-		Name = "Road",
-		Image = SETTINGS.RoadAssetId,
-		toolTipOffset = Vector2.new(-32, -32),
-
-		active = false,
-	},
-	{
-		Name = "City",
-		Image = SETTINGS.CityAssetId,
-		toolTipOffset = Vector2.new(-32, -32),
-
-		active = true,
-	},
-	{
-		Name = "Residential",
-		Image = SETTINGS.ResidentialAssetId,
-		toolTipOffset = Vector2.new(-32, -32),
-	},
-	{
-		Name = "Industrial",
-		Image = SETTINGS.IndustrialAssetId,
-		toolTipOffset = Vector2.new(-32, -32),
-	},
-	{
-		Name = "Commercial",
-		Image = SETTINGS.CommercialAssetId,
-		toolTipOffset = Vector2.new(-32, -32),
-	},
-	{
-		Name = "Decoration",
-		Image = SETTINGS.DecorationAssetId,
-		toolTipOffset = Vector2.new(-32, -32),
-	},
-}
-
 return function(props)
 	local currentTab, setCurrentTab = React.useState("City")
 
 	local newButtonTabs = {}
 
-	for i, tab in pairs(buttonTabs) do
-		tab.active = tab.Name == currentTab
-		tab.onClick = function()
-			setCurrentTab(tab.Name)
+	local categories = Structures2.getCategories()
+
+	for _, category in pairs(categories) do
+		local buttonInfo = {
+			Name = category.verboseName,
+			Image = category.icon,
+			toolTipOffset = Vector2.new(-32, -32),
+
+			active = category.verboseName == currentTab,
+
+			onClick = function()
+				setCurrentTab(category.verboseName)
+			end,
+		}
+
+		table.insert(newButtonTabs, e(Button, buttonInfo))
+	end
+
+	local entries = React.useMemo(function()
+		local structures = Structures2.getStructuresInCategory(currentTab)
+
+		local newEntries = {}
+
+		for _, structure in pairs(structures) do
+			table.insert(
+				newEntries,
+				e(StructureEntry, {
+					name = structure.name,
+					price = structure.price,
+					model = structure.model,
+				})
+			)
 		end
 
-		table.insert(newButtonTabs, e(Button, tab))
-	end
+		return newEntries
+	end, { currentTab })
 
 	return e("Frame", {
 		Position = UDim2.new(0.5, 0, 1, 0),
@@ -192,18 +186,7 @@ return function(props)
 						Padding = UDim.new(0, 16),
 					}),
 
-					e(StructureEntry, {
-						name = "House",
-						price = "$1000",
-					}),
-
-					e(StructureEntry, {}),
-
-					e(StructureEntry, {}),
-
-					e(StructureEntry, {}),
-
-					e(StructureEntry, {}),
+					entries,
 				}),
 			}),
 		}),

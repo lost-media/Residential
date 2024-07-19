@@ -10,6 +10,10 @@ local SETTINGS = {
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage.Packages
 
+local LMEngine = require(ReplicatedStorage.LMEngine)
+
+local NumberFormatter = require(LMEngine.SharedDir.NumberFormatter)
+
 local React = require(Packages.react)
 local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 
@@ -26,10 +30,46 @@ local TooltipProvider = require(dirProviders.TooltipProvider)
 type StructureEntryProps = {
 	structureType: "City" | "Residential" | "Industrial" | "Commercial" | "Decoration" | "Road",
 	name: string,
-	price: string,
+	price: {
+		value: number,
+		currency: string,
+	},
+	model: Model,
 }
 
-return function(props)
+return function(props: StructureEntryProps)
+	local viewportRef = React.useRef(nil)
+	local viewportCameraRef = React.useRef(nil)
+
+	React.useEffect(function()
+		local model = props.model
+
+		local newModel = model and model:Clone()
+		if newModel then
+			-- clone the model
+			newModel.Parent = viewportRef.current
+
+			-- Calculate the model's center position
+			local modelCFrame = newModel:GetModelCFrame()
+			local size = newModel:GetExtentsSize()
+			local modelCenter = modelCFrame.Position -- Assuming the model's CFrame is at its center
+
+			-- Calculate the distance and direction for the camera to look at the model's center
+			local distance = size.magnitude * 1.5
+			local cameraPosition = modelCenter + Vector3.new(0, 0, distance)
+
+			if viewportCameraRef.current then
+				viewportCameraRef.current.CFrame = CFrame.new(cameraPosition, modelCenter)
+			end
+		end
+
+		return function()
+			if newModel then
+				newModel:Destroy()
+			end
+		end
+	end, { props.model })
+
 	return e("CanvasGroup", {
 		Size = UDim2.new(1, 0, 1, 0),
 		BackgroundTransparency = 0,
@@ -119,14 +159,18 @@ return function(props)
 			}),
 
 			-- TODO: make this a viewport frame
-			Image = e("ImageLabel", {
+			Viewport = e("ViewportFrame", {
+				ref = viewportRef,
 				Size = UDim2.new(1, 0, 0.475, 0),
 				BackgroundTransparency = 1,
-				Image = props.Image or "rbxassetid://18476991644",
-				ImageColor3 = Color3.fromRGB(0, 0, 0),
-				ScaleType = Enum.ScaleType.Fit,
+				CurrentCamera = viewportCameraRef.current,
 
 				LayoutOrder = 2,
+			}, {
+				e("Camera", {
+					ref = viewportCameraRef,
+					FieldOfView = 30,
+				}),
 			}),
 
 			e("Frame", {
@@ -159,7 +203,8 @@ return function(props)
 				Price = e("TextLabel", {
 					Size = UDim2.new(1, 0, 0.5, 0),
 					BackgroundTransparency = 1,
-					Text = props.price or "$100.0k",
+					Text = props.price and NumberFormatter.MonetaryFormat(props.price.value, false)
+						or "$100.0k",
 					TextColor3 = Color3.fromRGB(0, 0, 0),
 					TextSize = 24,
 					FontFace = BuilderSans.Regular,
