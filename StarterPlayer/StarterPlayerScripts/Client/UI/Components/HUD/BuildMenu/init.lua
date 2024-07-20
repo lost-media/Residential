@@ -30,6 +30,7 @@ local StructureEntry = require(script.StructureEntry)
 
 return function(props)
 	local currentTab, setCurrentTab = React.useState("City")
+	local scroillCanvasSize, setScrollCanvasSize = React.useState(UDim2.new(100, 0, 0, 0))
 
 	local newButtonTabs = {}
 
@@ -37,11 +38,12 @@ return function(props)
 
 	for _, category in pairs(categories) do
 		local buttonInfo = {
-			Name = category.verboseName,
+			Name = category.verboseNamePlural,
 			Image = category.icon,
 			toolTipOffset = Vector2.new(-32, -32),
 
 			active = category.verboseName == currentTab,
+			layoutOrder = category.layoutOrder,
 
 			onClick = function()
 				setCurrentTab(category.verboseName)
@@ -51,8 +53,18 @@ return function(props)
 		table.insert(newButtonTabs, e(Button, buttonInfo))
 	end
 
+	table.sort(newButtonTabs, function(a, b)
+		return a.props.layoutOrder < b.props.layoutOrder
+	end)
+
 	local entries = React.useMemo(function()
 		local structures = Structures2.getStructuresInCategory(currentTab)
+		local category = Structures2.getCategory(currentTab)
+
+		if category == nil then
+			warn("Category not found: " .. currentTab)
+			return {}
+		end
 
 		local newEntries = {}
 
@@ -63,6 +75,8 @@ return function(props)
 					name = structure.name,
 					price = structure.price,
 					model = structure.model,
+					category = category,
+					viewportZoomScale = structure.viewportZoomScale,
 				})
 			)
 		end
@@ -94,6 +108,8 @@ return function(props)
 				HorizontalAlignment = props.HorizontalAlignment or Enum.HorizontalAlignment.Center,
 				VerticalAlignment = props.VerticalAlignment or Enum.VerticalAlignment.Bottom,
 				Padding = props.ListPadding or UDim.new(0.015, 0),
+
+				SortOrder = Enum.SortOrder.LayoutOrder,
 			}),
 
 			newButtonTabs,
@@ -133,22 +149,22 @@ return function(props)
 					AnchorPoint = Vector2.new(0.5, 0),
 					Size = UDim2.new(1, 0, 0.2, 0),
 
-					BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+					BackgroundColor3 = Color3.fromRGB(62, 163, 52),
 					BorderSizePixel = 0,
 				}, {
 
 					e("UIStroke", {
-						Thickness = 2,
+						Thickness = 3,
 						LineJoinMode = Enum.LineJoinMode.Round,
-						Color = Color3.fromRGB(226, 226, 226),
+						Color = Color3.fromRGB(50, 133, 42),
 					}),
 
 					e("TextLabel", {
 						BackgroundTransparency = 1,
 						Size = UDim2.new(0.1, 0, 1, 0),
 						Text = "Residential",
-						FontFace = BuilderSans.SemiBold,
-						TextColor3 = Color3.fromRGB(0, 0, 0),
+						FontFace = BuilderSans.Bold,
+						TextColor3 = Color3.fromRGB(255, 255, 255),
 						TextScaled = true,
 
 						AnchorPoint = Vector2.new(0.5, 0),
@@ -171,7 +187,7 @@ return function(props)
 					ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
 					ScrollingDirection = Enum.ScrollingDirection.X,
 
-					CanvasSize = UDim2.new(100, 0, 0, 0),
+					CanvasSize = scroillCanvasSize,
 				}, {
 					e("UIPadding", {
 						PaddingTop = UDim.new(0, 8),
@@ -184,6 +200,10 @@ return function(props)
 						HorizontalAlignment = Enum.HorizontalAlignment.Left,
 						VerticalAlignment = Enum.VerticalAlignment.Center,
 						Padding = UDim.new(0, 16),
+
+						[React.Change.AbsoluteContentSize] = function(rbx)
+							setScrollCanvasSize(UDim2.new(0, rbx.AbsoluteContentSize.X, 0, 0))
+						end,
 					}),
 
 					entries,

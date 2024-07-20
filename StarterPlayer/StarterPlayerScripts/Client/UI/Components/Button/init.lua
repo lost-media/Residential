@@ -46,6 +46,8 @@ type ButtonProps = {
 	activeStripeColor: Color3?,
 
 	active: boolean?,
+
+	layoutOrder: number?,
 }
 
 return function(props: ButtonProps)
@@ -80,6 +82,8 @@ return function(props: ButtonProps)
 		ImageColor3 = Color3.fromRGB(255, 255, 255),
 		Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
 		AnchorPoint = props.AnchorPoint or Vector2.new(0.5, 0.5),
+
+		LayoutOrder = props.layoutOrder,
 	}, {
 		e("UIPadding", {
 			PaddingTop = UDim.new(0, 2),

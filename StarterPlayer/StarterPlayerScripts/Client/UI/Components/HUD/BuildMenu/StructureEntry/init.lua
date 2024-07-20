@@ -8,9 +8,16 @@ local SETTINGS = {
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Packages = ReplicatedStorage.Packages
 
 local LMEngine = require(ReplicatedStorage.LMEngine)
+
+local Currency = require(LMEngine.Game.Currency)
+type Currency = Currency.Currency
+
+local Structures2 = require(LMEngine.Game.Shared.Structures2)
+type StructureCategory = Structures2.StructureCategory
 
 local NumberFormatter = require(LMEngine.SharedDir.NumberFormatter)
 
@@ -32,40 +39,70 @@ type StructureEntryProps = {
 	name: string,
 	price: {
 		value: number,
-		currency: string,
+		currency: Currency,
 	},
 	model: Model,
+	category: StructureCategory,
+
+	viewportZoomScale: number?,
 }
 
 return function(props: StructureEntryProps)
 	local viewportRef = React.useRef(nil)
-	local viewportCameraRef = React.useRef(nil)
 
 	React.useEffect(function()
 		local model = props.model
 
-		local newModel = model and model:Clone()
+		local newModel: Model = model and model:Clone()
+		local camera = nil
+		local renderStepped = nil
+
 		if newModel then
-			-- clone the model
 			newModel.Parent = viewportRef.current
 
 			-- Calculate the model's center position
-			local modelCFrame = newModel:GetModelCFrame()
+			local modelCFrame = newModel:GetPivot()
 			local size = newModel:GetExtentsSize()
-			local modelCenter = modelCFrame.Position -- Assuming the model's CFrame is at its center
+			local modelCenter = modelCFrame.Position
 
-			-- Calculate the distance and direction for the camera to look at the model's center
-			local distance = size.magnitude * 1.5
-			local cameraPosition = modelCenter + Vector3.new(0, 0, distance)
+			-- Initial distance and angles
+			local distance = size.Magnitude * (props.viewportZoomScale or 0.6)
+			local angleRight = math.pi / 4 -- Start angle for rotation around the model
 
-			if viewportCameraRef.current then
-				viewportCameraRef.current.CFrame = CFrame.new(cameraPosition, modelCenter)
+			-- Create a camera to look at the model
+			camera = Instance.new("Camera")
+			camera.Parent = viewportRef.current
+
+			-- Set the viewport's camera to the new camera
+			if viewportRef.current then
+				viewportRef.current.CurrentCamera = camera
 			end
+
+			-- Function to update camera position and rotation
+			local function updateCamera()
+				angleRight = angleRight + math.rad(0.05) -- Increment the angle for rotation
+				local cameraOffset = Vector3.new(
+					distance * math.cos(angleRight),
+					2, -- Keep the camera at a constant height, adjust if needed
+					distance * math.sin(angleRight)
+				)
+				local cameraPosition = modelCenter + cameraOffset
+				camera.CFrame = CFrame.new(cameraPosition, modelCenter)
+			end
+
+			-- Connect this function to a game loop or event like RenderStepped in Roblox
+			renderStepped = game:GetService("RunService").RenderStepped:Connect(updateCamera)
 		end
 
 		return function()
 			if newModel then
 				newModel:Destroy()
+			end
+			if camera then
+				camera:Destroy()
+			end
+			if renderStepped then
+				renderStepped:Disconnect()
 			end
 		end
 	end, { props.model })
@@ -82,7 +119,7 @@ return function(props: StructureEntryProps)
 			AspectRatio = 1,
 		}),
 		e("UISizeConstraint", {
-			MaxSize = Vector2.new(128, 128),
+			MaxSize = Vector2.new(256, 256),
 		}),
 		e("UICorner", {
 			CornerRadius = UDim.new(0, 8),
@@ -99,10 +136,10 @@ return function(props: StructureEntryProps)
 			reversed = false,
 		}, {
 			e("UIPadding", {
-				PaddingTop = UDim.new(0.05, 0),
-				PaddingBottom = UDim.new(0.05, 0),
-				PaddingLeft = UDim.new(0.05, 0),
-				PaddingRight = UDim.new(0.05, 0),
+				PaddingTop = UDim.new(0.025, 0),
+				PaddingBottom = UDim.new(0.025, 0),
+				PaddingLeft = UDim.new(0.025, 0),
+				PaddingRight = UDim.new(0.025, 0),
 			}),
 			e("UIListLayout", {
 				FillDirection = Enum.FillDirection.Vertical,
@@ -113,7 +150,7 @@ return function(props: StructureEntryProps)
 			}),
 
 			Top = e("Frame", {
-				Size = UDim2.new(1, 0, 0.175, 0),
+				Size = UDim2.new(1, 0, 0.15, 0),
 				BackgroundTransparency = 1,
 				LayoutOrder = 1,
 			}, {
@@ -131,9 +168,7 @@ return function(props: StructureEntryProps)
 					Size = UDim2.new(1, 0, 1, 0),
 					BackgroundTransparency = 1,
 					-- TODO: make this a function that returns the correct asset id
-					Image = if props.structureType
-						then SETTINGS[props.structureType .. "AssetId"]
-						else SETTINGS.CityAssetId,
+					Image = if props.category then props.category.icon else nil,
 					ImageColor3 = Color3.fromRGB(0, 0, 0),
 					ImageTransparency = 0.8,
 					ScaleType = Enum.ScaleType.Fit,
@@ -158,30 +193,29 @@ return function(props: StructureEntryProps)
 				}),
 			}),
 
-			-- TODO: make this a viewport frame
 			Viewport = e("ViewportFrame", {
 				ref = viewportRef,
-				Size = UDim2.new(1, 0, 0.475, 0),
+				Size = UDim2.new(1, 0, 0.55, 0),
 				BackgroundTransparency = 1,
-				CurrentCamera = viewportCameraRef.current,
 
 				LayoutOrder = 2,
-			}, {
-				e("Camera", {
-					ref = viewportCameraRef,
-					FieldOfView = 30,
-				}),
 			}),
 
 			e("Frame", {
-				Size = UDim2.new(1, 0, 0.35, 0),
+				Size = UDim2.new(1, 0, 0.3, 0),
 				BackgroundTransparency = 1,
 				LayoutOrder = 3,
 			}, {
+				e("UIPadding", {
+					PaddingTop = UDim.new(0.1, 0),
+					PaddingBottom = UDim.new(0, 0),
+					PaddingLeft = UDim.new(0.05, 0),
+					PaddingRight = UDim.new(0.05, 0),
+				}),
 				e("UIListLayout", {
 					FillDirection = Enum.FillDirection.Vertical,
 					HorizontalAlignment = Enum.HorizontalAlignment.Center,
-					VerticalAlignment = Enum.VerticalAlignment.Top,
+					VerticalAlignment = Enum.VerticalAlignment.Bottom,
 					SortOrder = Enum.SortOrder.LayoutOrder,
 				}),
 				Name = e("TextLabel", {
@@ -189,33 +223,68 @@ return function(props: StructureEntryProps)
 					BackgroundTransparency = 1,
 					Text = props.name or "Classic City Hall",
 					TextColor3 = Color3.fromRGB(0, 0, 0),
-					FontFace = BuilderSans.SemiBold,
+					FontFace = BuilderSans.Bold,
 
 					TextScaled = true,
 
-					LayoutOrder = 3,
+					LayoutOrder = 0,
 					TextYAlignment = Enum.TextYAlignment.Bottom,
 				}, {
 					e("UITextSizeConstraint", {
 						MaxTextSize = 20,
+						MinTextSize = 10,
 					}),
 				}),
-				Price = e("TextLabel", {
-					Size = UDim2.new(1, 0, 0.5, 0),
+				e("Frame", {
 					BackgroundTransparency = 1,
-					Text = props.price and NumberFormatter.MonetaryFormat(props.price.value, false)
-						or "$100.0k",
-					TextColor3 = Color3.fromRGB(0, 0, 0),
-					TextSize = 24,
-					FontFace = BuilderSans.Regular,
-					TextXAlignment = Enum.TextXAlignment.Center,
+					Size = UDim2.new(1, 0, 0.5, 0),
 
-					TextScaled = true,
-
-					LayoutOrder = 3,
+					LayoutOrder = 1,
 				}, {
-					e("UITextSizeConstraint", {
-						MaxTextSize = 18,
+					e("UIListLayout", {
+						FillDirection = Enum.FillDirection.Horizontal,
+						HorizontalAlignment = Enum.HorizontalAlignment.Center,
+						VerticalAlignment = Enum.VerticalAlignment.Center,
+						SortOrder = Enum.SortOrder.LayoutOrder,
+						Padding = UDim.new(0.025, 0),
+					}),
+					e("ImageLabel", {
+						Size = UDim2.new(0.2, 0, 0.9, 0),
+						BackgroundTransparency = 1,
+						Image = if props.price then props.price.currency.icon else nil,
+						ImageColor3 = Color3.fromRGB(255, 255, 255),
+						ImageTransparency = 0,
+						ScaleType = Enum.ScaleType.Fit,
+						Visible = props.price
+							and props.price.value
+							and props.price.value > 0
+							and props.price.currency.icon ~= nil,
+
+						LayoutOrder = 2,
+					}),
+					Price = e("TextLabel", {
+						Size = UDim2.new(0, 0, 1, 0),
+						BackgroundTransparency = 1,
+						Text = if props.price
+							then if props.price.value == 0
+								then "Free"
+								else NumberFormatter.MonetaryFormat(props.price.value, false)
+							else "$100.0k",
+						TextColor3 = Color3.fromRGB(0, 0, 0),
+						TextSize = 24,
+						FontFace = BuilderSans.Regular,
+						TextXAlignment = Enum.TextXAlignment.Left,
+
+						TextScaled = true,
+
+						LayoutOrder = 3,
+
+						AutomaticSize = Enum.AutomaticSize.X,
+					}, {
+						e("UITextSizeConstraint", {
+							MaxTextSize = 18,
+							MinTextSize = 8,
+						}),
 					}),
 				}),
 			}),

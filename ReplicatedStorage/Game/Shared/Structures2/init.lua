@@ -43,6 +43,16 @@ function Structures.getCategories(): { StructureCategory }
 	return categories
 end
 
+function Structures.getCategory(categoryName: string): StructureCategory
+	for _, category in pairs(Structures.Structures) do
+		if category.verboseName == categoryName then
+			return category
+		end
+	end
+
+	return nil
+end
+
 ----- Initialize -----
 
 for _, category in pairs(dirStructureCategories:GetChildren()) do

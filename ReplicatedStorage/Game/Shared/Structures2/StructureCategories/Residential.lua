@@ -1,5 +1,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local dirStructures = ReplicatedStorage.Structures.City
+
+local LMEngine = require(ReplicatedStorage.LMEngine)
+
+local Currency = require(LMEngine.Game.Currency)
+
+local dirStructures = ReplicatedStorage.Structures.Residential
 
 local structureTypes = require(script.Parent.Parent.Types)
 
@@ -10,22 +15,58 @@ export type Residential = structureTypes.StructureCategory & {
 }
 
 local Residential: Residential = {
+	layoutOrder = 1,
 	verboseName = "Residential",
 	verboseNamePlural = "Residentials",
 	description = "Residential buildings are structures that are necessary to progress in the game. They are the backbone of your city and provide the necessary services to keep your city running.",
 	icon = "rbxassetid://18312606125",
 	structures = {},
+
+	folder = dirStructures,
 }
 
 Residential.structures = {
 	{
-		id = "city_hall",
-		name = "Futuristic",
-		description = "The City Hall is the central building of your city. It is where you can manage your city and its services.",
-		model = dirStructures["CityHall"],
+		id = "residential/medieval_house1",
+		name = "Medieval House 1",
+		description = "A small medieval house.",
+		model = dirStructures["Medieval House 1"],
 		price = {
 			value = 100,
-			currency = "kloins",
+			currency = Currency.kloins,
+		},
+	},
+
+	{
+		id = "residential/medieval_house2",
+		name = "Medieval House 2",
+		description = "A small medieval house.",
+		model = dirStructures["Medieval House 2"],
+		price = {
+			value = 100,
+			currency = Currency.kloins,
+		},
+	},
+
+	{
+		id = "residential/victorian_house1",
+		name = "Victorian House 1",
+		description = "A small victorian house.",
+		model = dirStructures["Victorian House 1"],
+		price = {
+			value = 100,
+			currency = Currency.kloins,
+		},
+	},
+
+	{
+		id = "residential/victorian_house2",
+		name = "Victorian House 2",
+		description = "A small victorian house.",
+		model = dirStructures["Victorian House 2"],
+		price = {
+			value = 100,
+			currency = Currency.kloins,
 		},
 	},
 } :: { ResidentialStructure }
