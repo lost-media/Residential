@@ -38,7 +38,7 @@ local function App(_)
 			React.createElement(BottomBarButtons, {}),
 			React.createElement(SideBarButtons, {}),
 			React.createElement(TopBar, {}),
-			React.createElement(BuildMenu, {}),
+			--React.createElement(BuildMenu, {}),
 		}),
 	})
 end

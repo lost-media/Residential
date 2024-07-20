@@ -29,6 +29,7 @@ local StripeTexture = require(dirComponents.StripeTexture)
 local StructureEntry = require(script.StructureEntry)
 
 return function(props)
+	local currentCategory: Structures2.StructureCategory, setCurrentCategory = React.useState(Structures2.getCategory("City"))
 	local currentTab, setCurrentTab = React.useState("City")
 	local scroillCanvasSize, setScrollCanvasSize = React.useState(UDim2.new(100, 0, 0, 0))
 
@@ -42,10 +43,11 @@ return function(props)
 			Image = category.icon,
 			toolTipOffset = Vector2.new(-32, -32),
 
-			active = category.verboseName == currentTab,
+			active = category.verboseName == currentCategory.verboseName,
 			layoutOrder = category.layoutOrder,
 
 			onClick = function()
+				setCurrentCategory(category)
 				setCurrentTab(category.verboseName)
 			end,
 		}
@@ -89,8 +91,13 @@ return function(props)
 		AnchorPoint = Vector2.new(0.5, 1),
 		BackgroundTransparency = 1,
 
-		Size = UDim2.new(0.8, 0, 0.5, 0),
+		Size = UDim2.new(0.8, 0, 0.2, 0),
+
+		AutomaticSize = Enum.AutomaticSize.Y,
 	}, {
+		e("UISizeConstraint", {
+			MaxSize = Vector2.new("inf", 480),
+		}),
 		e("UIListLayout", {
 			FillDirection = props.FillDirection or Enum.FillDirection.Vertical,
 			HorizontalAlignment = props.HorizontalAlignment or Enum.HorizontalAlignment.Center,
@@ -152,6 +159,11 @@ return function(props)
 					BackgroundColor3 = Color3.fromRGB(62, 163, 52),
 					BorderSizePixel = 0,
 				}, {
+					e(StripeTexture, {
+						size = UDim2.new(1, 0, 1, 0),
+						color = Color3.fromRGB(60, 158, 51),
+						tileSize = UDim2.new(1, 0, 25, 0),
+					}),
 
 					e("UIStroke", {
 						Thickness = 3,
@@ -161,8 +173,8 @@ return function(props)
 
 					e("TextLabel", {
 						BackgroundTransparency = 1,
-						Size = UDim2.new(0.1, 0, 1, 0),
-						Text = "Residential",
+						Size = UDim2.new(0.35, 0, 1, 0),
+						Text = currentCategory.verboseNamePlural,
 						FontFace = BuilderSans.Bold,
 						TextColor3 = Color3.fromRGB(255, 255, 255),
 						TextScaled = true,
@@ -202,7 +214,7 @@ return function(props)
 						Padding = UDim.new(0, 16),
 
 						[React.Change.AbsoluteContentSize] = function(rbx)
-							setScrollCanvasSize(UDim2.new(0, rbx.AbsoluteContentSize.X, 0, 0))
+							setScrollCanvasSize(UDim2.new(0, rbx.AbsoluteContentSize.X + 32, 0, 0))
 						end,
 					}),
 
