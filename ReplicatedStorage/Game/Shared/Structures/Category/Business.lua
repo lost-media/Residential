@@ -30,7 +30,7 @@ local Businesses: StructureTypes.IndustrialCollection = {
 		UID = 0,
 		Id = "Business/Grocery Store",
 		Description = "A normal grocery store",
-		Model = BusinessesFolder["Grocery Store"],
+		Model = BusinessesFolder["GroceryStore"],
 	}, SharedProperties),
 }
 
