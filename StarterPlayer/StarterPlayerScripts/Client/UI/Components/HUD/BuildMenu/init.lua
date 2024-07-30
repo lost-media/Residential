@@ -35,7 +35,9 @@ type BuildMenuProps = {
 return function(props: BuildMenuProps)
 	local currentCategory: Structures2.StructureCategory, setCurrentCategory = React.useState(Structures2.getCategory("City"))
 	local currentTab, setCurrentTab = React.useState("City")
-	local scroillCanvasSize, setScrollCanvasSize = React.useState(UDim2.new(100, 0, 0, 0))
+
+
+	local scroillCanvasSize, setScrollCanvasSize = React.useState(UDim2.new(0, 0, 0, 0))
 
 	local newButtonTabs = {}
 
@@ -91,6 +93,7 @@ return function(props: BuildMenuProps)
 	end, { currentTab })
 
 	return e("Frame", {
+		ZIndex = -1,
 		Position = UDim2.new(0.5, 0, 1, 0),
 		AnchorPoint = Vector2.new(0.5, 1),
 		BackgroundTransparency = 1,

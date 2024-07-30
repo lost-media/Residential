@@ -22,6 +22,10 @@ type Frame = {
 }
 
 export type FrameContextProps = {
+    buildMenuOpen: boolean,
+    setBuildMenuOpen: (open: boolean) -> (),
+
+    
 	getFrame: (name: string) -> Frame,
     closeFrame: (name: string) -> (),
     openFrame: (name: string) -> (),
@@ -50,6 +54,13 @@ local function FrameProvider(props)
     local buildMenuOpen, setBuildMenuOpen = React.useState(false)
 
     print('rerender')
+
+    local function setFrameOpen(name: string, open: boolean)
+        setFrames(function(oldFrames)
+            oldFrames[name].open = open
+            return oldFrames
+        end)
+    end
 
     local function createIfNotExist(name: string)
         if frames[name] then
@@ -114,10 +125,9 @@ local function FrameProvider(props)
 	return e(FrameContext.Provider, {
 		value = context,
 	}, {
-        e(TooltipProvider.Provider, {}, {
            
             props.children,
-        }),
+        
 	})
 end
 

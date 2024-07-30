@@ -25,6 +25,8 @@ local Quest = require(dirHUD.Quest)
 local function Frames(_)
 	local frames: FrameProvider.FrameContextProps = React.useContext(FrameProvider.Context)
 
+	print(frames.frames)
+
 	return React.createElement(
 		React.Fragment,
 		nil,
@@ -41,7 +43,7 @@ local function Frames(_)
 			isOpen = frames.getFrame("TopBar").open,
 		}),
 		React.createElement(BuildMenu, {
-			isOpen = frames.buildMenuOpen
+			isOpen = frames.buildMenuOpen,
 		})
 	)
 end

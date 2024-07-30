@@ -2,12 +2,6 @@ local SETTINGS = {
 	CircleAssetId = "rbxassetid://18416727845",
 	StripeAssetId = "rbxassetid://18490111133",
 
-	DefaultBgColor = Color3.fromRGB(255, 255, 255),
-	DefaultStripeColor = Color3.fromRGB(243, 243, 243),
-
-	DefaultHoverBgColor = Color3.fromRGB(150, 255, 140),
-	DefaultHoverStripeColor = Color3.fromRGB(102, 255, 88),
-
 	ScaleFactor = 1.1,
 
 	ClickSoundId = "rbxassetid://8755541422",
@@ -53,7 +47,6 @@ type ButtonProps = {
 }
 
 return function(props: ButtonProps)
-	local frames: FrameProvider.FrameContextProps = React.useContext(FrameProvider.Context)
 	local tooltip = React.useContext(TooltipProvider.Context)
 
 	local buttonRef = React.useRef()
@@ -63,14 +56,6 @@ return function(props: ButtonProps)
 	local hovered, setHovered = React.useState(false)
 
 	local styles = RoactSpring.useSpring({
-		bgColor = if props.active
-			then props.activeBgColor or props.hoverBgColor or SETTINGS.DefaultHoverBgColor
-			elseif hovered then props.hoverBgColor or SETTINGS.DefaultHoverBgColor
-			else SETTINGS.DefaultBgColor,
-		stripeColor = if props.active
-			then props.activeStripeColor or props.hoverStripeColor or SETTINGS.DefaultHoverStripeColor
-			elseif hovered then props.hoverStripeColor or SETTINGS.DefaultHoverStripeColor
-			else SETTINGS.DefaultStripeColor,
 		scale = if hovered then SETTINGS.ScaleFactor else 1,
 		config = {
 			damping = 5,

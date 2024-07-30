@@ -29,13 +29,7 @@ type ButtonListProps = {
 }
 
 return function(props: ButtonListProps)
-	local buttons = {}
-
-	for i, data in ipairs(props.buttons) do
-		buttons[i] = React.createElement(Button, data)
-		buttons[i].LayoutOrder = data.LayoutOrder or i
-	end
-
+	
 	return e("Frame", {
 		Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
 		AnchorPoint = props.AnchorPoint or Vector2.new(0.5, 0.5),
@@ -51,6 +45,6 @@ return function(props: ButtonListProps)
 			Padding = props.ListPadding or UDim.new(0, 8),
 		}),
 
-		unpack(buttons),
+		props.children,
 	})
 end
