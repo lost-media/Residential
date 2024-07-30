@@ -4,20 +4,12 @@ local Packages = ReplicatedStorage.Packages
 local React = require(Packages.react)
 local ReactRoblox = require(Packages.reactroblox)
 
-local dirProviders = script.Parent.Parent.Providers
-
-local Tooltip = require(script.Parent)
-local TooltipProvider = require(dirProviders.TooltipProvider)
+local Circle = require(script.Parent)
 
 return function(target)
 	local handle = ReactRoblox.createRoot(target)
 
-	local createdComponent = React.createElement(TooltipProvider.Provider, {}, {
-		React.createElement(Tooltip, {
-			Visible = true,
-			Text = "This is a tooltip",
-		}),
-	})
+	local createdComponent = React.createElement(Circle, {})
 
 	handle:render(createdComponent)
 

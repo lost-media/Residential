@@ -1,5 +1,16 @@
 local SETTINGS = {
 	CircleAssetId = "rbxassetid://18416727845",
+	StripeAssetId = "rbxassetid://18490111133",
+
+	DefaultBgColor = Color3.fromRGB(255, 255, 255),
+	DefaultStripeColor = Color3.fromRGB(243, 243, 243),
+
+	DefaultHoverBgColor = Color3.fromRGB(150, 255, 140),
+	DefaultHoverStripeColor = Color3.fromRGB(102, 255, 88),
+
+	ScaleFactor = 1.1,
+
+	ClickSoundId = "rbxassetid://8755541422",
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -10,17 +21,38 @@ local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 
 local e = React.createElement
 
-local Tooltip = require(script.Parent.Tooltip)
+local dirComponents = script.Parent
+local dirProviders = dirComponents.Providers
+
+local TooltipProvider = require(dirProviders.TooltipProvider)
+
+local Circle = require(dirComponents.Circle)
+local NewAlertIndicator = require(dirComponents.NewAlertIndicator)
 
 type ButtonProps = {
 	OnClick: () -> ()?,
 	Size: ("sm" | "md" | "lg")?,
+	AnchorPoint: Vector2?,
 	Position: UDim2?,
 	Image: string,
 	Name: string?,
+
+	hasNewAlert: boolean?,
+	toolTipOffset: Vector2?,
+	hoverBgColor: Color3?,
+	hoverStripeColor: Color3?,
+
+	activeBgColor: Color3?,
+	activeStripeColor: Color3?,
+
+	active: boolean?,
+
+	layoutOrder: number?,
 }
 
 return function(props: ButtonProps)
+	local tooltip = React.useContext(TooltipProvider.Context)
+
 	local buttonRef = React.useRef()
 
 	props.Size = props.Size or "md"
@@ -28,28 +60,31 @@ return function(props: ButtonProps)
 	local hovered, setHovered = React.useState(false)
 
 	local styles = RoactSpring.useSpring({
-		color = if hovered then Color3.fromRGB(176, 243, 121) else Color3.fromRGB(255, 255, 255),
-		scale = if hovered then 1.1 else 1,
+		bgColor = if props.active
+			then props.activeBgColor or props.hoverBgColor or SETTINGS.DefaultHoverBgColor
+			elseif hovered then props.hoverBgColor or SETTINGS.DefaultHoverBgColor
+			else SETTINGS.DefaultBgColor,
+		stripeColor = if props.active
+			then props.activeStripeColor or props.hoverStripeColor or SETTINGS.DefaultHoverStripeColor
+			elseif hovered then props.hoverStripeColor or SETTINGS.DefaultHoverStripeColor
+			else SETTINGS.DefaultStripeColor,
+		scale = if hovered then SETTINGS.ScaleFactor else 1,
 		config = {
 			damping = 5,
 			mass = 0.5,
 			tension = 500,
+			clamp = true,
 		},
 	})
 
-	return e("ImageLabel", {
-		BackgroundTransparency = 1,
-		Image = SETTINGS.CircleAssetId,
+	return e(Circle, {
 		Size = UDim2.new(1, 0, 1, 0),
 		ImageColor3 = Color3.fromRGB(255, 255, 255),
 		Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
-		AnchorPoint = Vector2.new(0.5, 0.5),
+		AnchorPoint = props.AnchorPoint or Vector2.new(0.5, 0.5),
+
+		LayoutOrder = props.layoutOrder,
 	}, {
-		e("UIAspectRatioConstraint", {
-			AspectRatio = 1,
-			AspectType = Enum.AspectType.FitWithinMaxSize,
-			DominantAxis = Enum.DominantAxis.Width,
-		}),
 		e("UIPadding", {
 			PaddingTop = UDim.new(0, 2),
 			PaddingBottom = UDim.new(0, 2),
@@ -63,48 +98,70 @@ return function(props: ButtonProps)
 			MaxSize = props.Size == "sm" and Vector2.new(48, 48)
 				or props.Size == "md" and Vector2.new(56, 56)
 				or props.Size == "lg" and Vector2.new(72, 72),
-			MinSize = Vector2.new(24, 24),
+			MinSize = Vector2.new(40, 40),
 		}),
-		e("ImageButton", {
-			ref = buttonRef,
+		e(Circle, {
 			Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Size = UDim2.new(1, 0, 1, 0),
-			BackgroundTransparency = 1,
-			Image = "rbxassetid://18476903270",
-			ImageColor3 = styles.color,
-
-			[React.Event.MouseEnter] = function()
-				setHovered(true)
-			end,
-
-			[React.Event.MouseLeave] = function()
-				setHovered(false)
-			end,
-
-			[React.Event.MouseButton1Click] = props.OnClick,
+			ImageColor3 = styles.bgColor,
 		}, {
-			e("UIPadding", {
-				PaddingTop = UDim.new(0.2, 0),
-				PaddingBottom = UDim.new(0.2, 0),
-				PaddingLeft = UDim.new(0.2, 0),
-				PaddingRight = UDim.new(0.2, 0),
-			}),
-			e("ImageLabel", {
-				BackgroundTransparency = 1,
-				Image = props.Image or "rbxassetid://18476991644",
-				Size = UDim2.new(1, 0, 1, 0),
-				Position = UDim2.new(0.5, 0, 0.5, 0),
+			e("ImageButton", {
+				ref = buttonRef,
+				Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
 				AnchorPoint = Vector2.new(0.5, 0.5),
-				ImageColor3 = Color3.new(0, 0, 0),
-			}),
+				Size = UDim2.new(1, 0, 1, 0),
+				BackgroundTransparency = 1,
+				Image = SETTINGS.StripeAssetId,
+				ImageColor3 = styles.stripeColor,
 
-			e(Tooltip, {
-				Text = props.Name or "Button",
-				Visible = hovered,
-				Direction = "top",
-				ParentRef = buttonRef,
+				[React.Event.MouseEnter] = function()
+					setHovered(true)
+					tooltip.show({
+						offset = props.toolTipOffset,
+						text = props.Name,
+						visible = true,
+					})
+				end,
+
+				[React.Event.MouseLeave] = function()
+					setHovered(false)
+					tooltip.setVisible(false)
+				end,
+
+				[React.Event.Activated] = function()
+					if props.onClick then
+						props.onClick()
+					end
+
+					local clickSound = Instance.new("Sound")
+					clickSound.SoundId = SETTINGS.ClickSoundId
+					clickSound.Parent = game:GetService("SoundService")
+					clickSound.PlayOnRemove = true
+					clickSound:Destroy()
+				end,
+			}, {
+				e("UIPadding", {
+					PaddingTop = UDim.new(0.2, 0),
+					PaddingBottom = UDim.new(0.2, 0),
+					PaddingLeft = UDim.new(0.2, 0),
+					PaddingRight = UDim.new(0.2, 0),
+				}),
+				e("ImageLabel", {
+					BackgroundTransparency = 1,
+					Image = props.Image or "rbxassetid://18476991644",
+					Size = UDim2.new(1, 0, 1, 0),
+					Position = UDim2.new(0.5, 0, 0.5, 0),
+					AnchorPoint = Vector2.new(0.5, 0.5),
+					ImageColor3 = Color3.new(0, 0, 0),
+				}),
 			}),
+		}),
+
+		props.hasNewAlert and e(NewAlertIndicator, {
+			Size = UDim2.new(0.4, 0, 0.4, 0),
+			Position = UDim2.new(0.95, 0, -0.05, 0),
+			AnchorPoint = Vector2.new(0.5, 0),
 		}),
 	})
 end

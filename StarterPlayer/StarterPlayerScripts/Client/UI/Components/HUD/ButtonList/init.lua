@@ -32,12 +32,8 @@ return function(props: ButtonListProps)
 	local buttons = {}
 
 	for i, data in ipairs(props.buttons) do
-		buttons[i] = React.createElement(Button, {
-			Image = data.Image,
-			LayoutOrder = data.LayoutOrder or i,
-			Size = data.Size,
-			Name = data.Name,
-		})
+		buttons[i] = React.createElement(Button, data)
+		buttons[i].LayoutOrder = data.LayoutOrder or i
 	end
 
 	return e("Frame", {
@@ -46,7 +42,7 @@ return function(props: ButtonListProps)
 		BackgroundTransparency = 1,
 		AutomaticSize = props.AutomaticSize or Enum.AutomaticSize.XY,
 
-		Size = props.Size or UDim2.new(0, 0, 0),
+		Size = props.Size or UDim2.new(0, 0, 0, 0),
 	}, {
 		e("UIListLayout", {
 			FillDirection = props.FillDirection or Enum.FillDirection.Horizontal,

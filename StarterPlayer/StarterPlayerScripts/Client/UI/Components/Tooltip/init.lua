@@ -1,5 +1,5 @@
 local SETTINGS = {
-	MouseOffset = Vector2.new(5, -34), -- The offset of the tooltip from the mouse
+	MouseOffset = Vector2.new(12, 0), -- The offset of the tooltip from the mouse
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -12,22 +12,25 @@ local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 
 local e = React.createElement
 
+local dirComponents = script.Parent
+local dirFonts = dirComponents.Parent.Fonts
+
+local BuilderSans = require(dirFonts.BuilderSans)
+
 type TooltipProps = {
-	Visible: boolean,
-	Text: string,
-	ParentRef: { current: GuiObject },
+	text: string,
+	position: UDim2,
+	visible: boolean,
 }
 
 return function(props: TooltipProps)
 	local ref = React.useRef(nil)
 
-	local mousePosition, setMousePosition = React.useState(Vector2.new(0, 0))
-
 	local styles = RoactSpring.useSpring({
 		from = { scale = 0.25, opacity = 1 },
 		to = {
-			scale = if props.Visible then 1 else 0.25,
-			opacity = if props.Visible then 0 else 1,
+			scale = if props.visible then 1 else 0.25,
+			opacity = if props.visible then 0 else 1,
 		},
 		config = {
 			damping = 100,
@@ -37,36 +40,6 @@ return function(props: TooltipProps)
 		},
 	})
 
-	React.useEffect(function()
-		local parent = props.ParentRef and props.ParentRef.current
-
-		local function updateMousePosition()
-			local newMousePosition = UserInputService:GetMouseLocation()
-			-- calculate the position from the parent
-			if parent then
-				newMousePosition = newMousePosition - parent.AbsolutePosition
-				-- add the offset
-
-				newMousePosition = newMousePosition + SETTINGS.MouseOffset
-			end
-
-			setMousePosition(newMousePosition)
-		end
-
-		updateMousePosition() -- Update immediately in case the mouse isn't moving
-
-		local connection = UserInputService.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseMovement then
-				updateMousePosition()
-			end
-		end)
-
-		-- Cleanup function to disconnect the event listener
-		return function()
-			connection:Disconnect()
-		end
-	end, { props.Visible })
-
 	return e("CanvasGroup", {
 		BackgroundTransparency = 0,
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -74,12 +47,9 @@ return function(props: TooltipProps)
 		ref = ref,
 		ZIndex = 100,
 		AutomaticSize = Enum.AutomaticSize.X,
-		Position = UDim2.fromOffset(
-			mousePosition.X + SETTINGS.MouseOffset.X,
-			mousePosition.Y + SETTINGS.MouseOffset.Y
-		),
+		Position = props.position,
 		Size = UDim2.new(0, 0, 0, 30),
-		AnchorPoint = Vector2.new(0, 0.5),
+		AnchorPoint = Vector2.new(0, 0),
 	}, {
 		e("UIStroke", {
 			Color = Color3.fromRGB(190, 190, 190),
@@ -102,8 +72,8 @@ return function(props: TooltipProps)
 			TextTransparency = styles.opacity,
 			BackgroundTransparency = 1,
 			BorderSizePixel = 0,
-			FontFace = Font.fromName("Inter", Enum.FontWeight.SemiBold),
-			Text = props.Text,
+			FontFace = BuilderSans.SemiBold,
+			Text = props.text,
 			TextColor3 = Color3.fromRGB(0, 0, 0),
 			TextSize = 20,
 			TextWrapped = false,
@@ -112,7 +82,8 @@ return function(props: TooltipProps)
 			TextScaled = false,
 			AutomaticSize = Enum.AutomaticSize.X,
 			ClearTextOnFocus = false,
-			ZIndex = 101,
+			ZIndex = 999,
+			Interactable = false,
 		}, {
 			e("UITextSizeConstraint", {
 				MaxTextSize = 20,

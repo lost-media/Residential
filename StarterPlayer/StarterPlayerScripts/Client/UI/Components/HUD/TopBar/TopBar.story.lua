@@ -4,14 +4,14 @@ local Packages = ReplicatedStorage.Packages
 local React = require(Packages.react)
 local ReactRoblox = require(Packages.reactroblox)
 
-local Button = require(script.Parent)
+local TopBar = require(script.Parent)
 
 return function(target)
 	local handle = ReactRoblox.createRoot(target)
 
-	local createdComponent = React.createElement(Button, {})
+	local createdBtn = React.createElement(TopBar, {})
 
-	handle:render(createdComponent)
+	handle:render(createdBtn)
 
 	return function()
 		handle:unmount()

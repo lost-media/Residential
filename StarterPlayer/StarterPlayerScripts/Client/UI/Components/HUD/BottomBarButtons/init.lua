@@ -13,16 +13,26 @@ local buttonData = {
 		Image = "rbxassetid://18476991644",
 		Size = "lg",
 		Name = "Build",
+		hoverBgColor = Color3.fromRGB(150, 255, 140),
+		hoverStripeColor = Color3.fromRGB(102, 255, 88),
+		toolTipOffset = Vector2.new(-24, -40),
 	},
 	{
 		Image = "rbxassetid://18477186326",
 		Size = "lg",
 		Name = "Stats",
+		hoverBgColor = Color3.fromRGB(133, 255, 235),
+		hoverStripeColor = Color3.fromRGB(172, 255, 241),
+		toolTipOffset = Vector2.new(-24, -40),
 	},
 	{
 		Image = "rbxassetid://18477206156",
 		Size = "lg",
 		Name = "Quests",
+		hasNewAlert = true,
+		hoverBgColor = Color3.fromRGB(255, 160, 242),
+		hoverStripeColor = Color3.fromRGB(255, 178, 245),
+		toolTipOffset = Vector2.new(-24, -40),
 	},
 }
 
