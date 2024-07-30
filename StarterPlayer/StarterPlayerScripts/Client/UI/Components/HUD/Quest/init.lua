@@ -14,7 +14,11 @@ local StripeTexture = require(dirComponents.StripeTexture)
 
 local QuestSlot = require(script.QuestSlot)
 
-return function(props)
+type QuestFrameProps = {
+	isOpen: boolean,
+}
+
+return function(props: QuestFrameProps)
 	local scrollingFrameRef = React.useRef(nil)
 	local contentSize, setContentSize = React.useState(UDim2.new(0, 0, 0, 0))
 
@@ -25,6 +29,8 @@ return function(props)
 		BorderSizePixel = 0,
 
 		Size = UDim2.new(0.55, 0, 0.55, 0),
+
+		Visible = props.isOpen,
 	}, {
 		e("UIStroke", {
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,

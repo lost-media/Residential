@@ -28,7 +28,11 @@ local StripeTexture = require(dirComponents.StripeTexture)
 
 local StructureEntry = require(script.StructureEntry)
 
-return function(props)
+type BuildMenuProps = {
+	isOpen: boolean,
+}
+
+return function(props: BuildMenuProps)
 	local currentCategory: Structures2.StructureCategory, setCurrentCategory = React.useState(Structures2.getCategory("City"))
 	local currentTab, setCurrentTab = React.useState("City")
 	local scroillCanvasSize, setScrollCanvasSize = React.useState(UDim2.new(100, 0, 0, 0))
@@ -94,6 +98,8 @@ return function(props)
 		Size = UDim2.new(0.8, 0, 0.2, 0),
 
 		AutomaticSize = Enum.AutomaticSize.Y,
+
+		Visible = props.isOpen,
 	}, {
 		e("UISizeConstraint", {
 			MaxSize = Vector2.new("inf", 480),

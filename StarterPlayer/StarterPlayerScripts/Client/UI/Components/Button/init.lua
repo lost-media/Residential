@@ -24,6 +24,7 @@ local e = React.createElement
 local dirComponents = script.Parent
 local dirProviders = dirComponents.Providers
 
+local FrameProvider = require(dirProviders.FrameProvider)
 local TooltipProvider = require(dirProviders.TooltipProvider)
 
 local Circle = require(dirComponents.Circle)
@@ -48,9 +49,11 @@ type ButtonProps = {
 	active: boolean?,
 
 	layoutOrder: number?,
+	frameToOpen: string?,
 }
 
 return function(props: ButtonProps)
+	local frames: FrameProvider.FrameContextProps = React.useContext(FrameProvider.Context)
 	local tooltip = React.useContext(TooltipProvider.Context)
 
 	local buttonRef = React.useRef()
@@ -132,6 +135,10 @@ return function(props: ButtonProps)
 				[React.Event.Activated] = function()
 					if props.onClick then
 						props.onClick()
+					end
+
+					if props.frameToOpen then
+						frames.setBuildMenuOpen(true)
 					end
 
 					local clickSound = Instance.new("Sound")

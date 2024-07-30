@@ -12,6 +12,7 @@ local dirProviders = dirComponents.Providers
 local dirHUD = dirComponents.HUD
 
 local TooltipProvider = require(dirProviders.TooltipProvider)
+local FrameProvider = require(dirProviders.FrameProvider)
 
 local BottomBarButtons = require(dirHUD.BottomBarButtons)
 local SideBarButtons = require(dirHUD.SideBarButtons)
@@ -21,12 +22,36 @@ local TopBar = require(dirHUD.TopBar)
 local BuildMenu = require(dirHUD.BuildMenu)
 local Quest = require(dirHUD.Quest)
 
+local function Frames(_)
+	local frames: FrameProvider.FrameContextProps = React.useContext(FrameProvider.Context)
+
+	return React.createElement(
+		React.Fragment,
+		nil,
+		React.createElement(Quest, {
+			isOpen = frames.getFrame("Quest").open,
+		}),
+		React.createElement(BottomBarButtons, {
+			isOpen = frames.getFrame("BottomBarButtons").open,
+		}),
+		React.createElement(SideBarButtons, {
+			isOpen = frames.getFrame("SideBarButtons").open,
+		}),
+		React.createElement(TopBar, {
+			isOpen = frames.getFrame("TopBar").open,
+		}),
+		React.createElement(BuildMenu, {
+			isOpen = frames.buildMenuOpen
+		})
+	)
+end
+
 local function App(_)
-	return React.createElement(TooltipProvider.Provider, {}, {
-		React.createElement("Frame", {
-			Size = UDim2.new(1, 0, 1, 0),
-			BackgroundTransparency = 1,
-		}, {
+	return React.createElement("Frame", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+	}, {
+		React.createElement(FrameProvider.Provider, {}, {
 			React.createElement("UIPadding", {
 				PaddingTop = UDim.new(0, 16),
 				PaddingBottom = UDim.new(0, 16),
@@ -34,11 +59,7 @@ local function App(_)
 				PaddingRight = UDim.new(0, 16),
 			}),
 
-			--React.createElement(Quest, {}),
-			React.createElement(BottomBarButtons, {}),
-			React.createElement(SideBarButtons, {}),
-			React.createElement(TopBar, {}),
-			--React.createElement(BuildMenu, {}),
+			React.createElement(Frames)
 		}),
 	})
 end

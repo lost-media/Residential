@@ -4,6 +4,11 @@ local Packages = ReplicatedStorage.Packages
 local React = require(Packages.react)
 local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 
+local dirComponents = script.Parent.Parent
+local dirProviders = dirComponents.Providers
+
+--local FrameProvider = require(dirProviders.FrameProvider)
+
 local ButtonList = require(script.Parent.ButtonList)
 
 local e = React.createElement
@@ -16,6 +21,8 @@ local buttonData = {
 		hoverBgColor = Color3.fromRGB(150, 255, 140),
 		hoverStripeColor = Color3.fromRGB(102, 255, 88),
 		toolTipOffset = Vector2.new(-24, -40),
+
+		frameToOpen = "BuildMenu"
 	},
 	{
 		Image = "rbxassetid://18477186326",
