@@ -74,6 +74,7 @@ return function(props: any)
 			onClick = function()
 				frames.setFrameOpen("BottomBarButtons", false)
 				frames.setFrameOpen("Quests", false)
+				frames.setFrameOpen("Stats", false)
 				frames.setFrameOpen("BuildMenu", true)
 			end,
 		}),
@@ -87,7 +88,8 @@ return function(props: any)
 			toolTipOffset = Vector2.new(-24, -40),
 
 			onClick = function()
-				--frames.setBuildMenuOpen(not frames.buildMenuOpen)
+				frames.setFrameOpen("Stats", not frames.statsOpen)
+				frames.setFrameOpen("Quests", false)
 			end,
 		}),
 
@@ -101,7 +103,7 @@ return function(props: any)
 			toolTipOffset = Vector2.new(-24, -40),
 
 			onClick = function()
-				--frames.setFrameOpen("BottomBarButtons", false)
+				frames.setFrameOpen("Stats", false)
 				frames.setFrameOpen("Quests", not frames.questLogOpen)
 			end,
 		}),

@@ -25,6 +25,7 @@ export type FrameContextProps = {
 	buildMenuOpen: boolean,
 	bottomBarButtonsOpen: boolean,
 	questLogOpen: boolean,
+	statsOpen: boolean,
 
 	setFrameOpen: (name: string, open: boolean) -> (),
 
@@ -56,12 +57,14 @@ local function FrameProvider(props)
 	local buildMenuOpen, setBuildMenuOpen = React.useState(false)
 	local bottomBarButtonsOpen, setBottomBarButtonsOpen = React.useState(true)
 	local questLogOpen, setQuestLogOpen = React.useState(false)
+	local statsOpen, setStatsOpen = React.useState(false)
 
 	local function setFrameOpen(name: string, open: boolean)
 		local dict = {
 			["BuildMenu"] = setBuildMenuOpen,
 			["BottomBarButtons"] = setBottomBarButtonsOpen,
 			["Quests"] = setQuestLogOpen,
+			["Stats"] = setStatsOpen,
 		}
 
 		if dict[name] then
@@ -122,6 +125,7 @@ local function FrameProvider(props)
 		buildMenuOpen = buildMenuOpen,
 		bottomBarButtonsOpen = bottomBarButtonsOpen,
 		questLogOpen = questLogOpen,
+		statsOpen = statsOpen,
 
 		setFrameOpen = setFrameOpen,
 

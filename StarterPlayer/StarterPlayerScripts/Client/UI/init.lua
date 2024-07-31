@@ -21,6 +21,7 @@ local TopBar = require(dirHUD.TopBar)
 -- Frames
 local BuildMenu = require(dirHUD.BuildMenu)
 local Quest = require(dirHUD.Quest)
+local Stats = require(dirHUD.Stats)
 
 local function Frames(_)
 	local frames: FrameProvider.FrameContextProps = React.useContext(FrameProvider.Context)
@@ -42,6 +43,9 @@ local function Frames(_)
 		}),
 		React.createElement(BuildMenu, {
 			isOpen = frames.buildMenuOpen,
+		}),
+		React.createElement(Stats, {
+			isOpen = frames.statsOpen,
 		})
 	)
 end
