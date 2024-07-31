@@ -60,6 +60,8 @@ return function(props: any)
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		VerticalAlignment = Enum.VerticalAlignment.Bottom,
 		ListPadding = UDim.new(0, 8),
+
+		visible = frames.bottomBarButtonsOpen,
 	}, {
 		e(Button, {
 			Image = "rbxassetid://18476991644",
@@ -70,7 +72,9 @@ return function(props: any)
 			toolTipOffset = Vector2.new(-24, -40),
 
 			onClick = function()
-				frames.setBuildMenuOpen(not frames.buildMenuOpen)
+				frames.setFrameOpen("BottomBarButtons", false)
+				frames.setFrameOpen("Quests", false)
+				frames.setFrameOpen("BuildMenu", true)
 			end,
 		}),
 
@@ -83,7 +87,7 @@ return function(props: any)
 			toolTipOffset = Vector2.new(-24, -40),
 
 			onClick = function()
-				frames.setBuildMenuOpen(not frames.buildMenuOpen)
+				--frames.setBuildMenuOpen(not frames.buildMenuOpen)
 			end,
 		}),
 
@@ -97,7 +101,8 @@ return function(props: any)
 			toolTipOffset = Vector2.new(-24, -40),
 
 			onClick = function()
-				frames.setBuildMenuOpen(not frames.buildMenuOpen)
+				--frames.setFrameOpen("BottomBarButtons", false)
+				frames.setFrameOpen("Quests", not frames.questLogOpen)
 			end,
 		}),
 	})

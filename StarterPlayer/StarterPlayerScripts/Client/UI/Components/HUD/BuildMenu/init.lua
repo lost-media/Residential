@@ -19,13 +19,18 @@ local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 local e = React.createElement
 
 local dirComponents = script.Parent.Parent
+
+local dirProviders = dirComponents.Providers
 local dirFonts = dirComponents.Parent.Fonts
+
+local FrameProvider = require(dirProviders.FrameProvider)
 
 local BuilderSans = require(dirFonts.BuilderSans)
 
 local Button = require(dirComponents.Button)
-local StripeTexture = require(dirComponents.StripeTexture)
+local CloseButton = require(dirComponents.Button.CloseButton)
 
+local StripeTexture = require(dirComponents.StripeTexture)
 local StructureEntry = require(script.StructureEntry)
 
 type BuildMenuProps = {
@@ -33,9 +38,10 @@ type BuildMenuProps = {
 }
 
 return function(props: BuildMenuProps)
-	local currentCategory: Structures2.StructureCategory, setCurrentCategory = React.useState(Structures2.getCategory("City"))
+	local frames: FrameProvider.FrameContextProps = React.useContext(FrameProvider.Context)
+	local currentCategory: Structures2.StructureCategory, setCurrentCategory =
+		React.useState(Structures2.getCategory("City"))
 	local currentTab, setCurrentTab = React.useState("City")
-
 
 	local scroillCanvasSize, setScrollCanvasSize = React.useState(UDim2.new(0, 0, 0, 0))
 
@@ -143,7 +149,7 @@ return function(props: BuildMenuProps)
 				CornerRadius = UDim.new(0, 16),
 			}),
 			e("UIStroke", {
-				Thickness = 0, --2,
+				Thickness = 3, --2,
 				Color = Color3.fromRGB(0, 0, 0),
 			}),
 			e(StripeTexture, {
@@ -194,6 +200,16 @@ return function(props: BuildMenuProps)
 						e("UITextSizeConstraint", {
 							MaxTextSize = 24,
 						}),
+					}),
+
+					e(CloseButton, {
+						Position = UDim2.new(1, 0, 0.5, 0),
+						AnchorPoint = Vector2.new(1, 0.5),
+						iconColor = Color3.fromRGB(255, 255, 255),
+						onClick = function()
+							frames.setFrameOpen("BuildMenu", false)
+							frames.setFrameOpen("BottomBarButtons", true)
+						end,
 					}),
 				}),
 

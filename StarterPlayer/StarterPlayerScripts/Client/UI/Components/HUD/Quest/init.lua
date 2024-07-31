@@ -9,7 +9,10 @@ local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 local e = React.createElement
 
 local dirComponents = script.Parent.Parent
+local dirProviders = dirComponents.Providers
 
+local CloseButton = require(dirComponents.Button.CloseButton)
+local FrameProvider = require(dirProviders.FrameProvider)
 local StripeTexture = require(dirComponents.StripeTexture)
 
 local QuestSlot = require(script.QuestSlot)
@@ -19,6 +22,8 @@ type QuestFrameProps = {
 }
 
 return function(props: QuestFrameProps)
+	local frames = React.useContext(FrameProvider.Context)
+
 	local scrollingFrameRef = React.useRef(nil)
 	local contentSize, setContentSize = React.useState(UDim2.new(0, 0, 0, 0))
 
@@ -28,7 +33,7 @@ return function(props: QuestFrameProps)
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 		BorderSizePixel = 0,
 
-		Size = UDim2.new(0.55, 0, 0.55, 0),
+		Size = UDim2.new(0.8, 0, 0.65, 0),
 
 		Visible = props.isOpen,
 	}, {
@@ -39,12 +44,12 @@ return function(props: QuestFrameProps)
 			Thickness = 3,
 		}),
 		e("UISizeConstraint", {
-			MaxSize = Vector2.new(800, 800),
+			MaxSize = Vector2.new(900, 900),
 			MinSize = Vector2.new(240, 240),
 		}),
 
 		e("UIAspectRatioConstraint", {
-			AspectRatio = 1.3,
+			AspectRatio = 1.4,
 		}),
 		e("UICorner", {
 			CornerRadius = UDim.new(0, 16),
@@ -83,6 +88,16 @@ return function(props: QuestFrameProps)
 				e("UIPadding", {
 					PaddingLeft = UDim.new(0, 16),
 				}),
+			}),
+
+			e(CloseButton, {
+				Position = UDim2.new(1, 0, 0.5, 0),
+				AnchorPoint = Vector2.new(1, 0.5),
+				iconColor = Color3.fromRGB(255, 255, 255),
+				onClick = function()
+					frames.setFrameOpen("Quests", false)
+					frames.setFrameOpen("BottomBarButtons", true)
+				end,
 			}),
 		}),
 

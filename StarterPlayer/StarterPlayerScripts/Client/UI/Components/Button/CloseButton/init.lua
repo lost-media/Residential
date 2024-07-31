@@ -1,6 +1,6 @@
 local SETTINGS = {
 	CircleAssetId = "rbxassetid://18416727845",
-	StripeAssetId = "rbxassetid://18490111133",
+	CloseAssetId = "rbxassetid://18312760469",
 
 	ScaleFactor = 1.1,
 
@@ -15,25 +15,20 @@ local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 
 local e = React.createElement
 
-local dirComponents = script.Parent
-local dirProviders = dirComponents.Providers
-
-local FrameProvider = require(dirProviders.FrameProvider)
-local TooltipProvider = require(dirProviders.TooltipProvider)
+local dirComponents = script.Parent.Parent
 
 local Circle = require(dirComponents.Circle)
 local NewAlertIndicator = require(dirComponents.NewAlertIndicator)
 
 type ButtonProps = {
-	OnClick: () -> ()?,
+	onClick: () -> ()?,
 	Size: ("sm" | "md" | "lg")?,
 	AnchorPoint: Vector2?,
 	Position: UDim2?,
 	Image: string,
 	Name: string?,
 
-	hasNewAlert: boolean?,
-	toolTipOffset: Vector2?,
+	imageTransparency: number?,
 	hoverBgColor: Color3?,
 	hoverStripeColor: Color3?,
 
@@ -44,11 +39,11 @@ type ButtonProps = {
 
 	layoutOrder: number?,
 	frameToOpen: string?,
+
+	iconColor: Color3?,
 }
 
 return function(props: ButtonProps)
-	local tooltip = React.useContext(TooltipProvider.Context)
-
 	local buttonRef = React.useRef()
 
 	props.Size = props.Size or "md"
@@ -72,13 +67,18 @@ return function(props: ButtonProps)
 		AnchorPoint = props.AnchorPoint or Vector2.new(0.5, 0.5),
 
 		LayoutOrder = props.layoutOrder,
+		imageTransparency = props.imageTransparency or 1,
+
+		onMouseEnter = function()
+			setHovered(true)
+		end,
+
+		onMouseLeave = function()
+			setHovered(false)
+		end,
+
+		onClick = props.onClick,
 	}, {
-		e("UIPadding", {
-			PaddingTop = UDim.new(0, 2),
-			PaddingBottom = UDim.new(0, 2),
-			PaddingLeft = UDim.new(0, 2),
-			PaddingRight = UDim.new(0, 2),
-		}),
 		e("UIScale", {
 			Scale = styles.scale,
 		}),
@@ -88,69 +88,19 @@ return function(props: ButtonProps)
 				or props.Size == "lg" and Vector2.new(72, 72),
 			MinSize = Vector2.new(40, 40),
 		}),
-		e(Circle, {
-			Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			Size = UDim2.new(1, 0, 1, 0),
-			ImageColor3 = styles.bgColor,
-		}, {
-			e("ImageButton", {
-				ref = buttonRef,
-				Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
-				AnchorPoint = Vector2.new(0.5, 0.5),
-				Size = UDim2.new(1, 0, 1, 0),
-				BackgroundTransparency = 1,
-				Image = SETTINGS.StripeAssetId,
-				ImageColor3 = styles.stripeColor,
-
-				[React.Event.MouseEnter] = function()
-					setHovered(true)
-					tooltip.show({
-						offset = props.toolTipOffset,
-						text = props.Name,
-						visible = true,
-					})
-				end,
-
-				[React.Event.MouseLeave] = function()
-					setHovered(false)
-					tooltip.setVisible(false)
-				end,
-
-				[React.Event.Activated] = function()
-					if props.onClick then
-						props.onClick()
-					end
-
-
-					local clickSound = Instance.new("Sound")
-					clickSound.SoundId = SETTINGS.ClickSoundId
-					clickSound.Parent = game:GetService("SoundService")
-					clickSound.PlayOnRemove = true
-					clickSound:Destroy()
-				end,
-			}, {
-				e("UIPadding", {
-					PaddingTop = UDim.new(0.2, 0),
-					PaddingBottom = UDim.new(0.2, 0),
-					PaddingLeft = UDim.new(0.2, 0),
-					PaddingRight = UDim.new(0.2, 0),
-				}),
-				e("ImageLabel", {
-					BackgroundTransparency = 1,
-					Image = props.Image or "rbxassetid://18476991644",
-					Size = UDim2.new(1, 0, 1, 0),
-					Position = UDim2.new(0.5, 0, 0.5, 0),
-					AnchorPoint = Vector2.new(0.5, 0.5),
-					ImageColor3 = Color3.new(0, 0, 0),
-				}),
-			}),
+		e("UIPadding", {
+			PaddingTop = UDim.new(0.3, 0),
+			PaddingBottom = UDim.new(0.3, 0),
+			PaddingLeft = UDim.new(0.3, 0),
+			PaddingRight = UDim.new(0.3, 0),
 		}),
-
-		props.hasNewAlert and e(NewAlertIndicator, {
-			Size = UDim2.new(0.4, 0, 0.4, 0),
-			Position = UDim2.new(0.95, 0, -0.05, 0),
-			AnchorPoint = Vector2.new(0.5, 0),
+		e("ImageLabel", {
+			BackgroundTransparency = 1,
+			Image = SETTINGS.CloseAssetId,
+			Size = UDim2.new(1, 0, 1, 0),
+			Position = UDim2.new(0.5, 0, 0.5, 0),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			ImageColor3 = props.iconColor or Color3.new(0, 0, 0),
 		}),
 	})
 end

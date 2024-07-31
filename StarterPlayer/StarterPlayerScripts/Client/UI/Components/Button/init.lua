@@ -137,7 +137,6 @@ return function(props: ButtonProps)
 						props.onClick()
 					end
 
-
 					local clickSound = Instance.new("Sound")
 					clickSound.SoundId = SETTINGS.ClickSoundId
 					clickSound.Parent = game:GetService("SoundService")

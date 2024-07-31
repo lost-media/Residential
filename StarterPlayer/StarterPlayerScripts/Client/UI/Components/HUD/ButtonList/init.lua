@@ -26,10 +26,11 @@ type ButtonListProps = {
 	HorizontalAlignment: Enum.HorizontalAlignment,
 	VerticalAlignment: Enum.VerticalAlignment,
 	ListPadding: UDim,
+
+	visible: boolean,
 }
 
 return function(props: ButtonListProps)
-	
 	return e("Frame", {
 		Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
 		AnchorPoint = props.AnchorPoint or Vector2.new(0.5, 0.5),
@@ -37,6 +38,8 @@ return function(props: ButtonListProps)
 		AutomaticSize = props.AutomaticSize or Enum.AutomaticSize.XY,
 
 		Size = props.Size or UDim2.new(0, 0, 0, 0),
+
+		Visible = props.visible,
 	}, {
 		e("UIListLayout", {
 			FillDirection = props.FillDirection or Enum.FillDirection.Horizontal,

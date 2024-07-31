@@ -10,7 +10,7 @@ local structureTypes = require(script.Parent.Parent.Types)
 export type RoadStructure = structureTypes.Structure & {}
 
 export type Road = structureTypes.StructureCategory & {
-	structures: { RoadStructure }
+	structures: { RoadStructure },
 }
 
 local Road: Road = {
@@ -30,65 +30,65 @@ Road.structures = {
 		name = "Normal Road",
 		description = "The City Hall is the central building of your city. It is where you can manage your city and its services.",
 		model = dirStructures["Normal"],
-        viewportZoomScale = 0.75,
+		viewportZoomScale = 0.75,
 		price = {
 			value = 50,
 			currency = Currency.kloins,
 		},
 	},
 
-    {
+	{
 		id = "road/curved",
 		name = "Curved Road",
 		description = "The City Hall is the central building of your city. It is where you can manage your city and its services.",
 		model = dirStructures["Curved"],
-        viewportZoomScale = 0.75,
+		viewportZoomScale = 0.75,
 		price = {
 			value = 50,
 			currency = Currency.kloins,
 		},
 	},
 
-    {
+	{
 		id = "road/int",
 		name = "Intersection Road",
 		description = "The City Hall is the central building of your city. It is where you can manage your city and its services.",
 		model = dirStructures["Intersection"],
-        viewportZoomScale = 0.75,
+		viewportZoomScale = 0.75,
 		price = {
 			value = 50,
 			currency = Currency.kloins,
 		},
 	},
 
-    {
+	{
 		id = "road/t-int",
 		name = "T-Intersection Road",
 		description = "The City Hall is the central building of your city. It is where you can manage your city and its services.",
 		model = dirStructures["T-Intersection"],
-        viewportZoomScale = 0.75,
+		viewportZoomScale = 0.75,
 		price = {
 			value = 50,
 			currency = Currency.kloins,
 		},
 	},
-    {
+	{
 		id = "road/deadend",
 		name = "Dead-End Road",
 		description = "The City Hall is the central building of your city. It is where you can manage your city and its services.",
 		model = dirStructures["DeadEnd"],
-        viewportZoomScale = 0.75,
+		viewportZoomScale = 0.75,
 		price = {
 			value = 50,
 			currency = Currency.kloins,
 		},
 	},
-    {
+	{
 		id = "road/ramp",
 		name = "Ramp",
 		description = "The City Hall is the central building of your city. It is where you can manage your city and its services.",
 		model = dirStructures["Ramp"],
-        viewportZoomScale = 0.75,
+		viewportZoomScale = 0.75,
 		price = {
 			value = 50,
 			currency = Currency.kloins,

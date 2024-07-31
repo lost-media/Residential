@@ -11,8 +11,8 @@ local dirComponents = script.Components
 local dirProviders = dirComponents.Providers
 local dirHUD = dirComponents.HUD
 
-local TooltipProvider = require(dirProviders.TooltipProvider)
 local FrameProvider = require(dirProviders.FrameProvider)
+local TooltipProvider = require(dirProviders.TooltipProvider)
 
 local BottomBarButtons = require(dirHUD.BottomBarButtons)
 local SideBarButtons = require(dirHUD.SideBarButtons)
@@ -25,16 +25,14 @@ local Quest = require(dirHUD.Quest)
 local function Frames(_)
 	local frames: FrameProvider.FrameContextProps = React.useContext(FrameProvider.Context)
 
-	print(frames.frames)
-
 	return React.createElement(
 		React.Fragment,
 		nil,
 		React.createElement(Quest, {
-			isOpen = frames.getFrame("Quest").open,
+			isOpen = frames.questLogOpen,
 		}),
 		React.createElement(BottomBarButtons, {
-			isOpen = frames.getFrame("BottomBarButtons").open,
+			isOpen = frames.bottomBarButtonsOpen,
 		}),
 		React.createElement(SideBarButtons, {
 			isOpen = frames.getFrame("SideBarButtons").open,
@@ -61,7 +59,9 @@ local function App(_)
 				PaddingRight = UDim.new(0, 16),
 			}),
 
-			React.createElement(Frames)
+			React.createElement(TooltipProvider.Provider, {}, {
+				React.createElement(Frames),
+			}),
 		}),
 	})
 end
