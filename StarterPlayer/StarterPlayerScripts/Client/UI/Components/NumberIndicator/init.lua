@@ -92,7 +92,7 @@ return function(props: NumberIndicatorProps)
 
 				[React.Event.MouseEnter] = function()
 					setHovered(true)
-					tooltip.setOffset(props.toolTipOffset or Vector2.new(-32, 48))
+					tooltip.setOffset(props.toolTipOffset or Vector2.new(-32, 8))
 					tooltip.setVisible(true)
 					tooltip.setText(props.Name)
 				end,

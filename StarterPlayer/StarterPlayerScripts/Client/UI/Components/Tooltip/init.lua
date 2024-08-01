@@ -69,6 +69,7 @@ return function(props: TooltipProps)
 			PaddingRight = UDim.new(0, 16),
 		}),
 		e("TextBox", {
+			RichText = true,
 			TextTransparency = styles.opacity,
 			BackgroundTransparency = 1,
 			BorderSizePixel = 0,

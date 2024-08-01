@@ -24,6 +24,7 @@ local e = React.createElement
 local dirComponents = script.Parent
 local dirProviders = dirComponents.Providers
 
+local FrameProvider = require(dirProviders.FrameProvider)
 local TooltipProvider = require(dirProviders.TooltipProvider)
 
 local Circle = require(dirComponents.Circle)
@@ -48,9 +49,11 @@ type ButtonProps = {
 	active: boolean?,
 
 	layoutOrder: number?,
+	frameToOpen: string?,
 }
 
 return function(props: ButtonProps)
+	local frames: FrameProvider.FrameContextProps = React.useContext(FrameProvider.Context)
 	local tooltip = React.useContext(TooltipProvider.Context)
 
 	local buttonRef = React.useRef()
@@ -98,7 +101,7 @@ return function(props: ButtonProps)
 			MaxSize = props.Size == "sm" and Vector2.new(48, 48)
 				or props.Size == "md" and Vector2.new(56, 56)
 				or props.Size == "lg" and Vector2.new(72, 72),
-			MinSize = Vector2.new(40, 40),
+			MinSize = Vector2.new(24, 24),
 		}),
 		e(Circle, {
 			Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),
