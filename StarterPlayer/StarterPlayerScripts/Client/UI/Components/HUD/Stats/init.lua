@@ -20,6 +20,8 @@ local Star = require(dirComponents.Star)
 local StripeTexture = require(dirComponents.StripeTexture)
 local TooltipProvider = require(dirProviders.TooltipProvider)
 
+local StatBar = require(script.StatBar)
+
 local QuestSlot = require(script.QuestSlot)
 
 type QuestFrameProps = {
@@ -143,14 +145,15 @@ return function(props: QuestFrameProps)
 					FillDirection = Enum.FillDirection.Vertical,
 					HorizontalAlignment = Enum.HorizontalAlignment.Left,
 					VerticalAlignment = Enum.VerticalAlignment.Top,
-					Padding = UDim.new(0, 16),
+					Padding = UDim.new(0, 8),
 
 					[React.Change.AbsoluteContentSize] = function(rbx)
 						setContentSize(UDim2.new(0, 0, 0, rbx.AbsoluteContentSize.Y + 80))
 					end,
 				}),
 				e("UIPadding", {
-					PaddingRight = UDim.new(0, 10),
+					PaddingRight = UDim.new(0, 8),
+					PaddingLeft = UDim.new(0, 4),
 				}),
 
 				e("Frame", {
@@ -181,7 +184,7 @@ return function(props: QuestFrameProps)
 						FillDirection = Enum.FillDirection.Horizontal,
 						HorizontalAlignment = Enum.HorizontalAlignment.Center,
 						VerticalAlignment = Enum.VerticalAlignment.Top,
-						Padding = UDim.new(0, 16),
+						Padding = UDim.new(0.05, 0),
 					}),
 					e("UIPadding", {
 						PaddingRight = UDim.new(0, 10),
@@ -219,7 +222,7 @@ return function(props: QuestFrameProps)
 
 				e("TextLabel", {
 					BackgroundTransparency = 1,
-					Size = UDim2.new(1, 0, 0.1, 0),
+					Size = UDim2.new(1, 0, 0.12, 0),
 					FontFace = BuilderSans.Bold,
 					Text = "Your city could be improved! ",
 					TextColor3 = Color3.fromRGB(0, 0, 0),
@@ -227,12 +230,67 @@ return function(props: QuestFrameProps)
 					TextScaled = true,
 
 					TextXAlignment = Enum.TextXAlignment.Center,
+					TextYAlignment = Enum.TextYAlignment.Center,
 				}, {
 					e("UITextSizeConstraint", {
 						MaxTextSize = 24,
 					}),
 					e("UIPadding", {
 						PaddingLeft = UDim.new(0, 16),
+					}),
+				}),
+
+				e("CanvasGroup", {
+					BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+					Size = UDim2.new(1, 0, 0.38, 0),
+					BorderSizePixel = 0,
+				}, {
+					e("UICorner", {
+						CornerRadius = UDim.new(0, 16),
+					}),
+					e("UIStroke", {
+						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+						Color = Color3.fromRGB(0, 0, 0),
+						LineJoinMode = Enum.LineJoinMode.Round,
+						Thickness = 3,
+					}),
+					e("UIListLayout", {
+						FillDirection = Enum.FillDirection.Horizontal,
+						HorizontalAlignment = Enum.HorizontalAlignment.Left,
+						VerticalAlignment = Enum.VerticalAlignment.Top,
+
+						Wraps = true,
+					}),
+					e(StatBar, {
+						size = UDim2.new(0.5, 0, 1 / 3, 0),
+					}),
+					e(StatBar, {
+						size = UDim2.new(0.5, 0, 1 / 3, 0),
+					}),
+					e(StatBar, {
+						isDark = true,
+						size = UDim2.new(0.5, 0, 1 / 3, 0),
+					}),
+					e(StatBar, {
+						isDark = true,
+						size = UDim2.new(0.5, 0, 1 / 3, 0),
+					}),
+					e("TextButton", {
+						BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+						BorderSizePixel = 0,
+						Size = UDim2.new(1, 0, 1 / 3, 0),
+						Text = "View More",
+						Font = Enum.Font.SourceSans,
+						TextSize = 24,
+						TextColor3 = Color3.fromRGB(255, 255, 255),
+						TextScaled = true,
+						TextWrapped = true,
+						TextXAlignment = Enum.TextXAlignment.Center,
+						TextYAlignment = Enum.TextYAlignment.Center,
+					}, {
+						e("UITextSizeConstraint", {
+							MaxTextSize = 24,
+						}),
 					}),
 				}),
 			}),
