@@ -101,7 +101,7 @@ return function(props: ButtonProps)
 			MaxSize = props.Size == "sm" and Vector2.new(48, 48)
 				or props.Size == "md" and Vector2.new(56, 56)
 				or props.Size == "lg" and Vector2.new(72, 72),
-			MinSize = Vector2.new(40, 40),
+			MinSize = Vector2.new(24, 24),
 		}),
 		e(Circle, {
 			Position = props.Position or UDim2.new(0.5, 0, 0.5, 0),

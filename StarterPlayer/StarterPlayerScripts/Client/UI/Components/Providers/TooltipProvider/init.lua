@@ -1,5 +1,5 @@
 local SETTINGS = {
-	MouseOffset = Vector2.new(12, 0), -- The default offset of the tooltip from the mouse
+	MouseOffset = Vector2.new(4, 0), -- The default offset of the tooltip from the mouse
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

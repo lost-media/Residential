@@ -45,7 +45,6 @@ return function(props: QuestFrameProps)
 		}),
 		e("UISizeConstraint", {
 			MaxSize = Vector2.new(900, 900),
-			MinSize = Vector2.new(240, 240),
 		}),
 
 		e("UIAspectRatioConstraint", {

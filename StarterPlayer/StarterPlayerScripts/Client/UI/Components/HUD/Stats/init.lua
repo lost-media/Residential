@@ -1,6 +1,4 @@
-local SETTINGS = {
-	StarAssetId = "rbxassetid://18732784280",
-}
+local SETTINGS = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage.Packages
@@ -10,12 +8,17 @@ local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 
 local e = React.createElement
 
+local dirFonts = script.Parent.Parent.Parent.Fonts
 local dirComponents = script.Parent.Parent
 local dirProviders = dirComponents.Providers
 
+local BuilderSans = require(dirFonts.BuilderSans)
+
 local CloseButton = require(dirComponents.Button.CloseButton)
 local FrameProvider = require(dirProviders.FrameProvider)
+local Star = require(dirComponents.Star)
 local StripeTexture = require(dirComponents.StripeTexture)
+local TooltipProvider = require(dirProviders.TooltipProvider)
 
 local QuestSlot = require(script.QuestSlot)
 
@@ -25,9 +28,12 @@ type QuestFrameProps = {
 
 return function(props: QuestFrameProps)
 	local frames = React.useContext(FrameProvider.Context)
+	local tooltip: TooltipProvider.TooltipContext = React.useContext(TooltipProvider.Context)
 
 	local scrollingFrameRef = React.useRef(nil)
 	local contentSize, setContentSize = React.useState(UDim2.new(0, 0, 0, 0))
+
+	local value = 2.8
 
 	return e("CanvasGroup", {
 		Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -47,7 +53,6 @@ return function(props: QuestFrameProps)
 		}),
 		e("UISizeConstraint", {
 			MaxSize = Vector2.new(900, 900),
-			MinSize = Vector2.new(240, 240),
 		}),
 
 		e("UIAspectRatioConstraint", {
@@ -149,12 +154,85 @@ return function(props: QuestFrameProps)
 				}),
 
 				e("Frame", {
-					BackgroundColor3 = Color3.fromRGB(172, 89, 89),
+					BackgroundColor3 = Color3.fromRGB(238, 238, 238),
 					BorderSizePixel = 0,
-					Size = UDim2.new(0.5, 0, 0.5, 0),
+					Size = UDim2.new(1, 0, 0.2, 0),
+
+					[React.Event.MouseEnter] = function()
+						tooltip.show({
+							text = string.format(
+								"<font color='rgb(195, 150, 55)'><b>%.1f</b></font> stars (Click to view more)",
+								value
+							),
+							visible = true,
+						})
+					end,
+
+					[React.Event.MouseLeave] = function()
+						tooltip.show({
+							visible = false,
+						})
+					end,
 				}, {
 					e("UICorner", {
 						CornerRadius = UDim.new(0, 16),
+					}),
+					e("UIListLayout", {
+						FillDirection = Enum.FillDirection.Horizontal,
+						HorizontalAlignment = Enum.HorizontalAlignment.Center,
+						VerticalAlignment = Enum.VerticalAlignment.Top,
+						Padding = UDim.new(0, 16),
+					}),
+					e("UIPadding", {
+						PaddingRight = UDim.new(0, 10),
+						PaddingLeft = UDim.new(0, 10),
+						PaddingTop = UDim.new(0, 10),
+						PaddingBottom = UDim.new(0, 10),
+					}),
+					e(Star, {
+						Size = UDim2.new(0.2, 0, 1, 0),
+
+						value = value,
+						starValue = 1,
+					}),
+					e(Star, {
+						Size = UDim2.new(0.2, 0, 1, 0),
+						value = value,
+						starValue = 2,
+					}),
+					e(Star, {
+						Size = UDim2.new(0.2, 0, 1, 0),
+						value = value,
+						starValue = 3,
+					}),
+					e(Star, {
+						Size = UDim2.new(0.2, 0, 1, 0),
+						value = value,
+						starValue = 4,
+					}),
+					e(Star, {
+						Size = UDim2.new(0.2, 0, 1, 0),
+						value = value,
+						starValue = 5,
+					}),
+				}),
+
+				e("TextLabel", {
+					BackgroundTransparency = 1,
+					Size = UDim2.new(1, 0, 0.1, 0),
+					FontFace = BuilderSans.Bold,
+					Text = "Your city could be improved! ",
+					TextColor3 = Color3.fromRGB(0, 0, 0),
+					TextSize = 24,
+					TextScaled = true,
+
+					TextXAlignment = Enum.TextXAlignment.Center,
+				}, {
+					e("UITextSizeConstraint", {
+						MaxTextSize = 24,
+					}),
+					e("UIPadding", {
+						PaddingLeft = UDim.new(0, 16),
 					}),
 				}),
 			}),

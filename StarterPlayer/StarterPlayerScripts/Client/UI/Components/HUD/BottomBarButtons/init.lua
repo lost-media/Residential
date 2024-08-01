@@ -54,7 +54,7 @@ return function(props: any)
 		Position = UDim2.new(0.5, 0, 1, 0),
 		AnchorPoint = Vector2.new(0.5, 1),
 		AutomaticSize = Enum.AutomaticSize.X,
-		Size = UDim2.new(0.5, 0, 0.15, 0),
+		Size = UDim2.new(0.5, 0, 0.125, 0),
 
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
