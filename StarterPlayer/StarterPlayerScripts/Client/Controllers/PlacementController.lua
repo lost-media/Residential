@@ -29,7 +29,7 @@ local Trove = LMEngine.GetShared("Trove")
 
 local TroveObject = Trove.new()
 
-local StructuresUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
+local Structures2 = require(ReplicatedStorage.Game.Shared.Structures2)
 
 ---@class PlacementController
 local PlacementController = LMEngine.CreateController({
@@ -158,15 +158,20 @@ function PlacementController:StartPlacement(structureId: string)
 		self:DisableDeleteMode()
 	end
 
-	local structure = StructuresUtils.GetStructureFromId(structureId)
+	local structure = Structures2.Utils.getStructure(structureId)
 	assert(structure ~= nil, "[PlacementController] StartPlacement: Structure not found")
 
 	-- fetch the structure from the structures list
 	if self._placement_client == nil then
+		---@type PlotController
 		local PlotController = LMEngine.GetController("PlotController")
-		local plot = PlotController:WaitForPlot()
+		PlotController:GetPlotAsync():andThen(function(plot)
+			self._placement_client = PlacementClient.new(plot)
+		end)
+	end
 
-		self._placement_client = PlacementClient.new(plot)
+	if self._placement_client == nil then
+		return
 	end
 
 	if self._placement_client:IsActive() == false then
@@ -176,7 +181,7 @@ function PlacementController:StartPlacement(structureId: string)
 		self._placement_client = PlacementClient.new(plot)
 	end
 
-	local clone = structure.Model:Clone()
+	local clone = structure.model:Clone()
 
 	self._isMoving = false
 
@@ -197,7 +202,7 @@ function PlacementController:StartMovement(clone: Model)
 
 	self:DisableMoveMode()
 
-	local structure = StructuresUtils.GetStructureFromId(structureId)
+	local structure = Structures2.Utils.getStructure(structureId)
 
 	clone.Parent = workspace
 

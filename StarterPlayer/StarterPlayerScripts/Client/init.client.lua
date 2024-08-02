@@ -8,9 +8,9 @@ local LMEngine = require(ReplicatedStorage.LMEngine)
 local Cmdr = require(ReplicatedStorage:WaitForChild("CmdrClient"))
 
 local dir_Controllers = script.Controllers
-local dir_Modules = script.Modules
+--local dir_Modules = script.Modules
 
-LMEngine.LoadModulesFromParent(dir_Modules)
+--LMEngine.LoadModulesFromParent(dir_Modules)
 LMEngine.AddControllers(dir_Controllers)
 
 Cmdr:SetActivationKeys({

@@ -29,12 +29,12 @@ local SETTINGS = {
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+---@type LMEngineServer
+local LMEngine = require(ReplicatedStorage.LMEngine)
+
 local dir_Structures = ReplicatedStorage.Game.Shared.Structures
 
-local StructuresCollection = require(dir_Structures)
-
----@type LMEngineClient
-local LMEngine = require(ReplicatedStorage.LMEngine)
+local Structures2 = require(LMEngine.Game.Shared.Structures2)
 
 local PlotConfigs = require(LMEngine.Game.Shared.Configs.Plot)
 
@@ -54,14 +54,16 @@ local StructureService = LMEngine.CreateService({
 ----- Public functions -----
 
 function StructureService:Init()
-	for _, structures in StructuresCollection do
-		for _, structure in structures do
-			WeldLib.WeldModelToPrimaryPart(structure.Model)
-			structure.Model:SetAttribute(PlotConfigs.STRUCTURE_ID_ATTRIBUTE_KEY, structure.Id)
+	for _, structures in Structures2.Structures do
+		for _, structure in structures.structures do
+			local model = structure.model
+
+			WeldLib.WeldModelToPrimaryPart(model)
+			model:SetAttribute(PlotConfigs.STRUCTURE_ID_ATTRIBUTE_KEY, structure.Id)
 
 			-- the hitboxes don't need to collide with the player
-			if structure.Model.PrimaryPart ~= nil then
-				structure.Model.PrimaryPart.CanCollide = false
+			if model.PrimaryPart ~= nil then
+				model.PrimaryPart.CanCollide = false
 			end
 		end
 	end

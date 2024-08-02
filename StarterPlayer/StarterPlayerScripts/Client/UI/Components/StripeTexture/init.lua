@@ -20,10 +20,12 @@ type StripeTextureProps = {
 	rotation: number?,
 
 	reversed: boolean?,
+
+	onClick: () -> (),
 }
 
 return function(props: StripeTextureProps)
-	return e("ImageLabel", {
+	return e("ImageButton", {
 		BackgroundTransparency = 1,
 		Size = props.size or UDim2.new(1, 0, 1, 0),
 		Image = if props.reversed then SETTINGS.ReverseStripeAssetId else SETTINGS.StripeAssetId,
@@ -33,6 +35,8 @@ return function(props: StripeTextureProps)
 		TileSize = props.tileSize or UDim2.new(1, 0, 1, 0),
 		Position = props.position or UDim2.new(0, 0, 0, 0),
 		Rotation = props.rotation or 0,
+
+		[React.Event.Activated] = props.onClick,
 	}, {
 		props.children,
 	})

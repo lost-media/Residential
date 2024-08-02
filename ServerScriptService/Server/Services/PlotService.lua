@@ -49,7 +49,9 @@ local PlotServiceRateLimiter = RateLimiter.NewRateLimiter(SETTINGS.MAX_RATE_PER_
 local Plot = require(dir_Modules.Plot2)
 local PlotTypes = require(dir_Modules.Plot2.Types)
 
-local StructureFactory = require(ReplicatedStorage.Game.Shared.Structures.StructureFactory)
+local Structures2 = require(LMEngine.Game.Shared.Structures2)
+
+local StructureFactory = Structures2.Factory
 
 type Plot = PlotTypes.Plot
 
@@ -243,7 +245,7 @@ function PlotService:PlaceStructure(player: Player, structure_id: string, cframe
 
 	local success, err = pcall(function()
 		-- Create the structure
-		local structure = StructureFactory.MakeStructure(structure_id)
+		local structure = StructureFactory.makeStructure(structure_id)
 		assert(structure ~= nil, "[PlotService] PlaceStructure: Structure not found")
 
 		local place_successful, structure = plot:PlaceStructure(structure, cframe)
