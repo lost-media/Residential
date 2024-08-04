@@ -1,6 +1,12 @@
 local SETTINGS = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+---@type LMEngineClient
+local LMEngine = require(ReplicatedStorage.LMEngine)
+
+local TableUtil = require(LMEngine.SharedDir.TableUtil)
+
 local Packages = ReplicatedStorage.Packages
 
 local React = require(Packages.react)
@@ -22,10 +28,28 @@ type QuestFrameProps = {
 }
 
 return function(props: QuestFrameProps)
+	local plots, setPlots = React.useState({})
 	local frames = React.useContext(FrameProvider.Context)
 
 	local scrollingFrameRef = React.useRef(nil)
 	local contentSize, setContentSize = React.useState(UDim2.new(0, 0, 0, 0))
+
+	React.useEffect(function()
+		LMEngine.OnStart():andThen(function()
+			-- Load the player's plots
+			---@type PlotController
+			local PlotController = LMEngine.GetController("PlotController")
+			PlotController:GetPlotsAsync():andThen(function(newPlots)
+				setPlots(newPlots)
+			end)
+		end)
+	end, {})
+
+	local loadPlot = React.useCallback(function(plotId: string)
+		print(plotId)
+		local DataService = LMEngine.GetService("DataService")
+		DataService:LoadPlot(plotId)
+	end, {})
 
 	return e("CanvasGroup", {
 		Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -148,26 +172,17 @@ return function(props: QuestFrameProps)
 					PaddingBottom = UDim.new(0, 4),
 				}),
 
-				e(PlotSlot, {
-					plotId = 1,
-					plotName = "Plot 1",
-					plotDescription = "This is a description of the plot",
-					plotImage = "rbxassetid://0",
-				}),
+				TableUtil.Map(TableUtil.Keys(plots), function(plotId)
+					local plot = plots[plotId]
+					return e(PlotSlot, {
+						plot = plot,
+						plotId = plotId,
 
-				e(PlotSlot, {
-					plotId = 1,
-					plotName = "Plot 1",
-					plotDescription = "This is a description of the plot",
-					plotImage = "rbxassetid://0",
-				}),
-
-				e(PlotSlot, {
-					plotId = 1,
-					plotName = "Plot 1",
-					plotDescription = "This is a description of the plot",
-					plotImage = "rbxassetid://0",
-				}),
+						onClick = function()
+							loadPlot(plotId)
+						end,
+					})
+				end),
 			}),
 		}),
 	})

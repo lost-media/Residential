@@ -59,7 +59,7 @@ function StructureService:Init()
 			local model = structure.model
 
 			WeldLib.WeldModelToPrimaryPart(model)
-			model:SetAttribute(PlotConfigs.STRUCTURE_ID_ATTRIBUTE_KEY, structure.Id)
+			model:SetAttribute(PlotConfigs.STRUCTURE_ID_ATTRIBUTE_KEY, structure.id)
 
 			-- the hitboxes don't need to collide with the player
 			if model.PrimaryPart ~= nil then

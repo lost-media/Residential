@@ -17,6 +17,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
+local PlotConfigs = require(LMEngine.Game.Shared.Configs.Plot)
+
 local DeleteStructure = require(LMEngine.Game.Shared.Placement.DeleteStructure)
 local MoveStructure = require(LMEngine.Game.Shared.Placement.MoveStructure)
 local PlacementClient = require(LMEngine.Game.Shared.Placement.PlacementClient2)
@@ -174,12 +176,14 @@ function PlacementController:StartPlacement(structureId: string)
 		return
 	end
 
-	if self._placement_client:IsActive() == false then
+	--[[if self._placement_client:IsActive() == false then
 		local PlotController = LMEngine.GetController("PlotController")
 		local plot = PlotController:WaitForPlot()
 
 		self._placement_client = PlacementClient.new(plot)
-	end
+	end]]
+
+	print("TEST")
 
 	local clone = structure.model:Clone()
 
@@ -189,8 +193,9 @@ function PlacementController:StartPlacement(structureId: string)
 end
 
 function PlacementController:StartMovement(clone: Model)
-	local structureId = clone:GetAttribute("Id")
+	local structureId = clone:GetAttribute(PlotConfigs.STRUCTURE_ID_ATTRIBUTE_KEY)
 
+	print(structureId)
 	if structureId == nil then
 		return
 	end
@@ -212,10 +217,10 @@ function PlacementController:StartMovement(clone: Model)
 
 	local settings = {}
 
-	local grid_unit = structure.GridUnit
+	local grid_unit = structure.GridUnit or 1
 
 	-- get the stacking info of the structure
-	local stacking = structure.Stacking.Allowed
+	local stacking = false
 
 	settings.can_stack = stacking
 
