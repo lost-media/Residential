@@ -17,6 +17,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)
 
+local PlotConfigs = require(LMEngine.Game.Shared.Configs.Plot)
+
 local DeleteStructure = require(LMEngine.Game.Shared.Placement.DeleteStructure)
 local MoveStructure = require(LMEngine.Game.Shared.Placement.MoveStructure)
 local PlacementClient = require(LMEngine.Game.Shared.Placement.PlacementClient2)
@@ -29,7 +31,7 @@ local Trove = LMEngine.GetShared("Trove")
 
 local TroveObject = Trove.new()
 
-local StructuresUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
+local Structures2 = require(ReplicatedStorage.Game.Shared.Structures2)
 
 ---@class PlacementController
 local PlacementController = LMEngine.CreateController({
@@ -158,25 +160,32 @@ function PlacementController:StartPlacement(structureId: string)
 		self:DisableDeleteMode()
 	end
 
-	local structure = StructuresUtils.GetStructureFromId(structureId)
+	local structure = Structures2.Utils.getStructure(structureId)
 	assert(structure ~= nil, "[PlacementController] StartPlacement: Structure not found")
 
 	-- fetch the structure from the structures list
 	if self._placement_client == nil then
+		---@type PlotController
+		local PlotController = LMEngine.GetController("PlotController")
+		PlotController:GetPlotAsync():andThen(function(plot)
+			self._placement_client = PlacementClient.new(plot)
+		end)
+	end
+
+	if self._placement_client == nil then
+		return
+	end
+
+	--[[if self._placement_client:IsActive() == false then
 		local PlotController = LMEngine.GetController("PlotController")
 		local plot = PlotController:WaitForPlot()
 
 		self._placement_client = PlacementClient.new(plot)
-	end
+	end]]
 
-	if self._placement_client:IsActive() == false then
-		local PlotController = LMEngine.GetController("PlotController")
-		local plot = PlotController:WaitForPlot()
+	print("TEST")
 
-		self._placement_client = PlacementClient.new(plot)
-	end
-
-	local clone = structure.Model:Clone()
+	local clone = structure.model:Clone()
 
 	self._isMoving = false
 
@@ -184,8 +193,9 @@ function PlacementController:StartPlacement(structureId: string)
 end
 
 function PlacementController:StartMovement(clone: Model)
-	local structureId = clone:GetAttribute("Id")
+	local structureId = clone:GetAttribute(PlotConfigs.STRUCTURE_ID_ATTRIBUTE_KEY)
 
+	print(structureId)
 	if structureId == nil then
 		return
 	end
@@ -197,7 +207,7 @@ function PlacementController:StartMovement(clone: Model)
 
 	self:DisableMoveMode()
 
-	local structure = StructuresUtils.GetStructureFromId(structureId)
+	local structure = Structures2.Utils.getStructure(structureId)
 
 	clone.Parent = workspace
 
@@ -207,10 +217,10 @@ function PlacementController:StartMovement(clone: Model)
 
 	local settings = {}
 
-	local grid_unit = structure.GridUnit
+	local grid_unit = structure.GridUnit or 1
 
 	-- get the stacking info of the structure
-	local stacking = structure.Stacking.Allowed
+	local stacking = false
 
 	settings.can_stack = stacking
 

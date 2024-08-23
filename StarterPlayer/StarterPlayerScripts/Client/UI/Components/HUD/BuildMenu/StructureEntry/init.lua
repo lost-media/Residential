@@ -36,6 +36,7 @@ local TooltipProvider = require(dirProviders.TooltipProvider)
 
 type StructureEntryProps = {
 	structureType: "City" | "Residential" | "Industrial" | "Commercial" | "Decoration" | "Road",
+	id: string,
 	name: string,
 	price: {
 		value: number,
@@ -45,6 +46,8 @@ type StructureEntryProps = {
 	category: StructureCategory,
 
 	viewportZoomScale: number?,
+
+	onClick: () -> (),
 }
 
 return function(props: StructureEntryProps)
@@ -129,11 +132,20 @@ return function(props: StructureEntryProps)
 			Thickness = 2,
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 		}),
+		e("TextButton", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			AutoButtonColor = false,
+			BorderSizePixel = 0,
+			Text = "",
+		}),
 		e(StripeTexture, {
 			color = Color3.fromRGB(246, 248, 246),
 			tileSize = UDim2.new(4, 0, 4, 0),
 			transparency = 1,
 			reversed = false,
+
+			onClick = props.onClick,
 		}, {
 			e("UIPadding", {
 				PaddingTop = UDim.new(0.025, 0),

@@ -63,4 +63,19 @@ function PlotController:GetPlotAsync(): Promise
 	end)
 end
 
+function PlotController:GetPlotsAsync(): Promise
+	return Promise.new(function(resolve, reject)
+		local DataService = LMEngine.GetService("DataService")
+
+		local plots = DataService:GetPlayerPlots() :: Promise
+		local success, plots = plots:await()
+
+		if success then
+			resolve(plots)
+		else
+			reject("Failed to get plots")
+		end
+	end)
+end
+
 return PlotController

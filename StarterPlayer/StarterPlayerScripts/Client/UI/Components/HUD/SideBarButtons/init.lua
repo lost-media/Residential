@@ -4,6 +4,7 @@ local Packages = ReplicatedStorage.Packages
 local React = require(Packages.react)
 local RoactSpring = require(ReplicatedStorage.Packages.reactspring)
 
+local Button = require(script.Parent.Parent.Button)
 local ButtonList = require(script.Parent.ButtonList)
 
 local e = React.createElement
@@ -27,6 +28,17 @@ local buttonData = {
 }
 
 return function(props: any)
+	local buttons = {}
+
+	for i, button in ipairs(buttonData) do
+		buttons[i] = e(Button, {
+			Image = button.Image,
+			Name = button.Name,
+			Size = button.Size,
+			LayoutOrder = i,
+		})
+	end
+
 	return e(ButtonList, {
 		Position = UDim2.new(0, 0, 0.5, 0),
 		AnchorPoint = Vector2.new(0, 0.5),
@@ -38,7 +50,7 @@ return function(props: any)
 		HorizontalAlignment = Enum.HorizontalAlignment.Left,
 		VerticalAlignment = Enum.VerticalAlignment.Center,
 		ListPadding = UDim.new(0, 8),
-
-		buttons = buttonData,
+	}, {
+		buttons,
 	})
 end

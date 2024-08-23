@@ -20,6 +20,7 @@ local TopBar = require(dirHUD.TopBar)
 
 -- Frames
 local BuildMenu = require(dirHUD.BuildMenu)
+local PlotSelection = require(dirHUD.PlotSelection)
 local Quest = require(dirHUD.Quest)
 local Stats = require(dirHUD.Stats)
 
@@ -45,6 +46,9 @@ local function Frames(_)
 			isOpen = frames.buildMenuOpen,
 		}),
 		React.createElement(Stats, {
+			isOpen = frames.statsOpen,
+		}),
+		React.createElement(PlotSelection, {
 			isOpen = frames.statsOpen,
 		})
 	)

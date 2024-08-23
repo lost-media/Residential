@@ -267,7 +267,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local PlacementUtils = require(ReplicatedStorage.Game.Shared.Placement.Utils)
-local StructuresUtils = require(ReplicatedStorage.Game.Shared.Structures.Utils)
+local StructuresUtils = require(ReplicatedStorage.Game.Shared.Structures2).Utils
 
 ---@type LMEngineClient
 local LMEngine = require(ReplicatedStorage.LMEngine.Client)

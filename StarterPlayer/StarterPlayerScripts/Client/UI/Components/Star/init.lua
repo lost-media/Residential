@@ -42,8 +42,6 @@ return function(props: CircleProps)
 		end
 	end
 
-	print(calculatedValue, 1 / calculatedValue)
-
 	return e("ImageButton", {
 		BackgroundTransparency = 1,
 		Image = SETTINGS.StarAssetId,

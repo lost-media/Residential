@@ -40,14 +40,14 @@ type BuildMenuProps = {
 return function(props: BuildMenuProps)
 	local frames: FrameProvider.FrameContextProps = React.useContext(FrameProvider.Context)
 	local currentCategory: Structures2.StructureCategory, setCurrentCategory =
-		React.useState(Structures2.getCategory("City"))
+		React.useState(Structures2.Utils.getCategory("City"))
 	local currentTab, setCurrentTab = React.useState("City")
 
 	local scroillCanvasSize, setScrollCanvasSize = React.useState(UDim2.new(0, 0, 0, 0))
 
 	local newButtonTabs = {}
 
-	local categories = Structures2.getCategories()
+	local categories = Structures2.Utils.getCategories()
 
 	for _, category in pairs(categories) do
 		local buttonInfo = {
@@ -72,8 +72,8 @@ return function(props: BuildMenuProps)
 	end)
 
 	local entries = React.useMemo(function()
-		local structures = Structures2.getStructuresInCategory(currentTab)
-		local category = Structures2.getCategory(currentTab)
+		local structures = Structures2.Utils.getStructuresInCategory(currentTab)
+		local category = Structures2.Utils.getCategory(currentTab)
 
 		if category == nil then
 			warn("Category not found: " .. currentTab)
@@ -86,11 +86,26 @@ return function(props: BuildMenuProps)
 			table.insert(
 				newEntries,
 				e(StructureEntry, {
+					id = structure.id,
 					name = structure.name,
 					price = structure.price,
 					model = structure.model,
 					category = category,
 					viewportZoomScale = structure.viewportZoomScale,
+
+					onClick = function()
+						LMEngine.OnStart()
+							:andThen(function()
+								---@type PlacementController
+								local placementController =
+									LMEngine.GetController("PlacementController")
+								placementController:StartPlacement(structure.id)
+							end)
+							:catch(function(err)
+								warn("Error starting build: ")
+								warn(err)
+							end)
+					end,
 				})
 			)
 		end

@@ -92,9 +92,11 @@ type IPlot = PlotTypes.IPlot
 type Plot = PlotTypes.Plot
 type SerializedStructure = PlotTypes.SerializedStructure
 
-local StructureFactory = require(LMEngine.Game.Shared.Structures.StructureFactory)
+local Structures2 = require(LMEngine.Game.Shared.Structures2)
 
-local StructureUtils = require(LMEngine.Game.Shared.Structures.Utils)
+local StructureFactory = Structures2.Factory
+
+local StructureUtils = Structures2.Utils
 
 ---@class Plot2
 local Plot: IPlot = {} :: IPlot
@@ -235,7 +237,7 @@ function Plot:Load(data: { [string]: { [string]: SerializedStructure } }, plot_u
 			--local id: number = structure_data.PlotId
 			--table.insert(ids, id)
 
-			local structure: Model = StructureFactory.MakeStructure(structure_id)
+			local structure: Model = StructureFactory.makeStructure(structure_id)
 
 			if structure == nil then
 				warn("[Plot] Failed to load structure with ID: " .. structure_id)
@@ -292,7 +294,7 @@ function Plot:PlaceStructure(structure: Model, cframe: CFrame): (boolean, Model?
 
 	local structure_id: string? = structure:GetAttribute("Id")
 
-	local structureContent = StructureUtils.GetStructureFromId(structure_id)
+	local structureContent = StructureUtils.getStructure(structure_id)
 	if structureContent == nil then
 		warn("[Plot2] PlaceStructure: Structure content is nil")
 		return false
@@ -539,7 +541,7 @@ function Plot:GetRoads()
 		if structure:IsA("Model") then
 			local structure_id = structure:GetAttribute("Id")
 
-			local structure_content = StructureUtils.GetStructureFromId(structure_id)
+			local structure_content = StructureUtils.getStructure(structure_id)
 
 			if structure_content == nil then
 				warn("[Plot] Failed to get structure content for ID: " .. structure_id)
@@ -568,7 +570,7 @@ function Plot:GetBuildings()
 		if structure:IsA("Model") then
 			local structure_id = structure:GetAttribute("Id")
 
-			local structure_content = StructureUtils.GetStructureFromId(structure_id)
+			local structure_content = StructureUtils.getStructure(structure_id)
 
 			if structure_content == nil then
 				warn("[Plot] Failed to get structure content for ID: " .. structure_id)

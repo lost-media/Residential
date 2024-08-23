@@ -6,7 +6,7 @@ local Currency = require(LMEngine.Game.Currency)
 
 local dirStructures = ReplicatedStorage.Structures.Residential
 
-local structureTypes = require(script.Parent.Parent.Types)
+local structureTypes = require(script.Parent.Parent.Parent.Types)
 
 export type ResidentialStructure = structureTypes.Structure & {}
 
